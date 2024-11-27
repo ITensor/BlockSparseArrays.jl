@@ -1,4 +1,5 @@
 [deps]
+BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
 BlockSparseArrays = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
 BroadcastMapConversion = "4a4adec5-520f-4750-bb37-d5e66b4ddeb2"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
