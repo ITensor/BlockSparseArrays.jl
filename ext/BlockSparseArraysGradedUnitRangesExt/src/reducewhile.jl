@@ -1,9 +1,9 @@
-"""
+#=
     reducewhile(f, op, collection, state)
 
 reducewhile(x -> length(x) < 3, vcat, ["a", "b", "c", "d"], 2; init=String[]) ==
   (["b", "c"], 4)
-"""
+=#
 function reducewhile(f, op, collection, state; init)
   prev_result = init
   prev_state = state
@@ -19,12 +19,12 @@ function reducewhile(f, op, collection, state; init)
   return prev_result, prev_state
 end
 
-"""
+#=
     groupreducewhile(f, op, collection, ngroups)
 
 groupreducewhile((i, x) -> length(x) ≤ i, vcat, ["a", "b", "c", "d", "e", "f"], 3; init=String[]) ==
   (["a"], ["b", "c"], ["d", "e", "f"])
-"""
+=#
 function groupreducewhile(f, op, collection, ngroups; init)
   state = firstindex(collection)
   return ntuple(ngroups) do group_number
