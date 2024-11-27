@@ -1,5 +1,5 @@
 using Base.Broadcast: BroadcastStyle, AbstractArrayStyle, DefaultArrayStyle, Broadcasted
-using ..BroadcastMapConversion: map_function, map_args
+using BroadcastMapConversion: map_function, map_args
 
 struct BlockSparseArrayStyle{N} <: AbstractArrayStyle{N} end
 

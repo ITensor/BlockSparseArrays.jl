@@ -1,5 +1,5 @@
 using BlockArrays: Block
-using ..SparseArraysBase: SparseArraysBase, sparse_storage, stored_indices
+using SparseArraysBase: SparseArraysBase, sparse_storage, stored_indices
 
 # Structure storing the block sparse storage
 struct BlockSparseStorage{Arr<:AbstractBlockSparseArray}

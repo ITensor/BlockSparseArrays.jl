@@ -1,8 +1,8 @@
 module BlockSparseArraysTensorAlgebraExt
 using BlockArrays: AbstractBlockedUnitRange
 using ..BlockSparseArrays: AbstractBlockSparseArray, block_reshape
-using ...GradedAxes: tensor_product
-using ...TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
+using GradedUnitRanges: tensor_product
+using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
 
 function TensorAlgebra.:⊗(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
   return tensor_product(a1, a2)

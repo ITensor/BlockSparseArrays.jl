@@ -2,9 +2,9 @@
 using Test: @test, @testset
 using BlockArrays:
   AbstractBlockArray, Block, BlockedOneTo, blockedrange, blocklengths, blocksize
-using NDTensors.BlockSparseArrays: BlockSparseArray, block_stored_length
-using NDTensors.GradedAxes:
-  GradedAxes,
+using BlockSparseArrays: BlockSparseArray, block_stored_length
+using GradedUnitRanges:
+  GradedUnitRanges,
   GradedOneTo,
   GradedUnitRange,
   GradedUnitRangeDual,
@@ -12,10 +12,10 @@ using NDTensors.GradedAxes:
   dual,
   gradedrange,
   isdual
-using NDTensors.LabelledNumbers: label
-using NDTensors.SparseArraysBase: stored_length
-using NDTensors.SymmetrySectors: U1
-using NDTensors.TensorAlgebra: fusedims, splitdims
+using LabelledNumbers: label
+using SparseArraysBase: stored_length
+using SymmetrySectors: U1
+using TensorAlgebra: fusedims, splitdims
 using LinearAlgebra: adjoint
 using Random: randn!
 function blockdiagonal!(f, a::AbstractArray)
@@ -27,7 +27,7 @@ function blockdiagonal!(f, a::AbstractArray)
 end
 
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
-@testset "BlockSparseArraysGradedAxesExt (eltype=$elt)" for elt in elts
+@testset "BlockSparseArraysGradedUnitRangesExt (eltype=$elt)" for elt in elts
   @testset "map" begin
     d1 = gradedrange([U1(0) => 2, U1(1) => 2])
     d2 = gradedrange([U1(0) => 2, U1(1) => 2])

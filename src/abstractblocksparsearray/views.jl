@@ -92,7 +92,7 @@ function Base.view(a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Block{1},N}) 
   return viewblock(a, I...)
 end
 
-# TODO: Move to `GradedAxes` or `BlockArraysExtensions`.
+# TODO: Move to `GradedUnitRanges` or `BlockArraysExtensions`.
 to_block(I::Block{1}) = I
 to_block(I::BlockIndexRange{1}) = Block(I)
 to_block_indices(I::Block{1}) = Colon()

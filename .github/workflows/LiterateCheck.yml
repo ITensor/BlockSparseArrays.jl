@@ -1,0 +1,39 @@
+name: Literate check
+on:
+  push:
+    branches: [main]
+    tags: [v*]
+  pull_request:
+
+jobs:
+  literate:
+    name: "Literate Check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: 1
+      - name: Install Literate and generate docs
+        run: |
+          julia  -e '
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+          Pkg.add(PackageSpec(name="Literate"))'
+          julia  -e 'include("docs/make_readme.jl")'
+      - name: Check if docs need to be updated
+        run: |
+          julia -e '
+          out = Cmd(`git diff --name-only`) |> read |> String
+          if out == ""
+              exit(0)
+          else
+              @error "The docs are outdated, rerun Literate to regenerate them."
+              write(stdout, out)
+              out_diff = Cmd(`git diff`) |> read |> String
+              @error "Diff:"
+              write(stdout, out_diff)
+              exit(1)
+              @error ""
+          end'

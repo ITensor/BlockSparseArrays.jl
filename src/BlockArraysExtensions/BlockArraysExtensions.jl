@@ -19,10 +19,9 @@ using BlockArrays:
   blocks,
   findblock,
   findblockindex
-using Compat: allequal
 using Dictionaries: Dictionary, Indices
-using ..GradedAxes: blockedunitrange_getindices, to_blockindices
-using ..SparseArraysBase: SparseArraysBase, stored_length, stored_indices
+using GradedUnitRanges: blockedunitrange_getindices, to_blockindices
+using SparseArraysBase: SparseArraysBase, stored_length, stored_indices
 
 # A return type for `blocks(array)` when `array` isn't blocked.
 # Represents a vector with just that single block.
@@ -191,25 +190,25 @@ function sub_axis(a::AbstractUnitRange, indices)
   return error("Not implemented")
 end
 
-# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::AbstractUnitRange)
   return only(axes(blockedunitrange_getindices(a, indices)))
 end
 
-# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:BlockRange{1}})
   return sub_axis(a, indices.block)
 end
 
-# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:Block{1}})
   return sub_axis(a, Block(indices))
 end
 
-# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:BlockIndexRange{1}})
   return sub_axis(a, indices.block)
@@ -219,25 +218,25 @@ function sub_axis(a::AbstractUnitRange, indices::BlockIndices)
   return sub_axis(a, indices.blocks)
 end
 
-# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::Block)
   return only(axes(blockedunitrange_getindices(a, indices)))
 end
 
-# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::BlockIndexRange)
   return only(axes(blockedunitrange_getindices(a, indices)))
 end
 
-# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::AbstractVector{<:Block})
   return blockedrange([length(a[index]) for index in indices])
 end
 
-# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
 # TODO: Merge blocks.
 function sub_axis(a::AbstractUnitRange, indices::BlockVector{<:Block})
   # `collect` is needed here, otherwise a `PseudoBlockVector` is
@@ -581,7 +580,7 @@ function view!(a::AbstractArray{<:Any,N}, index::Vararg{BlockIndexRange{1},N}) w
 end
 
 using MacroTools: @capture
-using NDTensors.SparseArraysBase: is_getindex_expr
+using SparseArraysBase: is_getindex_expr
 macro view!(expr)
   if !is_getindex_expr(expr)
     error("@view must be used with getindex syntax (as `@view! a[i,j,...]`)")

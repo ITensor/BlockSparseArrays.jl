@@ -13,7 +13,7 @@ using BlockArrays:
   blocks,
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
-using ..SparseArraysBase: perm, iperm, stored_length, sparse_zero!
+using SparseArraysBase: perm, iperm, stored_length, sparse_zero!
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
@@ -142,7 +142,7 @@ end
 
 # BlockArrays
 
-using ..SparseArraysBase: SparseArraysBase, AbstractSparseArray, AbstractSparseMatrix
+using SparseArraysBase: SparseArraysBase, AbstractSparseArray, AbstractSparseMatrix
 
 _perm(::PermutedDimsArray{<:Any,<:Any,perm}) where {perm} = perm
 _invperm(::PermutedDimsArray{<:Any,<:Any,<:Any,invperm}) where {invperm} = invperm

@@ -1,8 +1,8 @@
 @eval module $(gensym())
 using Test: @test, @testset
-using NDTensors.BlockSparseArrays: BlockSparseArray
-using NDTensors.TensorAlgebra: contract
-using NDTensors.SparseArraysBase: densearray
+using BlockSparseArrays: BlockSparseArray
+using TensorAlgebra: contract
+using SparseArraysBase: densearray
 @testset "BlockSparseArraysTensorAlgebraExt (eltype=$elt)" for elt in (
   Float32, Float64, Complex{Float32}, Complex{Float64}
 )

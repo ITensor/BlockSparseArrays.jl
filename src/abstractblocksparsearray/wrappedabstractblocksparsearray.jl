@@ -9,7 +9,7 @@ using BlockArrays:
   mortar,
   unblock
 using SplitApplyCombine: groupcount
-using ..TypeParameterAccessors: similartype
+using TypeParameterAccessors: similartype
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
   T,N,AbstractBlockSparseArray,AbstractBlockSparseArray{T,N}
@@ -71,7 +71,7 @@ function BlockArrays.blocks(
   return blocksparse_blocks(a)
 end
 
-using ..TypeParameterAccessors: parenttype
+using TypeParameterAccessors: parenttype
 function blockstype(arraytype::Type{<:WrappedAbstractBlockSparseArray})
   return blockstype(parenttype(arraytype))
 end

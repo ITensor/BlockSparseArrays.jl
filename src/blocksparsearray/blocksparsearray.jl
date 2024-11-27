@@ -1,6 +1,6 @@
 using BlockArrays: BlockArrays, Block, BlockedUnitRange, blockedrange, blocklength
 using Dictionaries: Dictionary
-using ..SparseArraysBase: SparseArrayDOK
+using SparseArraysBase: SparseArrayDOK
 
 # TODO: Delete this.
 ## using BlockArrays: blocks

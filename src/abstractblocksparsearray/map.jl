@@ -1,7 +1,7 @@
 using ArrayLayouts: LayoutArray
 using BlockArrays: blockisequal
 using LinearAlgebra: Adjoint, Transpose
-using ..SparseArraysBase:
+using SparseArraysBase:
   SparseArraysBase,
   SparseArrayStyle,
   sparse_map!,

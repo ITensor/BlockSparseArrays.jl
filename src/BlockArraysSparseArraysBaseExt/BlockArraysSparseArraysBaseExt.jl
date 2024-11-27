@@ -1,5 +1,5 @@
 using BlockArrays: AbstractBlockArray, BlocksView
-using ..SparseArraysBase: SparseArraysBase, stored_length
+using SparseArraysBase: SparseArraysBase, stored_length
 
 function SparseArraysBase.stored_length(a::AbstractBlockArray)
   return sum(b -> stored_length(b), blocks(a); init=zero(Int))

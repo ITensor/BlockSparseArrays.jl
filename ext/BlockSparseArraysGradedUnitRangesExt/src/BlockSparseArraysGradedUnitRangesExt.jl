@@ -1,4 +1,4 @@
-module BlockSparseArraysGradedAxesExt
+module BlockSparseArraysGradedUnitRangesExt
 using BlockArrays:
   AbstractBlockVector,
   AbstractBlockedUnitRange,
@@ -14,8 +14,8 @@ using ..BlockSparseArrays:
   BlockSparseMatrix,
   BlockSparseVector,
   block_merge
-using ...GradedAxes:
-  GradedAxes,
+using GradedUnitRanges:
+  GradedUnitRanges,
   AbstractGradedUnitRange,
   OneToOne,
   blockmergesortperm,
@@ -25,7 +25,7 @@ using ...GradedAxes:
   nondual,
   tensor_product
 using LinearAlgebra: Adjoint, Transpose
-using ...TensorAlgebra:
+using TensorAlgebra:
   TensorAlgebra, FusionStyle, BlockReshapeFusion, SectorFusion, fusedims, splitdims
 
 # TODO: Make a `ReduceWhile` library.
@@ -77,8 +77,8 @@ end
 
 # This is a temporary fix for `eachindex` being broken for BlockSparseArrays
 # with mixed dual and non-dual axes. This shouldn't be needed once
-# GradedAxes is rewritten using BlockArrays v1.
-# TODO: Delete this once GradedAxes is rewritten.
+# GradedUnitRanges is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedUnitRanges is rewritten.
 function Base.eachindex(a::AbstractBlockSparseArray)
   return CartesianIndices(nondual.(axes(a)))
 end
@@ -98,8 +98,8 @@ end
 # TODO: Remove this once that issue is fixed,
 # see https://github.com/JuliaArrays/BlockArrays.jl/pull/405.
 using BlockArrays: BlockRange
-using NDTensors.LabelledNumbers: label
-function GradedAxes.blocklabels(a::BlockSparseVector)
+using LabelledNumbers: label
+function GradedUnitRanges.blocklabels(a::BlockSparseVector)
   return map(BlockRange(a)) do block
     return label(blocks(a)[Int(block)])
   end
@@ -107,8 +107,8 @@ end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays
 # with mixed dual and non-dual axes. This shouldn't be needed once
-# GradedAxes is rewritten using BlockArrays v1.
-# TODO: Delete this once GradedAxes is rewritten.
+# GradedUnitRanges is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedUnitRanges is rewritten.
 function blocksparse_show(
   io::IO, mime::MIME"text/plain", a::AbstractArray, axes_a::Tuple; kwargs...
 )
@@ -122,8 +122,8 @@ end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays
 # with mixed dual and non-dual axes. This shouldn't be needed once
-# GradedAxes is rewritten using BlockArrays v1.
-# TODO: Delete this once GradedAxes is rewritten.
+# GradedUnitRanges is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedUnitRanges is rewritten.
 function Base.show(io::IO, mime::MIME"text/plain", a::BlockSparseArray; kwargs...)
   axes_a = axes(a)
   a_nondual = BlockSparseArray(blocks(a), nondual.(axes(a)))
@@ -132,8 +132,8 @@ end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays
 # with mixed dual and non-dual axes. This shouldn't be needed once
-# GradedAxes is rewritten using BlockArrays v1.
-# TODO: Delete this once GradedAxes is rewritten.
+# GradedUnitRanges is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedUnitRanges is rewritten.
 function Base.show(
   io::IO, mime::MIME"text/plain", a::Adjoint{<:Any,<:BlockSparseMatrix}; kwargs...
 )
@@ -144,8 +144,8 @@ end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays
 # with mixed dual and non-dual axes. This shouldn't be needed once
-# GradedAxes is rewritten using BlockArrays v1.
-# TODO: Delete this once GradedAxes is rewritten.
+# GradedUnitRanges is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedUnitRanges is rewritten.
 function Base.show(
   io::IO, mime::MIME"text/plain", a::Transpose{<:Any,<:BlockSparseMatrix}; kwargs...
 )

@@ -14,10 +14,7 @@ using BlockArrays:
   blocksize,
   blocksizes,
   mortar
-using Compat: @compat
-using GPUArraysCore: @allowscalar
-using LinearAlgebra: Adjoint, Transpose, dot, mul!, norm
-using NDTensors.BlockSparseArrays:
+using BlockSparseArrays:
   @view!,
   BlockSparseArray,
   BlockSparseMatrix,
@@ -29,10 +26,11 @@ using NDTensors.BlockSparseArrays:
   blockstype,
   blocktype,
   view!
+using GPUArraysCore: @allowscalar
+using LinearAlgebra: Adjoint, Transpose, dot, mul!, norm
 using NDTensors.GPUArraysCoreExtensions: cpu
-using NDTensors.SparseArraysBase: stored_length
-using NDTensors.SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK
-using NDTensors.TensorAlgebra: contract
+using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, stored_length
+using TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
 include("TestBlockSparseArraysUtils.jl")
 
@@ -772,7 +770,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       return (; a, b, x)
     end
     for abx in (f1(), f2())
-      @compat (; a, b, x) = abx
+      (; a, b, x) = abx
       @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
       @test block_stored_length(b) == 1
       @test b[Block(1, 1)] == x
@@ -1012,7 +1010,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     a2[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
     # TODO: Make this work, requires customization of `TensorAlgebra.fusedims` and
     # `TensorAlgebra.splitdims` in terms of `BlockSparseArrays.block_reshape`,
-    # and customization of `TensorAlgebra.:⊗` in terms of `GradedAxes.tensor_product`.
+    # and customization of `TensorAlgebra.:⊗` in terms of `GradedUnitRanges.tensor_product`.
     a_dest, dimnames_dest = contract(a1, (1, -1), a2, (-1, 2))
     @allowscalar begin
       a_dest_dense, dimnames_dest_dense = contract(Array(a1), (1, -1), Array(a2), (-1, 2))
