@@ -11,6 +11,7 @@ NDTensors = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 NestedPermutedDimsArrays = "2c2a8ec4-3cfc-4276-aa3e-1307b4294e58"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SparseArraysBase = "0d5efcca-f356-4864-8770-e1ed8d78f208"
+SymmetrySectors = "f8a8ad64-adbc-4fce-92f7-ffe2bb36a86e"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
@@ -21,5 +22,6 @@ GradedUnitRanges = {url = "https://github.com/ITensor/GradedUnitRanges.jl"}
 LabelledNumbers = {url = "https://github.com/ITensor/LabelledNumbers.jl"}
 NestedPermutedDimsArrays = {url = "https://github.com/ITensor/NestedPermutedDimsArrays.jl"}
 SparseArraysBase = {url = "https://github.com/ITensor/SparseArraysBase.jl"}
+SymmetrySectors = {url = "https://github.com/ITensor/SymmetrySectors.jl"}
 TensorAlgebra = {url = "https://github.com/ITensor/TensorAlgebra.jl"}
 TypeParameterAccessors = {url = "https://github.com/ITensor/TypeParameterAccessors.jl"}
