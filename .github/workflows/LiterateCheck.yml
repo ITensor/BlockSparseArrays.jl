@@ -18,7 +18,14 @@ jobs:
         run: |
           julia  -e '
           using Pkg
+          # TODO: Delete these once they are registered.
+          Pkg.add(url="https://github.com/ITensor/TypeParameterAccessors.jl")
+          Pkg.add(url="https://github.com/ITensor/BroadcastMapConversion.jl")
+          Pkg.add(url="https://github.com/ITensor/NestedPermutedDimsArrays.jl")
+          Pkg.add(url="https://github.com/ITensor/LabelledNumbers.jl")
+          Pkg.add(url="https://github.com/ITensor/GradedUnitRanges.jl")
           Pkg.add(url="https://github.com/ITensor/SparseArraysBase.jl")
+          Pkg.add(url="https://github.com/ITensor/TensorAlgebra.jl")
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
           Pkg.add(PackageSpec(name="Literate"))'
