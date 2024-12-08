@@ -21,7 +21,7 @@ using BlockArrays:
   findblockindex
 using Dictionaries: Dictionary, Indices
 using GradedUnitRanges: blockedunitrange_getindices, to_blockindices
-using SparseArraysBase: SparseArraysBase, stored_length, stored_indices
+using SparseArraysBase: SparseArraysBase, storedlength, eachstoredindex
 
 # A return type for `blocks(array)` when `array` isn't blocked.
 # Represents a vector with just that single block.
@@ -533,13 +533,13 @@ function Base.setindex!(a::BlockView{<:Any,N}, value, index::Vararg{Int,N}) wher
   return a
 end
 
-function SparseArraysBase.stored_length(a::BlockView)
+function SparseArraysBase.storedlength(a::BlockView)
   # TODO: Store whether or not the block is stored already as
   # a Bool in `BlockView`.
   I = CartesianIndex(Int.(a.block))
   # TODO: Use `block_stored_indices`.
-  if I ∈ stored_indices(blocks(a.array))
-    return stored_length(blocks(a.array)[I])
+  if I ∈ eachstoredindex(blocks(a.array))
+    return storedlength(blocks(a.array)[I])
   end
   return 0
 end

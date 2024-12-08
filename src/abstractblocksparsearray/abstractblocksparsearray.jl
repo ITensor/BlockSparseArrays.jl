@@ -8,6 +8,31 @@ function nonzero_keys end
 
 abstract type AbstractBlockSparseArray{T,N} <: AbstractBlockArray{T,N} end
 
+using Derive: @array_aliases
+# Define AbstractSparseVector, AnyAbstractSparseArray, etc.
+@array_aliases AbstractBlockSparseArray
+
+using Derive: Derive
+function Derive.interface(::Type{<:AbstractBlockSparseArray})
+  return BlockSparseArrayInterface()
+end
+
+using Derive: @derive
+
+# TODO: These need to be loaded since `AbstractArrayOps`
+# includes overloads of functions from these modules.
+# Ideally that wouldn't be needed and can be circumvented
+# with `GlobalRef`.
+using ArrayLayouts: ArrayLayouts
+using LinearAlgebra: LinearAlgebra
+
+# Derive `Base.getindex`, `Base.setindex!`, etc.
+# TODO: Define `AbstractMatrixOps` and overload for
+# `AnyAbstractSparseMatrix` and `AnyAbstractSparseVector`,
+# which is where matrix multiplication and factorizations
+# shoudl go.
+@derive AnyAbstractBlockSparseArray AbstractArrayOps
+
 ## Base `AbstractArray` interface
 
 Base.axes(::AbstractBlockSparseArray) = error("Not implemented")

@@ -1,13 +1,14 @@
 using BlockArrays: AbstractBlockedUnitRange, blockedrange, blocklengths
 using SparseArraysBase: SparseArraysBase, allocate_cat_output, sparse_cat!
 
-# TODO: Maybe move to `SparseArraysBaseBlockArraysExt`.
-# TODO: Handle dual graded unit ranges, for example in a new `SparseArraysBaseGradedUnitRangesExt`.
-function SparseArraysBase.axis_cat(
-  a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange
-)
-  return blockedrange(vcat(blocklengths(a1), blocklengths(a2)))
-end
+## TODO: This needs to be defined.
+## # TODO: Maybe move to `SparseArraysBaseBlockArraysExt`.
+## # TODO: Handle dual graded unit ranges, for example in a new `SparseArraysBaseGradedUnitRangesExt`.
+## function SparseArraysBase.axis_cat(
+##   a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange
+## )
+##   return blockedrange(vcat(blocklengths(a1), blocklengths(a2)))
+## end
 
 # that erroneously allocates too many blocks that are
 # zero and shouldn't be stored.

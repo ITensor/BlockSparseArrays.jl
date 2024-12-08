@@ -57,13 +57,14 @@ function reblock(
   return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]
 end
 
+# TODO: Define as `@interface BlockSparseArrayInterface Base.map!(...)`.
 # TODO: Rewrite this so that it takes the blocking structure
 # made by combining the blocking of the axes (i.e. the blocking that
 # is used to determine `union_stored_blocked_cartesianindices(...)`).
 # `reblock` is a partial solution to that, but a bit ad-hoc.
 # TODO: Move to `blocksparsearrayinterface/map.jl`.
-function SparseArraysBase.sparse_map!(
-  ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
+function blocksparse_map!(
+  f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
 )
   a_dest, a_srcs = reblock(a_dest), reblock.(a_srcs)
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
@@ -92,31 +93,37 @@ end
 # function SparseArraysBase.sparse_mapreduce(::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray})
 # end
 
+# TODO: @derive AbstractArrayInterface
 function Base.map!(f, a_dest::AbstractArray, a_srcs::Vararg{AnyAbstractBlockSparseArray})
   sparse_map!(f, a_dest, a_srcs...)
   return a_dest
 end
 
+# TODO: @derive AbstractArrayInterface
 function Base.map(f, as::Vararg{AnyAbstractBlockSparseArray})
   return f.(as...)
 end
 
+# TODO: @derive AbstractArrayInterface
 function Base.copy!(a_dest::AbstractArray, a_src::AnyAbstractBlockSparseArray)
   sparse_copy!(a_dest, a_src)
   return a_dest
 end
 
+# TODO: @derive AbstractArrayInterface
 function Base.copyto!(a_dest::AbstractArray, a_src::AnyAbstractBlockSparseArray)
   sparse_copyto!(a_dest, a_src)
   return a_dest
 end
 
+# TODO: @derive AbstractArrayInterface
 # Fix ambiguity error
 function Base.copyto!(a_dest::LayoutArray, a_src::AnyAbstractBlockSparseArray)
   sparse_copyto!(a_dest, a_src)
   return a_dest
 end
 
+# TODO: @derive AbstractArrayInterface
 function Base.copyto!(
   a_dest::AbstractMatrix, a_src::Transpose{T,<:AbstractBlockSparseMatrix{T}}
 ) where {T}
@@ -124,6 +131,7 @@ function Base.copyto!(
   return a_dest
 end
 
+# TODO: @derive AbstractArrayInterface
 function Base.copyto!(
   a_dest::AbstractMatrix, a_src::Adjoint{T,<:AbstractBlockSparseMatrix{T}}
 ) where {T}
@@ -131,20 +139,25 @@ function Base.copyto!(
   return a_dest
 end
 
+# TODO: @derive AbstractArrayInterface
+# TODO: Define as `a_dest .= PermutedDimsArray(a_src, perm)`
 function Base.permutedims!(a_dest, a_src::AnyAbstractBlockSparseArray, perm)
   sparse_permutedims!(a_dest, a_src, perm)
   return a_dest
 end
 
+# TODO: @derive AbstractArrayInterface
 function Base.mapreduce(f, op, as::Vararg{AnyAbstractBlockSparseArray}; kwargs...)
   return sparse_mapreduce(f, op, as...; kwargs...)
 end
 
+# TODO: @derive AbstractArrayInterface
 # TODO: Why isn't this calling `mapreduce` already?
 function Base.iszero(a::AnyAbstractBlockSparseArray)
   return sparse_iszero(blocks(a))
 end
 
+# TODO: @derive AbstractArrayInterface
 # TODO: Why isn't this calling `mapreduce` already?
 function Base.isreal(a::AnyAbstractBlockSparseArray)
   return sparse_isreal(blocks(a))

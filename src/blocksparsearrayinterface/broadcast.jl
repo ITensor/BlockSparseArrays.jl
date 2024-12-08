@@ -1,8 +1,6 @@
 using Base.Broadcast: BroadcastStyle, AbstractArrayStyle, DefaultArrayStyle, Broadcasted
 using BroadcastMapConversion: map_function, map_args
 
-struct BlockSparseArrayStyle{N} <: AbstractArrayStyle{N} end
-
 # Define for new sparse array types.
 # function Broadcast.BroadcastStyle(arraytype::Type{<:MyBlockSparseArray})
 #   return BlockSparseArrayStyle{ndims(arraytype)}()
@@ -28,12 +26,13 @@ function Base.similar(bc::Broadcasted{<:BlockSparseArrayStyle}, elt::Type)
   return similar(first(map_args(bc)), elt, combine_axes(axes.(map_args(bc))...))
 end
 
-# Broadcasting implementation
-function Base.copyto!(
-  dest::AbstractArray{<:Any,N}, bc::Broadcasted{BlockSparseArrayStyle{N}}
-) where {N}
-  # convert to map
-  # flatten and only keep the AbstractArray arguments
-  sparse_map!(map_function(bc), dest, map_args(bc)...)
-  return dest
-end
+## TODO: Bring this back by overloading `@interface AbstractBlockSparseArrayInterface Base.map!`.
+## # Broadcasting implementation
+## function Base.copyto!(
+##   dest::AbstractArray{<:Any,N}, bc::Broadcasted{BlockSparseArrayStyle{N}}
+## ) where {N}
+##   # convert to map
+##   # flatten and only keep the AbstractArray arguments
+##   sparse_map!(map_function(bc), dest, map_args(bc)...)
+##   return dest
+## end
