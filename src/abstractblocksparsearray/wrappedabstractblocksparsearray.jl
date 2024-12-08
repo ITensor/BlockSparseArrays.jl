@@ -11,14 +11,14 @@ using BlockArrays:
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
 
-const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
-  T,N,AbstractBlockSparseArray,AbstractBlockSparseArray{T,N}
-}
+## const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
+##   T,N,AbstractBlockSparseArray,AbstractBlockSparseArray{T,N}
+## }
 
-# TODO: Rename `AnyBlockSparseArray`.
-const AnyAbstractBlockSparseArray{T,N} = Union{
-  <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
-}
+## # TODO: Rename `AnyBlockSparseArray`.
+## const AnyAbstractBlockSparseArray{T,N} = Union{
+##   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
+## }
 
 # a[1:2, 1:2]
 function Base.to_indices(

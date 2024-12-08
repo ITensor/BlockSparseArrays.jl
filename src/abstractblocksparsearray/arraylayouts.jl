@@ -3,11 +3,12 @@ using BlockArrays: BlockLayout
 using SparseArraysBase: SparseLayout
 using TypeParameterAccessors: parenttype, similartype
 
-function ArrayLayouts.MemoryLayout(arraytype::Type{<:AnyAbstractBlockSparseArray})
-  outer_layout = typeof(MemoryLayout(blockstype(arraytype)))
-  inner_layout = typeof(MemoryLayout(blocktype(arraytype)))
-  return BlockLayout{outer_layout,inner_layout}()
-end
+## TODO: Bring this back.
+## function ArrayLayouts.MemoryLayout(arraytype::Type{<:AnyAbstractBlockSparseArray})
+##   outer_layout = typeof(MemoryLayout(blockstype(arraytype)))
+##   inner_layout = typeof(MemoryLayout(blocktype(arraytype)))
+##   return BlockLayout{outer_layout,inner_layout}()
+## end
 
 # TODO: Generalize to `BlockSparseVectorLike`/`AnyBlockSparseVector`.
 function ArrayLayouts.MemoryLayout(

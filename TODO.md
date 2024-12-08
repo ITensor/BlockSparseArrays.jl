@@ -1,3 +1,9 @@
+- Rename `block_storedlength` to `blockstoredlength`.
+- Rename `BlockZero` to `getunstoredblock`.
+- Use `Derive.@array_aliases`.
+- Use `@derive AbstractArrayInterface` to define `abstractblocksparsearray/map.jl` functions.
+
+
 - Add Aqua tests.
 - Turn the package extensions into actual package extensions:
   - BlockSparseArraysAdaptExt
