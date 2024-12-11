@@ -62,7 +62,7 @@ end
 # is used to determine `union_stored_blocked_cartesianindices(...)`).
 # `reblock` is a partial solution to that, but a bit ad-hoc.
 # TODO: Move to `blocksparsearrayinterface/map.jl`.
-## TODO: Make this an `@interface AbstractBlockSparseArray` function.
+## TODO: Make this an `@interface AbstractBlockSparseArrayInterface` function.
 function sparse_map!(
   ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
 )
