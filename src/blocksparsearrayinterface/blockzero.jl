@@ -18,28 +18,32 @@ struct BlockZero{Axes}
   axes::Axes
 end
 
-function (f::BlockZero)(a::AbstractArray, I)
-  return f(eltype(a), I)
+function (f::BlockZero)(a::AbstractArray, I...)
+  return f(eltype(a), I...)
 end
 
-function (f::BlockZero)(arraytype::Type{<:SubArray{<:Any,<:Any,P}}, I) where {P}
-  return f(P, I)
+function (f::BlockZero)(arraytype::Type{<:SubArray{<:Any,<:Any,P}}, I...) where {P}
+  return f(P, I...)
 end
 
-function (f::BlockZero)(arraytype::Type{<:AbstractArray}, I)
+function (f::BlockZero)(arraytype::Type{<:AbstractArray}, I::CartesianIndex)
+  return f(arraytype, Tuple(I)...)
+end
+
+function (f::BlockZero)(arraytype::Type{<:AbstractArray}, I::Int...)
   # TODO: Make sure this works for sparse or block sparse blocks, immutable
   # blocks, diagonal blocks, etc.!
-  blck_size = block_size(f.axes, Block(Tuple(I)))
+  blck_size = block_size(f.axes, Block(I))
   blck_type = similartype(arraytype, blck_size)
   return fill!(blck_type(undef, blck_size), false)
 end
 
 # Fallback so that `SparseArray` with scalar elements works.
-function (f::BlockZero)(blocktype::Type{<:Number}, I)
+function (f::BlockZero)(blocktype::Type{<:Number}, I...)
   return zero(blocktype)
 end
 
 # Fallback to Array if it is abstract
-function (f::BlockZero)(arraytype::Type{AbstractArray{T,N}}, I) where {T,N}
-  return f(Array{T,N}, I)
+function (f::BlockZero)(arraytype::Type{AbstractArray{T,N}}, I...) where {T,N}
+  return f(Array{T,N}, I...)
 end

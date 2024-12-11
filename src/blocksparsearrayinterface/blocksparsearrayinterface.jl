@@ -13,7 +13,7 @@ using BlockArrays:
   blocks,
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
-using SparseArraysBase: perm, iperm, stored_length, sparse_zero!
+using SparseArraysBase: perm, iperm, storedlength, sparse_zero!
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
@@ -136,8 +136,8 @@ function blocksparse_fill!(a::AbstractArray, value)
   return a
 end
 
-function block_stored_length(a::AbstractArray)
-  return stored_length(blocks(a))
+function block_storedlength(a::AbstractArray)
+  return storedlength(blocks(a))
 end
 
 # BlockArrays
@@ -169,18 +169,19 @@ function Base.getindex(
     blocks(parent(a.array))[_getindices(index, _invperm(a.array))...], _perm(a.array)
   )
 end
-function SparseArraysBase.stored_indices(a::SparsePermutedDimsArrayBlocks)
-  return map(I -> _getindices(I, _perm(a.array)), stored_indices(blocks(parent(a.array))))
+function SparseArraysBase.eachstoredindex(a::SparsePermutedDimsArrayBlocks)
+  return map(I -> _getindices(I, _perm(a.array)), eachstoredindex(blocks(parent(a.array))))
 end
 # TODO: Either make this the generic interface or define
 # `SparseArraysBase.sparse_storage`, which is used
 # to defined this.
-function SparseArraysBase.stored_length(a::SparsePermutedDimsArrayBlocks)
-  return length(stored_indices(a))
+function SparseArraysBase.storedlength(a::SparsePermutedDimsArrayBlocks)
+  return length(eachstoredindex(a))
 end
-function SparseArraysBase.sparse_storage(a::SparsePermutedDimsArrayBlocks)
-  return error("Not implemented")
-end
+## TODO: Delete.
+## function SparseArraysBase.sparse_storage(a::SparsePermutedDimsArrayBlocks)
+##   return error("Not implemented")
+## end
 
 reverse_index(index) = reverse(index)
 reverse_index(index::CartesianIndex) = CartesianIndex(reverse(Tuple(index)))
@@ -240,25 +241,32 @@ function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) whe
   # TODO: Implement this properly.
   return true
 end
-function SparseArraysBase.stored_indices(a::SparseSubArrayBlocks)
-  return stored_indices(view(blocks(parent(a.array)), blockrange(a)...))
+function SparseArraysBase.eachstoredindex(a::SparseSubArrayBlocks)
+  return eachstoredindex(view(blocks(parent(a.array)), blockrange(a)...))
 end
 # TODO: Either make this the generic interface or define
 # `SparseArraysBase.sparse_storage`, which is used
 # to defined this.
-SparseArraysBase.stored_length(a::SparseSubArrayBlocks) = length(stored_indices(a))
+SparseArraysBase.storedlength(a::SparseSubArrayBlocks) = length(eachstoredindex(a))
 
 ## struct SparseSubArrayBlocksStorage{Array<:SparseSubArrayBlocks}
 ##   array::Array
 ## end
-function SparseArraysBase.sparse_storage(a::SparseSubArrayBlocks)
-  return map(I -> a[I], stored_indices(a))
-end
 
-function SparseArraysBase.getindex_zero_function(a::SparseSubArrayBlocks)
-  # TODO: Base it off of `getindex_zero_function(blocks(parent(a.array))`, but replace the
-  # axes with `axes(a.array)`.
-  return BlockZero(axes(a.array))
+## TODO: Delete.
+## function SparseArraysBase.sparse_storage(a::SparseSubArrayBlocks)
+##   return map(I -> a[I], eachstoredindex(a))
+## end
+
+## TODO: Delete.
+## function SparseArraysBase.getindex_zero_function(a::SparseSubArrayBlocks)
+##   # TODO: Base it off of `getindex_zero_function(blocks(parent(a.array))`, but replace the
+##   # axes with `axes(a.array)`.
+##   return BlockZero(axes(a.array))
+## end
+
+function SparseArraysBase.getunstoredindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
+  error("Not implemented.")
 end
 
 to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)
@@ -271,4 +279,4 @@ function blocksparse_blocks(
 end
 
 using BlockArrays: BlocksView
-SparseArraysBase.stored_length(a::BlocksView) = length(a)
+SparseArraysBase.storedlength(a::BlocksView) = length(a)

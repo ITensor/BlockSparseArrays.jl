@@ -68,8 +68,8 @@ function BlockArrays.viewblock(
   a::AbstractBlockSparseArray{<:Any,N}, block::Vararg{Block{1},N}
 ) where {N}
   I = CartesianIndex(Int.(block))
-  # TODO: Use `block_stored_indices`.
-  if I ∈ stored_indices(blocks(a))
+  # TODO: Use `block_eachstoredindex`.
+  if I ∈ eachstoredindex(blocks(a))
     return blocks(a)[I]
   end
   return BlockView(a, block)
@@ -185,8 +185,8 @@ function BlockArrays.viewblock(
   block::Vararg{Block{1},N},
 ) where {T,N}
   I = CartesianIndex(Int.(block))
-  # TODO: Use `block_stored_indices`.
-  if I ∈ stored_indices(blocks(a))
+  # TODO: Use `block_eachstoredindex`.
+  if I ∈ eachstoredindex(blocks(a))
     return blocks(a)[I]
   end
   return BlockView(parent(a), Block.(Base.reindex(parentindices(blocks(a)), Tuple(I))))
