@@ -1,5 +1,5 @@
 using BlockArrays: Block
-using SparseArraysBase: SparseArraysBase, sparse_storage, stored_indices
+using SparseArraysBase: SparseArraysBase, sparse_storage, eachstoredindex, storedlength
 
 # Structure storing the block sparse storage
 struct BlockSparseStorage{Arr<:AbstractBlockSparseArray}
@@ -11,7 +11,7 @@ function blockindex_to_cartesianindex(a::AbstractArray, blockindex)
 end
 
 function Base.keys(s::BlockSparseStorage)
-  stored_blockindices = Iterators.map(stored_indices(blocks(s.array))) do I
+  stored_blockindices = Iterators.map(eachstoredindex(blocks(s.array))) do I
     block_axes = axes(blocks(s.array)[I])
     blockindices = Block(Tuple(I))[block_axes...]
     return Iterators.map(
@@ -29,10 +29,11 @@ function Base.iterate(s::BlockSparseStorage, args...)
   return iterate(values(s), args...)
 end
 
-function SparseArraysBase.sparse_storage(a::AbstractBlockSparseArray)
-  return BlockSparseStorage(a)
-end
+## TODO: Delete this, define `getstoredindex`, etc.
+## function SparseArraysBase.sparse_storage(a::AbstractBlockSparseArray)
+##   return BlockSparseStorage(a)
+## end
 
-function SparseArraysBase.stored_length(a::AnyAbstractBlockSparseArray)
-  return sum(stored_length, sparse_storage(blocks(a)); init=zero(Int))
+function SparseArraysBase.storedlength(a::AnyAbstractBlockSparseArray)
+  return sum(storedlength, sparse_storage(blocks(a)); init=zero(Int))
 end
