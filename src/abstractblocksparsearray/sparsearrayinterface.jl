@@ -1,5 +1,5 @@
 using BlockArrays: Block
-using SparseArraysBase: SparseArraysBase, sparse_storage, eachstoredindex, storedlength
+using SparseArraysBase: SparseArraysBase, eachstoredindex, storedlength, storedvalues
 
 # Structure storing the block sparse storage
 struct BlockSparseStorage{Arr<:AbstractBlockSparseArray}
@@ -35,5 +35,5 @@ end
 ## end
 
 function SparseArraysBase.storedlength(a::AnyAbstractBlockSparseArray)
-  return sum(storedlength, sparse_storage(blocks(a)); init=zero(Int))
+  return sum(storedlength, storedvalues(blocks(a)); init=zero(Int))
 end

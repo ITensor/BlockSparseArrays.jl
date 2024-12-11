@@ -580,7 +580,8 @@ function view!(a::AbstractArray{<:Any,N}, index::Vararg{BlockIndexRange{1},N}) w
 end
 
 using MacroTools: @capture
-using SparseArraysBase: is_getindex_expr
+is_getindex_expr(expr::Expr) = (expr.head === :ref)
+is_getindex_expr(x) = false
 macro view!(expr)
   if !is_getindex_expr(expr)
     error("@view must be used with getindex syntax (as `@view! a[i,j,...]`)")
