@@ -13,7 +13,12 @@ using BlockArrays:
   blocks,
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
-using SparseArraysBase: perm, iperm, storedlength, sparse_zero!
+using SparseArraysBase:
+  AbstractSparseArrayInterface, perm, iperm, storedlength, sparse_zero!
+
+abstract type AbstractBlockSparseArrayInterface <: AbstractSparseArrayInterface end
+
+struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
@@ -265,8 +270,10 @@ SparseArraysBase.storedlength(a::SparseSubArrayBlocks) = length(eachstoredindex(
 ##   return BlockZero(axes(a.array))
 ## end
 
-function SparseArraysBase.getunstoredindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
-  error("Not implemented.")
+function SparseArraysBase.getunstoredindex(
+  a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}
+) where {N}
+  return error("Not implemented.")
 end
 
 to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)

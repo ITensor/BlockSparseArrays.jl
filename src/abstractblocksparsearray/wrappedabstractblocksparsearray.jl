@@ -8,6 +8,7 @@ using BlockArrays:
   blockedrange,
   mortar,
   unblock
+using Derive: Derive
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
 
@@ -19,6 +20,8 @@ const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
 const AnyAbstractBlockSparseArray{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
+
+Derive.interface(::Type{<:AnyAbstractBlockSparseArray}) = BlockSparseArrayInterface()
 
 # a[1:2, 1:2]
 function Base.to_indices(

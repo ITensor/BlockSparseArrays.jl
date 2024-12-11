@@ -5,9 +5,7 @@ using SparseArraysBase: SparseArraysBase, allocate_cat_output, sparse_cat!
 # TODO: Handle dual graded unit ranges, for example in a new `SparseArraysBaseGradedUnitRangesExt`.
 ## TODO: Add this back.
 ## function SparseArraysBase.axis_cat(
-function axis_cat(
-  a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange
-)
+function axis_cat(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
   return blockedrange(vcat(blocklengths(a1), blocklengths(a2)))
 end
 

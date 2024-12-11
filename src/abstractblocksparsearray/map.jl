@@ -1,5 +1,6 @@
 using ArrayLayouts: LayoutArray
 using BlockArrays: blockisequal
+using Derive: @interface, interface
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
   SparseArraysBase,
@@ -16,7 +17,7 @@ using SparseArraysBase:
 function union_stored_blocked_cartesianindices(as::Vararg{AbstractArray})
   combined_axes = combine_axes(axes.(as)...)
   stored_blocked_cartesianindices_as = map(as) do a
-    return blocked_cartesianindices(axes(a), combined_axes, block_stored_indices(a))
+    return blocked_cartesianindices(axes(a), combined_axes, block_eachstoredindex(a))
   end
   return ∪(stored_blocked_cartesianindices_as...)
 end
@@ -57,14 +58,14 @@ function reblock(
   return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]
 end
 
+# TODO: Move to `blocksparsearrayinterface/map.jl`.
 # TODO: Rewrite this so that it takes the blocking structure
 # made by combining the blocking of the axes (i.e. the blocking that
 # is used to determine `union_stored_blocked_cartesianindices(...)`).
 # `reblock` is a partial solution to that, but a bit ad-hoc.
-# TODO: Move to `blocksparsearrayinterface/map.jl`.
 ## TODO: Make this an `@interface AbstractBlockSparseArrayInterface` function.
-function sparse_map!(
-  ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
+@interface ::AbstractBlockSparseArrayInterface function Base.map!(
+  f, a_dest::AbstractArray, a_srcs::AbstractArray...
 )
   a_dest, a_srcs = reblock(a_dest), reblock.(a_srcs)
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
@@ -89,12 +90,28 @@ function sparse_map!(
   return a_dest
 end
 
-# TODO: Implement this.
-# function SparseArraysBase.sparse_mapreduce(::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray})
-# end
+# TODO: Move to `blocksparsearrayinterface/map.jl`.
+@interface ::AbstractBlockSparseArrayInterface function Base.mapreduce(
+  f, op, as::AbstractArray...; kwargs...
+)
+  # TODO: Define an `init` value based on the element type.
+  return @interface interface(blocks.(as)...) mapreduce(
+    block -> mapreduce(f, op, block), op, blocks.(as)...; kwargs...
+  )
+end
 
-function Base.map!(f, a_dest::AbstractArray, a_srcs::Vararg{AnyAbstractBlockSparseArray})
-  sparse_map!(f, a_dest, a_srcs...)
+# TODO: Move to `blocksparsearrayinterface/map.jl`.
+@interface ::AbstractBlockSparseArrayInterface function Base.iszero(a::AbstractArray)
+  return @interface interface(blocks(a)) iszero(blocks(a))
+end
+
+# TODO: Move to `blocksparsearrayinterface/map.jl`.
+@interface ::AbstractBlockSparseArrayInterface function Base.isreal(a::AbstractArray)
+  return @interface interface(blocks(a)) isreal(blocks(a))
+end
+
+function Base.map!(f, a_dest::AbstractArray, a_srcs::AnyAbstractBlockSparseArray...)
+  @interface interface(a_srcs...) map!(f, a_dest, a_srcs...)
   return a_dest
 end
 
@@ -103,17 +120,20 @@ function Base.map(f, as::Vararg{AnyAbstractBlockSparseArray})
 end
 
 function Base.copy!(a_dest::AbstractArray, a_src::AnyAbstractBlockSparseArray)
+  # TODO: Call `@interface`.
   sparse_copy!(a_dest, a_src)
   return a_dest
 end
 
 function Base.copyto!(a_dest::AbstractArray, a_src::AnyAbstractBlockSparseArray)
+  # TODO: Call `@interface`.
   sparse_copyto!(a_dest, a_src)
   return a_dest
 end
 
 # Fix ambiguity error
 function Base.copyto!(a_dest::LayoutArray, a_src::AnyAbstractBlockSparseArray)
+  # TODO: Call `@interface`.
   sparse_copyto!(a_dest, a_src)
   return a_dest
 end
@@ -121,6 +141,7 @@ end
 function Base.copyto!(
   a_dest::AbstractMatrix, a_src::Transpose{T,<:AbstractBlockSparseMatrix{T}}
 ) where {T}
+  # TODO: Call `@interface`.
   sparse_copyto!(a_dest, a_src)
   return a_dest
 end
@@ -128,25 +149,24 @@ end
 function Base.copyto!(
   a_dest::AbstractMatrix, a_src::Adjoint{T,<:AbstractBlockSparseMatrix{T}}
 ) where {T}
+  # TODO: Call `@interface`.
   sparse_copyto!(a_dest, a_src)
   return a_dest
 end
 
 function Base.permutedims!(a_dest, a_src::AnyAbstractBlockSparseArray, perm)
-  sparse_permutedims!(a_dest, a_src, perm)
-  return a_dest
+  return @interface interface(a_src) permutedims!(a_dest, a_src, perm)
 end
 
-function Base.mapreduce(f, op, as::Vararg{AnyAbstractBlockSparseArray}; kwargs...)
-  return sparse_mapreduce(f, op, as...; kwargs...)
+function Base.mapreduce(f, op, as::AnyAbstractBlockSparseArray...; kwargs...)
+  @show interface(as...)
+  return @interface interface(as...) mapreduce(f, op, as...; kwargs...)
 end
 
-# TODO: Why isn't this calling `mapreduce` already?
 function Base.iszero(a::AnyAbstractBlockSparseArray)
-  return sparse_iszero(blocks(a))
+  return @interface interface(a) iszero(a)
 end
 
-# TODO: Why isn't this calling `mapreduce` already?
 function Base.isreal(a::AnyAbstractBlockSparseArray)
-  return sparse_isreal(blocks(a))
+  return @interface interface(a) isreal(a)
 end
