@@ -1,4 +1,3 @@
-@eval module $(gensym())
 using BlockArrays:
   Block,
   BlockIndexRange,
@@ -1027,5 +1026,4 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test block_storedlength(b) == 2
     @test storedlength(b) == 17
   end
-end
 end
