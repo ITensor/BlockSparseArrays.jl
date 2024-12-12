@@ -120,38 +120,28 @@ function Base.map(f, as::Vararg{AnyAbstractBlockSparseArray})
 end
 
 function Base.copy!(a_dest::AbstractArray, a_src::AnyAbstractBlockSparseArray)
-  # TODO: Call `@interface`.
-  sparse_copy!(a_dest, a_src)
-  return a_dest
+  return @interface interface(a_src) copy!(a_dest, a_src)
 end
 
 function Base.copyto!(a_dest::AbstractArray, a_src::AnyAbstractBlockSparseArray)
-  # TODO: Call `@interface`.
-  sparse_copyto!(a_dest, a_src)
-  return a_dest
+  return @interface interface(a_src) copyto!(a_dest, a_src)
 end
 
 # Fix ambiguity error
 function Base.copyto!(a_dest::LayoutArray, a_src::AnyAbstractBlockSparseArray)
-  # TODO: Call `@interface`.
-  sparse_copyto!(a_dest, a_src)
-  return a_dest
+  return @interface interface(a_src) copyto!(a_dest, a_src)
 end
 
 function Base.copyto!(
   a_dest::AbstractMatrix, a_src::Transpose{T,<:AbstractBlockSparseMatrix{T}}
 ) where {T}
-  # TODO: Call `@interface`.
-  sparse_copyto!(a_dest, a_src)
-  return a_dest
+  return @interface interface(a_src) copyto!(a_dest, a_src)
 end
 
 function Base.copyto!(
   a_dest::AbstractMatrix, a_src::Adjoint{T,<:AbstractBlockSparseMatrix{T}}
 ) where {T}
-  # TODO: Call `@interface`.
-  sparse_copyto!(a_dest, a_src)
-  return a_dest
+  return @interface interface(a_src) copyto!(a_dest, a_src)
 end
 
 function Base.permutedims!(a_dest, a_src::AnyAbstractBlockSparseArray, perm)
@@ -159,7 +149,6 @@ function Base.permutedims!(a_dest, a_src::AnyAbstractBlockSparseArray, perm)
 end
 
 function Base.mapreduce(f, op, as::AnyAbstractBlockSparseArray...; kwargs...)
-  @show interface(as...)
   return @interface interface(as...) mapreduce(f, op, as...; kwargs...)
 end
 

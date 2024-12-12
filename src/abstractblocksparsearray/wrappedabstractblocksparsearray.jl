@@ -8,7 +8,7 @@ using BlockArrays:
   blockedrange,
   mortar,
   unblock
-using Derive: Derive
+using Derive: Derive, zero!
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
 
@@ -131,11 +131,13 @@ end
 function Base.setindex!(
   a::AnyAbstractBlockSparseArray{<:Any,N}, value, I::BlockIndex{N}
 ) where {N}
+  # TODO: Use `@interface interface(a) setindex!(...)`.
   blocksparse_setindex!(a, value, I)
   return a
 end
 # Fixes ambiguity error with BlockArrays.jl
 function Base.setindex!(a::AnyAbstractBlockSparseArray{<:Any,1}, value, I::BlockIndex{1})
+  # TODO: Use `@interface interface(a) setindex!(...)`.
   blocksparse_setindex!(a, value, I)
   return a
 end
@@ -143,10 +145,10 @@ end
 function Base.fill!(a::AbstractBlockSparseArray, value)
   if iszero(value)
     # This drops all of the blocks.
-    sparse_zero!(blocks(a))
+    @interface interface(blocks(a)) zero!(blocks(a))
     return a
   end
-  blocksparse_fill!(a, value)
+  @interface interface(blocks(a)) fill!(blocks(a), value)
   return a
 end
 
@@ -156,7 +158,7 @@ function Base.fill!(a::AnyAbstractBlockSparseArray, value)
   # new blocks filled with zeros, unlike
   # `fill!(a::AbstractBlockSparseArray, value)`.
   # Consider changing that behavior when possible.
-  blocksparse_fill!(a, value)
+  @interface interface(blocks(a)) fill!(blocks(a), value)
   return a
 end
 
@@ -227,6 +229,7 @@ function Base.similar(
   elt::Type,
   axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
 )
+  # TODO: Use `@interface interface(arraytype) similar(...)`.
   return blocksparse_similar(arraytype, elt, axes)
 end
 
@@ -236,11 +239,13 @@ function Base.similar(
   elt::Type,
   axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
 )
+  # TODO: Use `@interface interface(a) similar(...)`.
   return blocksparse_similar(a, elt, axes)
 end
 
 # Fixes ambiguity error.
 function Base.similar(a::AnyAbstractBlockSparseArray, elt::Type, axes::Tuple{})
+  # TODO: Use `@interface interface(a) similar(...)`.
   return blocksparse_similar(a, elt, axes)
 end
 
@@ -252,6 +257,7 @@ function Base.similar(
     AbstractBlockedUnitRange{<:Integer},Vararg{AbstractBlockedUnitRange{<:Integer}}
   },
 )
+  # TODO: Use `@interface interface(a) similar(...)`.
   return blocksparse_similar(a, elt, axes)
 end
 
@@ -261,6 +267,7 @@ function Base.similar(
   elt::Type,
   axes::Tuple{AbstractUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
+  # TODO: Use `@interface interface(a) similar(...)`.
   return blocksparse_similar(a, elt, axes)
 end
 
@@ -270,6 +277,7 @@ function Base.similar(
   elt::Type,
   axes::Tuple{AbstractBlockedUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
+  # TODO: Use `@interface interface(a) similar(...)`.
   return blocksparse_similar(a, elt, axes)
 end
 
@@ -283,6 +291,7 @@ function Base.similar(
     Vararg{AbstractUnitRange{<:Integer}},
   },
 )
+  # TODO: Use `@interface interface(a) similar(...)`.
   return blocksparse_similar(a, elt, axes)
 end
 
@@ -290,6 +299,7 @@ end
 function Base.similar(
   a::AnyAbstractBlockSparseArray, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
 )
+  # TODO: Use `@interface interface(a) similar(...)`.
   return blocksparse_similar(a, elt, axes)
 end
 
