@@ -11,12 +11,3 @@ SparseArraysBase = "0d5efcca-f356-4864-8770-e1ed8d78f208"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
-
-[sources]
-BroadcastMapConversion = {url = "https://github.com/ITensor/BroadcastMapConversion.jl"}
-GradedUnitRanges = {url = "https://github.com/ITensor/GradedUnitRanges.jl"}
-LabelledNumbers = {url = "https://github.com/ITensor/LabelledNumbers.jl"}
-NestedPermutedDimsArrays = {url = "https://github.com/ITensor/NestedPermutedDimsArrays.jl"}
-SparseArraysBase = {url = "https://github.com/ITensor/SparseArraysBase.jl"}
-TensorAlgebra = {url = "https://github.com/ITensor/TensorAlgebra.jl"}
-TypeParameterAccessors = {url = "https://github.com/ITensor/TypeParameterAccessors.jl"}

@@ -20,15 +20,6 @@ SplitApplyCombine = "03a91e81-4c3e-53e1-a0a4-9c0c8f19dd66"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 
-[sources]
-BroadcastMapConversion = {url = "https://github.com/ITensor/BroadcastMapConversion.jl"}
-GradedUnitRanges = {url = "https://github.com/ITensor/GradedUnitRanges.jl"}
-LabelledNumbers = {url = "https://github.com/ITensor/LabelledNumbers.jl"}
-NestedPermutedDimsArrays = {url = "https://github.com/ITensor/NestedPermutedDimsArrays.jl"}
-SparseArraysBase = {url = "https://github.com/ITensor/SparseArraysBase.jl"}
-TensorAlgebra = {url = "https://github.com/ITensor/TensorAlgebra.jl"}
-TypeParameterAccessors = {url = "https://github.com/ITensor/TypeParameterAccessors.jl"}
-
 [compat]
 Adapt = "4.1.1"
 Aqua = "0.8.9"
