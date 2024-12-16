@@ -1,4 +1,5 @@
 using BlockArrays: BlockArrays, Block, BlockedUnitRange, blockedrange, blocklength
+using Derive: @interface
 using Dictionaries: Dictionary
 using SparseArraysBase: SparseArrayDOK
 
@@ -169,7 +170,8 @@ Base.axes(a::BlockSparseArray) = a.axes
 
 # BlockArrays `AbstractBlockArray` interface.
 # This is used by `blocks(::AnyAbstractBlockSparseArray)`.
-blocksparse_blocks(a::BlockSparseArray) = a.blocks
+@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::BlockSparseArray) =
+  a.blocks
 
 # TODO: Use `TypeParameterAccessors`.
 function blockstype(

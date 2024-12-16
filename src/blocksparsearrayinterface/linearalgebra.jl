@@ -1,6 +1,6 @@
-using LinearAlgebra: mul!
+using LinearAlgebra: LinearAlgebra, mul!
 
-function blocksparse_mul!(
+@interface ::AbstractBlockSparseArrayInterface function LinearAlgebra.mul!(
   a_dest::AbstractMatrix,
   a1::AbstractMatrix,
   a2::AbstractMatrix,

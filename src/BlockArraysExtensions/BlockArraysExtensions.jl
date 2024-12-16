@@ -104,7 +104,7 @@ Base.view(S::BlockIndices, i) = S[i]
 # @view b[Block(1, 1)[1:2, 2:2]]
 # ```
 # This is similar to the definition:
-# blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
+# @interface BlockSparseArrayInterface() to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
 function Base.getindex(
   a::NonBlockedVector{<:Integer,<:BlockIndices}, I::UnitRange{<:Integer}
 )

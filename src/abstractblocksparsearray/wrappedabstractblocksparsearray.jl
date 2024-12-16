@@ -9,7 +9,7 @@ using BlockArrays:
   blockedrange,
   mortar,
   unblock
-using Derive: Derive
+using Derive: Derive, @interface
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
 
@@ -28,14 +28,14 @@ Derive.interface(::Type{<:AnyAbstractBlockSparseArray}) = BlockSparseArrayInterf
 function Base.to_indices(
   a::AnyAbstractBlockSparseArray, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}}
 )
-  return blocksparse_to_indices(a, inds, I)
+  return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
 end
 
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function Base.to_indices(
   a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
 )
-  return blocksparse_to_indices(a, inds, I)
+  return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
 end
 
 # a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
@@ -45,7 +45,7 @@ function Base.to_indices(
   inds,
   I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}},
 )
-  return blocksparse_to_indices(a, inds, I)
+  return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
 end
 
 # a[mortar([Block(1)[1:2], Block(2)[1:3]])]
@@ -54,7 +54,7 @@ function Base.to_indices(
   inds,
   I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}},
 )
-  return blocksparse_to_indices(a, inds, I)
+  return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
 end
 
 # a[[Block(1)[1:2], Block(2)[1:2]], [Block(1)[1:2], Block(2)[1:2]]]
@@ -65,14 +65,16 @@ function Base.to_indices(
 end
 
 # BlockArrays `AbstractBlockArray` interface
-BlockArrays.blocks(a::AnyAbstractBlockSparseArray) = blocksparse_blocks(a)
+function BlockArrays.blocks(a::AnyAbstractBlockSparseArray)
+  @interface BlockSparseArrayInterface() blocks(a)
+end
 
 # Fix ambiguity error with `BlockArrays`
 using BlockArrays: BlockSlice
 function BlockArrays.blocks(
   a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{BlockSlice}}}
 )
-  return blocksparse_blocks(a)
+  return @interface BlockSparseArrayInterface() blocks(a)
 end
 
 using TypeParameterAccessors: parenttype
@@ -105,7 +107,7 @@ function Base.getindex(a::AnyAbstractBlockSparseArray{<:Any,0})
   return ArrayLayouts.layout_getindex(a)
 end
 
-# TODO: Define `blocksparse_isassigned`.
+# TODO: Define `@interface BlockSparseArrayInterface() isassigned`.
 function Base.isassigned(
   a::AnyAbstractBlockSparseArray{<:Any,N}, index::Vararg{Block{1},N}
 ) where {N}
@@ -121,7 +123,7 @@ function Base.isassigned(a::AnyAbstractBlockSparseArray{<:Any,N}, index::Block{N
   return isassigned(a, Tuple(index)...)
 end
 
-# TODO: Define `blocksparse_isassigned`.
+# TODO: Define `@interface BlockSparseArrayInterface() isassigned`.
 function Base.isassigned(
   a::AnyAbstractBlockSparseArray{<:Any,N}, index::Vararg{BlockIndex{1},N}
 ) where {N}
@@ -133,13 +135,13 @@ function Base.setindex!(
   a::AnyAbstractBlockSparseArray{<:Any,N}, value, I::BlockIndex{N}
 ) where {N}
   # TODO: Use `@interface interface(a) setindex!(...)`.
-  blocksparse_setindex!(a, value, I)
+  @interface BlockSparseArrayInterface() setindex!(a, value, I)
   return a
 end
 # Fixes ambiguity error with BlockArrays.jl
 function Base.setindex!(a::AnyAbstractBlockSparseArray{<:Any,1}, value, I::BlockIndex{1})
   # TODO: Use `@interface interface(a) setindex!(...)`.
-  blocksparse_setindex!(a, value, I)
+  @interface BlockSparseArrayInterface() setindex!(a, value, I)
   return a
 end
 
@@ -212,32 +214,51 @@ function blocksparse_similar(a, elt::Type, axes::Tuple)
     undef, axes
   )
 end
+@interface ::AbstractBlockSparseArrayInterface function Base.similar(
+  a::AbstractArray, elt::Type, axes::Tuple{Vararg{Int}}
+)
+  return blocksparse_similar(a, elt, axes)
+end
+@interface ::AbstractBlockSparseArrayInterface function Base.similar(
+  a::AbstractArray, elt::Type, axes::Tuple
+)
+  return blocksparse_similar(a, elt, axes)
+end
+@interface ::AbstractBlockSparseArrayInterface function Base.similar(
+  a::Type{<:AbstractArray}, elt::Type, axes::Tuple{Vararg{Int}}
+)
+  return blocksparse_similar(a, elt, axes)
+end
+@interface ::AbstractBlockSparseArrayInterface function Base.similar(
+  a::Type{<:AbstractArray}, elt::Type, axes::Tuple
+)
+  return blocksparse_similar(a, elt, axes)
+end
 
 # Needed by `BlockArrays` matrix multiplication interface
-# TODO: Define a `blocksparse_similar` function.
+# TODO: Define a `@interface BlockSparseArrayInterface() similar` function.
 function Base.similar(
   arraytype::Type{<:AnyAbstractBlockSparseArray},
   elt::Type,
   axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
 )
-  # TODO: Use `@interface interface(arraytype) similar(...)`.
-  return blocksparse_similar(arraytype, elt, axes)
+  return @interface BlockSparseArrayInterface() similar(arraytype, elt, axes)
 end
 
-# TODO: Define a `blocksparse_similar` function.
+# TODO: Define a `@interface BlockSparseArrayInterface() similar` function.
 function Base.similar(
   a::AnyAbstractBlockSparseArray,
   elt::Type,
   axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
 )
   # TODO: Use `@interface interface(a) similar(...)`.
-  return blocksparse_similar(a, elt, axes)
+  return @interface BlockSparseArrayInterface() similar(a, elt, axes)
 end
 
 # Fixes ambiguity error.
 function Base.similar(a::AnyAbstractBlockSparseArray, elt::Type, axes::Tuple{})
   # TODO: Use `@interface interface(a) similar(...)`.
-  return blocksparse_similar(a, elt, axes)
+  return @interface BlockSparseArrayInterface() similar(a, elt, axes)
 end
 
 # Fixes ambiguity error with `BlockArrays`.
@@ -249,7 +270,7 @@ function Base.similar(
   },
 )
   # TODO: Use `@interface interface(a) similar(...)`.
-  return blocksparse_similar(a, elt, axes)
+  return @interface BlockSparseArrayInterface() similar(a, elt, axes)
 end
 
 # Fixes ambiguity error with `OffsetArrays`.
@@ -259,7 +280,7 @@ function Base.similar(
   axes::Tuple{AbstractUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
   # TODO: Use `@interface interface(a) similar(...)`.
-  return blocksparse_similar(a, elt, axes)
+  return @interface BlockSparseArrayInterface() similar(a, elt, axes)
 end
 
 # Fixes ambiguity error with `BlockArrays`.
@@ -269,7 +290,7 @@ function Base.similar(
   axes::Tuple{AbstractBlockedUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
   # TODO: Use `@interface interface(a) similar(...)`.
-  return blocksparse_similar(a, elt, axes)
+  return @interface BlockSparseArrayInterface() similar(a, elt, axes)
 end
 
 # Fixes ambiguity errors with BlockArrays.
@@ -283,7 +304,7 @@ function Base.similar(
   },
 )
   # TODO: Use `@interface interface(a) similar(...)`.
-  return blocksparse_similar(a, elt, axes)
+  return @interface BlockSparseArrayInterface() similar(a, elt, axes)
 end
 
 # Fixes ambiguity error with `StaticArrays`.
@@ -291,7 +312,7 @@ function Base.similar(
   a::AnyAbstractBlockSparseArray, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
 )
   # TODO: Use `@interface interface(a) similar(...)`.
-  return blocksparse_similar(a, elt, axes)
+  return @interface BlockSparseArrayInterface() similar(a, elt, axes)
 end
 
 # TODO: Implement this in a more generic way using a smarter `copyto!`,
