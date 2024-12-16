@@ -1,4 +1,5 @@
 using Adapt: Adapt, WrappedArray
+using ArrayLayouts: zero!
 using BlockArrays:
   BlockArrays,
   AbstractBlockVector,
@@ -8,7 +9,7 @@ using BlockArrays:
   blockedrange,
   mortar,
   unblock
-using Derive: Derive, zero!
+using Derive: Derive
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
 
@@ -142,24 +143,14 @@ function Base.setindex!(a::AnyAbstractBlockSparseArray{<:Any,1}, value, I::Block
   return a
 end
 
-function Base.fill!(a::AbstractBlockSparseArray, value)
-  if iszero(value)
-    # This drops all of the blocks.
-    @interface interface(blocks(a)) zero!(blocks(a))
-    return a
-  end
-  @interface interface(blocks(a)) fill!(blocks(a), value)
-  return a
+# TODO: Use `@derive`.
+function ArrayLayouts.zero!(a::AnyAbstractBlockSparseArray)
+  return @interface interface(a) zero!(a)
 end
 
+# TODO: Use `@derive`.
 function Base.fill!(a::AnyAbstractBlockSparseArray, value)
-  # TODO: Even if `iszero(value)`, this doesn't drop
-  # blocks from `a`, and additionally allocates
-  # new blocks filled with zeros, unlike
-  # `fill!(a::AbstractBlockSparseArray, value)`.
-  # Consider changing that behavior when possible.
-  @interface interface(blocks(a)) fill!(blocks(a), value)
-  return a
+  return @interface interface(a) fill!(a, value)
 end
 
 # Needed by `BlockArrays` matrix multiplication interface

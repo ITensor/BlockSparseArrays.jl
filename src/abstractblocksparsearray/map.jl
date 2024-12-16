@@ -2,22 +2,13 @@ using ArrayLayouts: LayoutArray
 using BlockArrays: blockisequal
 using Derive: @interface, interface
 using LinearAlgebra: Adjoint, Transpose
-using SparseArraysBase:
-  SparseArraysBase,
-  SparseArrayStyle,
-  sparse_map!,
-  sparse_copy!,
-  sparse_copyto!,
-  sparse_permutedims!,
-  sparse_mapreduce,
-  sparse_iszero,
-  sparse_isreal
+using SparseArraysBase: SparseArraysBase, SparseArrayStyle
 
 # Returns `Vector{<:CartesianIndices}`
 function union_stored_blocked_cartesianindices(as::Vararg{AbstractArray})
   combined_axes = combine_axes(axes.(as)...)
   stored_blocked_cartesianindices_as = map(as) do a
-    return blocked_cartesianindices(axes(a), combined_axes, block_eachstoredindex(a))
+    return blocked_cartesianindices(axes(a), combined_axes, eachblockstoredindex(a))
   end
   return ∪(stored_blocked_cartesianindices_as...)
 end
@@ -102,11 +93,13 @@ end
 
 # TODO: Move to `blocksparsearrayinterface/map.jl`.
 @interface ::AbstractBlockSparseArrayInterface function Base.iszero(a::AbstractArray)
+  # TODO: Just call `iszero(blocks(a))`?
   return @interface interface(blocks(a)) iszero(blocks(a))
 end
 
 # TODO: Move to `blocksparsearrayinterface/map.jl`.
 @interface ::AbstractBlockSparseArrayInterface function Base.isreal(a::AbstractArray)
+  # TODO: Just call `isreal(blocks(a))`?
   return @interface interface(blocks(a)) isreal(blocks(a))
 end
 

@@ -1,3 +1,4 @@
+using ArrayLayouts: ArrayLayouts, zero!
 using BlockArrays:
   AbstractBlockVector,
   Block,
@@ -12,11 +13,29 @@ using BlockArrays:
   blocklengths,
   blocks,
   findblockindex
+using Derive: Derive, @interface
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
-  AbstractSparseArrayInterface, perm, iperm, storedlength, sparse_zero!
+  AbstractSparseArrayInterface, eachstoredindex, perm, iperm, storedlength, storedvalues
+
+# Like `SparseArraysBase.eachstoredindex` but
+# at the block level, i.e. iterates over the
+# stored block locations.
+function eachblockstoredindex(a::AbstractArray)
+  # TODO: Use `Iterators.map`.
+  return Block.(Tuple.(eachstoredindex(blocks(a))))
+end
+
+# Like `BlockArrays.eachblock` but only iterating
+# over stored blocks.
+function eachstoredblock(a::AbstractArray)
+  return storedvalues(blocks(a))
+end
 
 abstract type AbstractBlockSparseArrayInterface <: AbstractSparseArrayInterface end
+
+# TODO: Also support specifying the `blocktype` along with the `eltype`.
+Derive.arraytype(::AbstractBlockSparseArrayInterface, T::Type) = BlockSparseArray{T}
 
 struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
 
@@ -117,31 +136,28 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,0}, value, I::BlockIndex{0
   return a
 end
 
-function blocksparse_fill!(a::AbstractArray, value)
+@interface ::AbstractBlockSparseArrayInterface function Base.fill!(a::AbstractArray, value)
+  # TODO: Only do this check if `value isa Number`?
+  if iszero(value)
+    zero!(a)
+    return a
+  end
+  # TODO: Maybe use `map` over `blocks(a)` or something
+  # like that.
   for b in BlockRange(a)
-    # We can't use:
-    # ```julia
-    # a[b] .= value
-    # ```
-    # since that would lead to a stack overflow,
-    # because broadcasting calls `fill!`.
-
-    # TODO: Ideally we would use:
-    # ```julia
-    # @view!(a[b]) .= value
-    # ```
-    # but that doesn't work on `SubArray` right now.
-
-    # This line is needed to instantiate blocks
-    # that aren't instantiated yet. Maybe
-    # we can make this work without this line?
-    blocks(a)[Int.(Tuple(b))...] = blocks(a)[Int.(Tuple(b))...]
-    blocks(a)[Int.(Tuple(b))...] .= value
+    a[b] .= value
   end
   return a
 end
 
-function block_storedlength(a::AbstractArray)
+@interface ::AbstractBlockSparseArrayInterface function ArrayLayouts.zero!(a::AbstractArray)
+  # This will try to empty the storage if possible.
+  zero!(blocks(a))
+  return a
+end
+
+# TODO: Rename to `blockstoredlength`.
+function blockstoredlength(a::AbstractArray)
   return storedlength(blocks(a))
 end
 

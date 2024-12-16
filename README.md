@@ -35,7 +35,7 @@ julia> Pkg.add("BlockSparseArrays")
 
 ````julia
 using BlockArrays: BlockArrays, BlockedVector, Block, blockedrange
-using BlockSparseArrays: BlockSparseArray, block_storedlength
+using BlockSparseArrays: BlockSparseArray, blockstoredlength
 using Test: @test, @test_broken
 
 function main()
@@ -62,13 +62,13 @@ function main()
   ]
   b = BlockSparseArray(nz_blocks, d_blocks, i_axes)
 
-  @test block_storedlength(b) == 2
+  @test blockstoredlength(b) == 2
 
   # Blocks with discontiguous underlying data
   d_blocks = randn.(nz_block_sizes)
   b = BlockSparseArray(nz_blocks, d_blocks, i_axes)
 
-  @test block_storedlength(b) == 2
+  @test blockstoredlength(b) == 2
 
   # Access a block
   @test b[Block(1, 1)] == d_blocks[1]
@@ -92,7 +92,7 @@ function main()
   @test b + b ≈ Array(b) + Array(b)
   @test b + b isa BlockSparseArray
   # TODO: Fix this, broken.
-  @test_broken block_storedlength(b + b) == 2
+  @test_broken blockstoredlength(b + b) == 2
 
   scaled_b = 2b
   @test scaled_b ≈ 2Array(b)

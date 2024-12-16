@@ -2,6 +2,8 @@ using BlockArrays: Block
 using SparseArraysBase: SparseArraysBase, eachstoredindex, storedlength, storedvalues
 
 # Structure storing the block sparse storage
+# TODO: Delete this in favor of `storedvalues(blocks(a))`,
+# and rename `storedblocks(a)` and/or `eachstoredblock(a)`.
 struct BlockSparseStorage{Arr<:AbstractBlockSparseArray}
   array::Arr
 end
@@ -29,11 +31,12 @@ function Base.iterate(s::BlockSparseStorage, args...)
   return iterate(values(s), args...)
 end
 
-## TODO: Delete this, define `getstoredindex`, etc.
-## function SparseArraysBase.sparse_storage(a::AbstractBlockSparseArray)
+## TODO: Bring back this deifinition but check that it makes sense.
+## function SparseArraysBase.storedvaluese(a::AbstractBlockSparseArray)
 ##   return BlockSparseStorage(a)
 ## end
 
+# TODO: Turn this into an `@interface ::AbstractBlockSparseArrayInterface` function.
 function SparseArraysBase.storedlength(a::AnyAbstractBlockSparseArray)
   return sum(storedlength, storedvalues(blocks(a)); init=zero(Int))
 end

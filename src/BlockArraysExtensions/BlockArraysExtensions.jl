@@ -264,17 +264,17 @@ function blocks_to_cartesianindices(d::Dictionary{<:Block})
   return Dictionary(blocks_to_cartesianindices(eachindex(d)), d)
 end
 
-function block_reshape(a::AbstractArray, dims::Tuple{Vararg{Vector{Int}}})
-  return block_reshape(a, blockedrange.(dims))
+function blockreshape(a::AbstractArray, dims::Tuple{Vararg{Vector{Int}}})
+  return blockreshape(a, blockedrange.(dims))
 end
 
-function block_reshape(a::AbstractArray, dims::Vararg{Vector{Int}})
-  return block_reshape(a, dims)
+function blockreshape(a::AbstractArray, dims::Vararg{Vector{Int}})
+  return blockreshape(a, dims)
 end
 
 tuple_oneto(n) = ntuple(identity, n)
 
-function block_reshape(a::AbstractArray, axes::Tuple{Vararg{AbstractUnitRange}})
+function blockreshape(a::AbstractArray, axes::Tuple{Vararg{AbstractUnitRange}})
   reshaped_blocks_a = reshape(blocks(a), blocklength.(axes))
   reshaped_a = similar(a, axes)
   for I in eachstoredindex(reshaped_blocks_a)
@@ -285,8 +285,8 @@ function block_reshape(a::AbstractArray, axes::Tuple{Vararg{AbstractUnitRange}})
   return reshaped_a
 end
 
-function block_reshape(a::AbstractArray, axes::Vararg{AbstractUnitRange})
-  return block_reshape(a, axes)
+function blockreshape(a::AbstractArray, axes::Vararg{AbstractUnitRange})
+  return blockreshape(a, axes)
 end
 
 function cartesianindices(axes::Tuple, b::Block)
@@ -473,10 +473,6 @@ function findblocks(axis::AbstractUnitRange, range::AbstractUnitRange)
   return findblock(axis, first(range)):findblock(axis, last(range))
 end
 
-function block_eachstoredindex(a::AbstractArray)
-  return Block.(Tuple.(eachstoredindex(blocks(a))))
-end
-
 _block(indices) = block(indices)
 _block(indices::CartesianIndices) = Block(ntuple(Returns(1), ndims(indices)))
 
@@ -550,7 +546,7 @@ function SparseArraysBase.storedlength(a::BlockView)
   # TODO: Store whether or not the block is stored already as
   # a Bool in `BlockView`.
   I = CartesianIndex(Int.(a.block))
-  # TODO: Use `block_eachstoredindex`.
+  # TODO: Use `eachblockstoredindex`.
   if I ∈ eachstoredindex(blocks(parent(a)))
     return storedlength(blocks(parent(a))[I])
   end
