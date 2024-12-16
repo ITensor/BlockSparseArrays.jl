@@ -137,6 +137,22 @@ function Base.copyto!(
   return @interface interface(a_src) copyto!(a_dest, a_src)
 end
 
+# This avoids going through the generic version that calls `Base.permutedims!`,
+# which eventually calls block sparse `map!`, which involves slicing operations
+# that are not friendly to GPU (since they involve `SubArray` wrapping
+# `PermutedDimsArray`).
+# TODO: Handle slicing better in `map!` so that this can be removed.
+function Base.permutedims(a::AnyAbstractBlockSparseArray, perm)
+  @interface interface(a) permutedims(a, perm)
+end
+
+# The `::AbstractBlockSparseArrayInterface` version
+# has a special case for when `a_dest` and `PermutedDimsArray(a_src, perm)`
+# have the same blocking, and therefore can just use:
+# ```julia
+# permutedims!(blocks(a_dest), blocks(a_src), perm)
+# ```
+# TODO: Handle slicing better in `map!` so that this can be removed.
 function Base.permutedims!(a_dest, a_src::AnyAbstractBlockSparseArray, perm)
   return @interface interface(a_src) permutedims!(a_dest, a_src, perm)
 end

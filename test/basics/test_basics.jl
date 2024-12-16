@@ -415,7 +415,7 @@ arrayts = (Array, JLArray)
     a[Block(3, 2, 2, 3)] = dev(randn(elt, 1, 2, 2, 1))
     perm = (2, 3, 4, 1)
     for b in (PermutedDimsArray(a, perm), permutedims(a, perm))
-      @test Array(b) == permutedims(Array(a), perm)
+      @test @allowscalar(Array(b)) == permutedims(Array(a), perm)
       @test issetequal(eachblockstoredindex(b), [Block(2, 2, 3, 3)])
       @test @allowscalar b[Block(2, 2, 3, 3)] == permutedims(a[Block(3, 2, 2, 3)], perm)
     end

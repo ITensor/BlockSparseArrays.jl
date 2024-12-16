@@ -22,9 +22,4 @@ include("abstractblocksparsearray/cat.jl")
 include("blocksparsearray/defaults.jl")
 include("blocksparsearray/blocksparsearray.jl")
 include("BlockArraysSparseArraysBaseExt/BlockArraysSparseArraysBaseExt.jl")
-include("../ext/BlockSparseArraysTensorAlgebraExt/src/BlockSparseArraysTensorAlgebraExt.jl")
-include(
-  "../ext/BlockSparseArraysGradedUnitRangesExt/src/BlockSparseArraysGradedUnitRangesExt.jl"
-)
-include("../ext/BlockSparseArraysAdaptExt/src/BlockSparseArraysAdaptExt.jl")
 end

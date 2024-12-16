@@ -14,10 +14,17 @@ using BlockArrays:
   blocklengths,
   blocks,
   findblockindex
-using Derive: Derive, @interface
+using Derive: Derive, @interface, DefaultArrayInterface
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
-  AbstractSparseArrayInterface, eachstoredindex, perm, iperm, storedlength, storedvalues
+  AbstractSparseArrayInterface,
+  getstoredindex,
+  getunstoredindex,
+  eachstoredindex,
+  perm,
+  iperm,
+  storedlength,
+  storedvalues
 
 # Like `SparseArraysBase.eachstoredindex` but
 # at the block level, i.e. iterates over the
@@ -154,6 +161,39 @@ end
   return a
 end
 
+# Version of `permutedims!` that assumes the destination and source
+# have the same blocking.
+# TODO: Delete this and handle this logic in block sparse `map!`.
+function blocksparse_permutedims!(a_dest::AbstractArray, a_src::AbstractArray, perm)
+  blocks(a_dest) .= blocks(PermutedDimsArray(a_src, perm))
+  return a_dest
+end
+
+# We overload `permutedims` here so that we can assume the destination and source
+# have the same blocking and avoid non-GPU friendly slicing operations in block sparse `map!`.
+# TODO: Delete this and handle this logic in block sparse `map!`.
+@interface ::AbstractBlockSparseArrayInterface function Base.permutedims(
+  a::AbstractArray, perm
+)
+  a_dest = similar(PermutedDimsArray(a, perm))
+  blocksparse_permutedims!(a_dest, a, perm)
+  return a_dest
+end
+
+# We overload `permutedims!` here so that we can special case when the destination and source
+# have the same blocking and avoid non-GPU friendly slicing operations in block sparse `map!`.
+# TODO: Delete this and handle this logic in block sparse `map!`.
+@interface ::AbstractBlockSparseArrayInterface function Base.permutedims!(
+  a_dest::AbstractArray, a_src::AbstractArray, perm
+)
+  if all(blockisequal.(axes(a_dest), axes(PermutedDimsArray(a_src, perm))))
+    blocksparse_permutedims!(a_dest, a_src, perm)
+    return a_dest
+  end
+  @interface DefaultArrayInterface() permutedims!(a_dest, a_src, perm)
+  return a_dest
+end
+
 @interface ::AbstractBlockSparseArrayInterface function Base.fill!(a::AbstractArray, value)
   # TODO: Only do this check if `value isa Number`?
   if iszero(value)
@@ -190,6 +230,7 @@ _getindices(i::CartesianIndex, indices) = CartesianIndex(_getindices(Tuple(i), i
 
 # Represents the array of arrays of a `PermutedDimsArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `PermutedDimsArray`.
+# TODO: Delete this in favor of `NestedPermutedDimsArrays.NestedPermutedDimsArray`.
 struct SparsePermutedDimsArrayBlocks{
   T,N,BlockType<:AbstractArray{T,N},Array<:PermutedDimsArray{T,N}
 } <: AbstractSparseArray{BlockType,N}
@@ -203,23 +244,31 @@ end
 function Base.size(a::SparsePermutedDimsArrayBlocks)
   return _getindices(size(blocks(parent(a.array))), _perm(a.array))
 end
-function Base.getindex(
+function SparseArraysBase.isstored(
+  a::SparsePermutedDimsArrayBlocks{<:Any,N}, index::Vararg{Int,N}
+) where {N}
+  return isstored(blocks(parent(a.array)), _getindices(index, _invperm(a.array))...)
+end
+function SparseArraysBase.getstoredindex(
   a::SparsePermutedDimsArrayBlocks{<:Any,N}, index::Vararg{Int,N}
 ) where {N}
   return PermutedDimsArray(
-    blocks(parent(a.array))[_getindices(index, _invperm(a.array))...], _perm(a.array)
+    getstoredindex(blocks(parent(a.array)), _getindices(index, _invperm(a.array))...),
+    _perm(a.array),
+  )
+end
+function SparseArraysBase.getunstoredindex(
+  a::SparsePermutedDimsArrayBlocks{<:Any,N}, index::Vararg{Int,N}
+) where {N}
+  return PermutedDimsArray(
+    getunstoredindex(blocks(parent(a.array)), _getindices(index, _invperm(a.array))...),
+    _perm(a.array),
   )
 end
 function SparseArraysBase.eachstoredindex(a::SparsePermutedDimsArrayBlocks)
   return map(I -> _getindices(I, _perm(a.array)), eachstoredindex(blocks(parent(a.array))))
 end
-# TODO: Either make this the generic interface or define
-# `SparseArraysBase.sparse_storage`, which is used
-# to defined this.
-function SparseArraysBase.storedlength(a::SparsePermutedDimsArrayBlocks)
-  return length(eachstoredindex(a))
-end
-## TODO: Delete.
+## TODO: Define `storedvalues` instead.
 ## function SparseArraysBase.sparse_storage(a::SparsePermutedDimsArrayBlocks)
 ##   return error("Not implemented")
 ## end
