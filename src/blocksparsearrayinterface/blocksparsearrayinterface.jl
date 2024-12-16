@@ -65,7 +65,7 @@ end
 )
   # TODO: Use `Block()[]` once https://github.com/JuliaArrays/BlockArrays.jl/issues/430
   # is fixed.
-  return a[BlockIndex{0,Tuple{},Tuple{}}((), ())]
+  return a[BlockIndex()]
 end
 
 # a[1:2, 1:2]
@@ -135,7 +135,7 @@ end
 )
   # TODO: Use `Block()[]` once https://github.com/JuliaArrays/BlockArrays.jl/issues/430
   # is fixed.
-  a[BlockIndex{0,Tuple{},Tuple{}}((), ())] = value
+  a[BlockIndex()] = value
   return a
 end
 
@@ -301,6 +301,8 @@ end
 function Base.size(a::SparseSubArrayBlocks)
   return length.(axes(a))
 end
+# TODO: Define `isstored`.
+# TODO: Define `getstoredindex`, `getunstoredindex` instead.
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
   # TODO: Should this be defined as `@view a.array[Block(I)]` instead?
   return @view a.array[Block(I)]
@@ -312,9 +314,11 @@ function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where
   ## return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
 end
 # TODO: This should be handled by generic `AbstractSparseArray` code.
+# TODO: Define `getstoredindex`, `getunstoredindex` instead.
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
   return a[Tuple(I)...]
 end
+# TODO: Define `setstoredindex!`, `setunstoredindex!` instead.
 function Base.setindex!(a::SparseSubArrayBlocks{<:Any,N}, value, I::Vararg{Int,N}) where {N}
   parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
   # TODO: The following line is required to instantiate
@@ -345,16 +349,9 @@ SparseArraysBase.storedlength(a::SparseSubArrayBlocks) = length(eachstoredindex(
 ##   array::Array
 ## end
 
-## TODO: Delete.
+## TODO: Define `storedvalues` instead.
 ## function SparseArraysBase.sparse_storage(a::SparseSubArrayBlocks)
 ##   return map(I -> a[I], eachstoredindex(a))
-## end
-
-## TODO: Delete.
-## function SparseArraysBase.getindex_zero_function(a::SparseSubArrayBlocks)
-##   # TODO: Base it off of `getindex_zero_function(blocks(parent(a.array))`, but replace the
-##   # axes with `axes(a.array)`.
-##   return BlockZero(axes(a.array))
 ## end
 
 function SparseArraysBase.getunstoredindex(
