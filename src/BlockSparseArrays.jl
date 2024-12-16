@@ -2,7 +2,7 @@ module BlockSparseArrays
 include("BlockArraysExtensions/BlockArraysExtensions.jl")
 include("blocksparsearrayinterface/blocksparsearrayinterface.jl")
 include("blocksparsearrayinterface/linearalgebra.jl")
-include("blocksparsearrayinterface/blockzero.jl")
+include("blocksparsearrayinterface/getunstoredblock.jl")
 include("blocksparsearrayinterface/broadcast.jl")
 include("blocksparsearrayinterface/map.jl")
 include("blocksparsearrayinterface/arraylayouts.jl")
