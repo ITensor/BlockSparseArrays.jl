@@ -1,3 +1,4 @@
+using Adapt: adapt
 using ArrayLayouts: zero!
 using BlockArrays:
   Block,
@@ -28,22 +29,18 @@ using BlockSparseArrays:
   blocktype,
   view!
 using GPUArraysCore: @allowscalar
+using JLArrays: JLArray
 using LinearAlgebra: Adjoint, Transpose, dot, mul!, norm
-using NDTensors.GPUArraysCoreExtensions: cpu
 using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, storedlength
 using TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
 include("TestBlockSparseArraysUtils.jl")
 
-using NDTensors: NDTensors
-include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
-using .NDTensorsTestUtils: devices_list, is_supported_eltype
-@testset "BlockSparseArrays (dev=$dev, eltype=$elt)" for dev in devices_list(copy(ARGS)),
+arrayts = (Array, JLArray)
+@testset "BlockSparseArrays (arraytype=$arrayt, eltype=$elt)" for arrayt in arrayts,
   elt in (Float32, Float64, Complex{Float32}, Complex{Float64})
 
-  if !is_supported_eltype(dev, elt)
-    continue
-  end
+  dev(a) = adapt(arrayt, a)
   @testset "Broken" begin
     # TODO: Fix this and turn it into a proper test.
     a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
@@ -268,7 +265,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test storedlength(a) == 2 * 4 + 3 * 3
 
     # TODO: Broken on GPU.
-    if dev ≠ cpu
+    if arrayt ≠ Array
       a = dev(BlockSparseArray{elt}([2, 3], [3, 4]))
       @test_broken a[Block(1, 2)] .= 2
     end
@@ -285,7 +282,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test storedlength(a) == 2 * 4
 
     # TODO: Broken on GPU.
-    if dev ≠ cpu
+    if arrayt ≠ Array
       a = dev(BlockSparseArray{elt}([2, 3], [3, 4]))
       @test_broken a[Block(1, 2)] .= 0
     end
@@ -321,7 +318,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test iszero(b)
     @test iszero(storedlength(b))
     # TODO: Broken on GPU.
-    @test iszero(c) broken = dev ≠ cpu
+    @test iszero(c) broken = arrayt ≠ Array
     @test iszero(storedlength(c))
     @allowscalar a[5, 7] = 1
     @test !iszero(a)
@@ -329,7 +326,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test !iszero(b)
     @test storedlength(b) == 3 * 4
     # TODO: Broken on GPU.
-    @test !iszero(c) broken = dev ≠ cpu
+    @test !iszero(c) broken = arrayt ≠ Array
     @test storedlength(c) == 3 * 4
     d = @view a[1:4, 1:6]
     @test iszero(d)

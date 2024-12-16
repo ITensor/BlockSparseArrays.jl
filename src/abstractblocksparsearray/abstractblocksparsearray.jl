@@ -1,10 +1,6 @@
 using BlockArrays:
   BlockArrays, AbstractBlockArray, Block, BlockIndex, BlockedUnitRange, blocks
 
-# TODO: Delete this. This function was replaced
-# by `stored_length` but is still used in `NDTensors`.
-function nonzero_keys end
-
 abstract type AbstractBlockSparseArray{T,N} <: AbstractBlockArray{T,N} end
 
 ## Base `AbstractArray` interface
