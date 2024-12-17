@@ -1,7 +1,7 @@
 using Test
 using BlockSparseArrays
 using BlockSparseArrays:
-    BlockSparseArray, svd, tsvd, notrunc, truncbelow, truncdim, BlockDiagonal
+    BlockSparseArray, svd, notrunc, truncbelow, truncdim, BlockDiagonal
 using BlockArrays
 using LinearAlgebra: LinearAlgebra, Diagonal, svdvals
 
@@ -21,21 +21,6 @@ eltypes = (Float32, Float64, ComplexF64)
     a = rand(m, n)
     usv = @inferred svd(a)
     test_svd(a, usv)
-
-    # TODO: type unstable?
-    usv2 = tsvd(a)
-    test_svd(a, usv2)
-
-    usv3 = tsvd(a; trunc=truncdim(2))
-    @test length(usv3.S) == 2
-    @test usv3.U' * usv3.U ≈ LinearAlgebra.I
-    @test usv3.Vt * usv3.V ≈ LinearAlgebra.I
-
-    s = usv3.S[end]
-    usv4 = tsvd(a; trunc=truncbelow(s))
-    @test length(usv4.S) == 2
-    @test usv4.U' * usv4.U ≈ LinearAlgebra.I
-    @test usv4.Vt * usv4.V ≈ LinearAlgebra.I
 end
 
 # block matrix
@@ -45,29 +30,6 @@ blockszs = (([2, 2], [2, 2]), ([2, 2], [2, 3]), ([2, 2, 1], [2, 3]), ([2, 3], [2
     a = mortar([rand(T, i, j) for i in m, j in n])
     usv = svd(a)
     test_svd(a, usv)
-    @test usv.U isa BlockedMatrix
-    @test usv.Vt isa BlockedMatrix
-    @test usv.S isa BlockedVector
-
-    usv2 = tsvd(a)
-    test_svd(a, usv2)
-    @test usv.U isa BlockedMatrix
-    @test usv.Vt isa BlockedMatrix
-    @test usv.S isa BlockedVector
-
-    usv3 = tsvd(a; trunc=truncdim(2))
-    @test length(usv3.S) == 2
-    @test usv3.U' * usv3.U ≈ LinearAlgebra.I
-    @test usv3.Vt * usv3.V ≈ LinearAlgebra.I
-    @test usv.U isa BlockedMatrix
-    @test usv.Vt isa BlockedMatrix
-    @test usv.S isa BlockedVector
-
-    s = usv3.S[end]
-    usv4 = tsvd(a; trunc=truncbelow(s))
-    @test length(usv4.S) == 2
-    @test usv4.U' * usv4.U ≈ LinearAlgebra.I
-    @test usv4.Vt * usv4.V ≈ LinearAlgebra.I
     @test usv.U isa BlockedMatrix
     @test usv.Vt isa BlockedMatrix
     @test usv.S isa BlockedVector
@@ -84,30 +46,6 @@ end
     @test usv.U isa BlockDiagonal
     @test usv.Vt isa BlockDiagonal
     @test usv.S isa BlockVector
-
-    usv2 = tsvd(a)
-    test_svd(a, usv2)
-    @test usv.U isa BlockDiagonal
-    @test usv.Vt isa BlockDiagonal
-    @test usv.S isa BlockVector
-
-    # TODO: need to find a slicing fix to make this work
-    # usv3 = tsvd(a; trunc=truncdim(2))
-    # @test length(usv3.S) == 2
-    # @test usv3.U' * usv3.U ≈ LinearAlgebra.I
-    # @test usv3.Vt * usv3.V ≈ LinearAlgebra.I
-    # @test usv.U isa BlockDiagonal
-    # @test usv.Vt isa BlockDiagonal
-    # @test usv.S isa BlockVector
-
-    # @show s = usv3.S[end]
-    # usv4 = tsvd(a; trunc=truncbelow(s))
-    # @test length(usv4.S) == 2
-    # @test usv4.U' * usv4.U ≈ LinearAlgebra.I
-    # @test usv4.Vt * usv4.V ≈ LinearAlgebra.I
-    # @test usv.U isa BlockDiagonal
-    # @test usv.Vt isa BlockDiagonal
-    # @test usv.S isa BlockVector
 end
 
 a = mortar([rand(2, 2) for i in 1:2, j in 1:3])
@@ -133,32 +71,13 @@ test_svd(a, usv)
     # errors because `blocks(a)[CartesianIndex.(...)]` is not implemented
     usv = svd(a)
     # TODO: `BlockDiagonal * Adjoint` errors
-    # test_svd(a, usv)
+    test_svd(a, usv)
     @test usv.U isa BlockDiagonal
     @test usv.Vt isa BlockDiagonal
     @test usv.S isa BlockVector
 
-    # usv2 = tsvd(a)
     test_svd(a, usv2)
     @test usv.U isa BlockDiagonal
     @test usv.Vt isa BlockDiagonal
     @test usv.S isa BlockVector
-
-    # TODO: need to find a slicing fix to make this work
-    # usv3 = tsvd(a; trunc=truncdim(2))
-    # @test length(usv3.S) == 2
-    # @test usv3.U' * usv3.U ≈ LinearAlgebra.I
-    # @test usv3.Vt * usv3.V ≈ LinearAlgebra.I
-    # @test usv.U isa BlockDiagonal
-    # @test usv.Vt isa BlockDiagonal
-    # @test usv.S isa BlockVector
-
-    # @show s = usv3.S[end]
-    # usv4 = tsvd(a; trunc=truncbelow(s))
-    # @test length(usv4.S) == 2
-    # @test usv4.U' * usv4.U ≈ LinearAlgebra.I
-    # @test usv4.Vt * usv4.V ≈ LinearAlgebra.I
-    # @test usv.U isa BlockDiagonal
-    # @test usv.Vt isa BlockDiagonal
-    # @test usv.S isa BlockVector
 end
