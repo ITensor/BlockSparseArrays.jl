@@ -67,10 +67,10 @@ function svd!(
   U, S, Vt = _allocate_svd_output(A, full, alg)
   for bI in eachblockstoredindex(A)
     bUSV = svd!(A[bI]; full, alg)
-    brow, bcol = Int.(Tuple(bI))
-    U[Block(brow, bcol)] = bUSV.U
-    S[Block(bcol)] = bUSV.S
-    Vt[Block(bcol, bcol)] = bUSV.Vt
+    brow, bcol = Tuple(bI)
+    U[brow, bcol] = bUSV.U
+    S[bcol] = bUSV.S
+    Vt[bcol, bcol] = bUSV.Vt
   end
   return SVD(U, S, Vt)
 end
