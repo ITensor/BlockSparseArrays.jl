@@ -13,7 +13,7 @@ end
 
 # SVD implementation
 function eigencopy_oftype(A::BlockDiagonal, T)
-  diag = map(Base.Fix2(eigencopy_oftype, T), A.blocks.diag)
+  diag = map(Base.Fix2(eigencopy_oftype, T), LinearAlgebra.diag(blocks(A)))
   return BlockDiagonal(diag)
 end
 
