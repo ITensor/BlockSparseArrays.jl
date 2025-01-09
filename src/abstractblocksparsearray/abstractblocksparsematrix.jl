@@ -49,9 +49,10 @@ function _allocate_svd_output(A::AbstractBlockSparseMatrix, full::Bool, ::Algori
     slengths[col] = min(brows[row], bcols[col])
   end
 
-  U = similar(A, axes(A, 1), blockedrange(slengths))
-  S = similar(A, real(eltype(A)), blockedrange(slengths))
-  Vt = similar(A, blockedrange(slengths), axes(A, 2))
+  s_axis = blockedrange(slengths)
+  U = similar(A, axes(A, 1), s_axis)
+  S = similar(A, real(eltype(A)), s_axis)
+  Vt = similar(A, s_axis, axes(A, 2))
 
   return U, S, Vt
 end
