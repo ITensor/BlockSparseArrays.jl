@@ -7,9 +7,9 @@ function svd(
   A::AbstractBlockSparseMatrix; full::Bool=false, alg::Algorithm=default_svd_alg(A)
 )
   T = LinearAlgebra.eigtype(eltype(A))
-  A′ = try_to_blockdiagonal(A)
+  A′_and_blockperms = try_to_blockdiagonal(A)
 
-  if isnothing(A′)
+  if isnothing(A′_and_blockperms)
     # not block-diagonal, fall back to dense case
     Adense = eigencopy_oftype(A, T)
     return svd!(Adense; full, alg)
@@ -18,5 +18,5 @@ function svd(
   # compute block-by-block and permute back
   A″, (I, J) = A′
   F = svd!(eigencopy_oftype(A″, T); full, alg)
-  return SVD(F.U[Block.(I), Block.(J)], F.S, F.Vt)
+  return SVD(F.U[I, J], F.S, F.Vt)
 end
