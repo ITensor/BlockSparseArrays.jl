@@ -67,7 +67,7 @@ function svd!(
   @assert is_block_permutation_matrix(A) "Cannot keep sparsity: use `svd` to convert to `BlockedMatrix"
   U, S, Vt = _allocate_svd_output(A, full, alg)
   for bI in eachblockstoredindex(A)
-    bUSV = svd!(A[bI]; full, alg)
+    bUSV = svd!(@view!(A[bI]); full, alg)
     brow, bcol = Tuple(bI)
     U[brow, bcol] = bUSV.U
     S[bcol] = bUSV.S
