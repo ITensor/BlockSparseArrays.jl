@@ -2,7 +2,13 @@ using BlockSparseArrays: BlockSparseArrays
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
 
 DocMeta.setdocmeta!(
-  BlockSparseArrays, :DocTestSetup, :(using BlockSparseArrays); recursive=true
+  BlockSparseArrays,
+  :DocTestSetup,
+  quote
+    using BlockSparseArrays
+    using LinearAlgebra: Diagonal
+  end;
+  recursive=true,
 )
 
 include("make_index.jl")
@@ -16,7 +22,7 @@ makedocs(;
     edit_link="main",
     assets=String[],
   ),
-  pages=["Home" => "index.md"],
+  pages=["Home" => "index.md", "Library" => "library.md"],
 )
 
 deploydocs(;
