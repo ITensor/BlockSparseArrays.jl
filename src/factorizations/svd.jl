@@ -200,7 +200,7 @@ true
 svd(A; kwargs...) =
   SVD(svd!(eigencopy_oftype(A, LinearAlgebra.eigtype(eltype(A))); kwargs...))
 
-LinearAlgebra.svdvals(usv::SVD{<:Any,T}) where {T} = (usv.S)::Vector{T}
+LinearAlgebra.svdvals(usv::SVD{<:Any,T}) where {T} = (usv.S)::AbstractVector{T}
 
 # Added here to avoid type-piracy
 eigencopy_oftype(A, S) = LinearAlgebra.eigencopy_oftype(A, S)
