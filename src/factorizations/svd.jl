@@ -33,14 +33,14 @@ julia> A = [1. 0. 0. 0. 2.; 0. 0. 3. 0. 0.; 0. 0. 0. 0. 0.; 0. 2. 0. 0. 0.]
  0.0  0.0  0.0  0.0  0.0
  0.0  2.0  0.0  0.0  0.0
 
-julia> F = svd(A)
-SVD{Float64, Float64, Matrix{Float64}, Vector{Float64}}
+julia> F = BlockSparseArrays.svd(A)
+BlockSparseArrays.SVD{Float64, Float64, Matrix{Float64}, Vector{Float64}, Matrix{Float64}}
 U factor:
 4×4 Matrix{Float64}:
- 0.0  1.0   0.0  0.0
- 1.0  0.0   0.0  0.0
- 0.0  0.0   0.0  1.0
- 0.0  0.0  -1.0  0.0
+ 0.0  1.0  0.0   0.0
+ 1.0  0.0  0.0   0.0
+ 0.0  0.0  0.0  -1.0
+ 0.0  0.0  1.0   0.0
 singular values:
 4-element Vector{Float64}:
  3.0
@@ -49,10 +49,10 @@ singular values:
  0.0
 Vt factor:
 4×5 Matrix{Float64}:
- -0.0        0.0  1.0  -0.0  0.0
-  0.447214   0.0  0.0   0.0  0.894427
-  0.0       -1.0  0.0   0.0  0.0
-  0.0        0.0  0.0   1.0  0.0
+ -0.0       0.0  1.0  -0.0  0.0
+  0.447214  0.0  0.0   0.0  0.894427
+ -0.0       1.0  0.0  -0.0  0.0
+  0.0       0.0  0.0   1.0  0.0
 
 julia> F.U * Diagonal(F.S) * F.Vt
 4×5 Matrix{Float64}:
@@ -181,7 +181,7 @@ number of singular values.
 ```jldoctest
 julia> A = rand(4,3);
 
-julia> F = svd(A); # Store the Factorization Object
+julia> F = BlockSparseArrays.svd(A); # Store the Factorization Object
 
 julia> A ≈ F.U * Diagonal(F.S) * F.Vt
 true
@@ -191,7 +191,7 @@ julia> U, S, V = F; # destructuring via iteration
 julia> A ≈ U * Diagonal(S) * V'
 true
 
-julia> Uonly, = svd(A); # Store U only
+julia> Uonly, = BlockSparseArrays.svd(A); # Store U only
 
 julia> Uonly == U
 true
