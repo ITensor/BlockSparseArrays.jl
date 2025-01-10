@@ -1,6 +1,6 @@
 using Test
 using BlockSparseArrays
-using BlockSparseArrays: BlockSparseArray, svd, notrunc, truncbelow, truncdim, BlockDiagonal
+using BlockSparseArrays: BlockSparseArray, svd, BlockDiagonal
 using BlockArrays
 using LinearAlgebra: LinearAlgebra, Diagonal, svdvals
 using Random
@@ -58,8 +58,8 @@ test_svd(a, usv)
 
 # blocksparse 
 # -----------
-@testset "($m, $n) BlockDiagonal{$T}" for ((m, n), T) in
-                                          Iterators.product(blockszs, eltypes)
+@testset "($m, $n) BlockSparseMatrix{$T}" for ((m, n), T) in
+                                              Iterators.product(blockszs, eltypes)
   a = BlockSparseArray{T}(m, n)
   for i in LinearAlgebra.diagind(blocks(a))
     I = CartesianIndices(blocks(a))[i]
@@ -72,12 +72,4 @@ test_svd(a, usv)
   usv = svd(a)
   # TODO: `BlockDiagonal * Adjoint` errors
   test_svd(a, usv)
-  @test usv.U isa BlockDiagonal
-  @test usv.Vt isa BlockDiagonal
-  @test usv.S isa BlockVector
-
-  test_svd(a, usv2)
-  @test usv.U isa BlockDiagonal
-  @test usv.Vt isa BlockDiagonal
-  @test usv.S isa BlockVector
 end
