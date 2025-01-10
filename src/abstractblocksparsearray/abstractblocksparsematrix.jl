@@ -8,7 +8,7 @@ function eigencopy_oftype(A::AbstractBlockSparseMatrix, T)
   if is_block_permutation_matrix(A)
     Acopy = similar(A, T)
     for bI in eachblockstoredindex(A)
-      Acopy[bI] = eigencopy_oftype(A[bI], T)
+      Acopy[bI] = eigencopy_oftype(@view!(A[bI]), T)
     end
     return Acopy
   else
