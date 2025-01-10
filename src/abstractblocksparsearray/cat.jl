@@ -1,4 +1,4 @@
-using Derive: @interface, interface
+using DerivableInterfaces: @interface, interface
 
 # TODO: Define with `@derive`.
 function Base.cat(as::AnyAbstractBlockSparseArray...; dims)

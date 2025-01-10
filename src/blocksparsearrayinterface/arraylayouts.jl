@@ -1,6 +1,6 @@
 using ArrayLayouts: ArrayLayouts, Dot, MatMulMatAdd, MatMulVecAdd, MulAdd
 using BlockArrays: BlockArrays, BlockLayout, muladd!
-using Derive: @interface
+using DerivableInterfaces: @interface
 using SparseArraysBase: SparseLayout
 using LinearAlgebra: LinearAlgebra, dot, mul!
 

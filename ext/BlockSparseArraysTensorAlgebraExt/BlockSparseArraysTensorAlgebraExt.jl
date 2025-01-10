@@ -42,7 +42,7 @@ using BlockSparseArrays:
   BlockSparseMatrix,
   BlockSparseVector,
   block_merge
-using Derive: @interface
+using DerivableInterfaces: @interface
 using GradedUnitRanges:
   GradedUnitRanges,
   AbstractGradedUnitRange,

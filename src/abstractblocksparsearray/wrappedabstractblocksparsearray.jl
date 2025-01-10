@@ -9,7 +9,7 @@ using BlockArrays:
   blockedrange,
   mortar,
   unblock
-using Derive: Derive, @interface
+using DerivableInterfaces: DerivableInterfaces, @interface
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
 
@@ -22,7 +22,9 @@ const AnyAbstractBlockSparseArray{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
 
-Derive.interface(::Type{<:AnyAbstractBlockSparseArray}) = BlockSparseArrayInterface()
+function DerivableInterfaces.interface(::Type{<:AnyAbstractBlockSparseArray})
+  return BlockSparseArrayInterface()
+end
 
 # a[1:2, 1:2]
 function Base.to_indices(

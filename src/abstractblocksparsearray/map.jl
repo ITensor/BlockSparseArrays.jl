@@ -1,6 +1,6 @@
 using ArrayLayouts: LayoutArray
 using BlockArrays: blockisequal
-using Derive: @interface, interface
+using DerivableInterfaces: @interface, interface
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase: SparseArraysBase, SparseArrayStyle
 

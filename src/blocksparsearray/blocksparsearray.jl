@@ -1,5 +1,5 @@
 using BlockArrays: BlockArrays, Block, BlockedUnitRange, blockedrange, blocklength
-using Derive: @interface
+using DerivableInterfaces: @interface
 using Dictionaries: Dictionary
 using SparseArraysBase: SparseArrayDOK
 

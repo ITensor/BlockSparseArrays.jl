@@ -14,7 +14,7 @@ using BlockArrays:
   blocklengths,
   blocks,
   findblockindex
-using Derive: Derive, @interface, DefaultArrayInterface
+using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
   AbstractSparseArrayInterface,
@@ -43,7 +43,9 @@ end
 abstract type AbstractBlockSparseArrayInterface <: AbstractSparseArrayInterface end
 
 # TODO: Also support specifying the `blocktype` along with the `eltype`.
-Derive.arraytype(::AbstractBlockSparseArrayInterface, T::Type) = BlockSparseArray{T}
+function DerivableInterfaces.arraytype(::AbstractBlockSparseArrayInterface, T::Type)
+  return BlockSparseArray{T}
+end
 
 struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
 
