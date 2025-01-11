@@ -1,3 +1,3 @@
-function blocksparse_view(a, I...)
+@interface ::AbstractBlockSparseArrayInterface function Base.view(a, I...)
   return Base.invoke(view, Tuple{AbstractArray,Vararg{Any}}, a, I...)
 end

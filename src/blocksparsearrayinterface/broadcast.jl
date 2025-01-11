@@ -1,7 +1,14 @@
 using Base.Broadcast: BroadcastStyle, AbstractArrayStyle, DefaultArrayStyle, Broadcasted
-using BroadcastMapConversion: map_function, map_args
+using MapBroadcast: Mapped
+using DerivableInterfaces: DerivableInterfaces, @interface
 
-struct BlockSparseArrayStyle{N} <: AbstractArrayStyle{N} end
+abstract type AbstractBlockSparseArrayStyle{N} <: AbstractArrayStyle{N} end
+
+function DerivableInterfaces.interface(::Type{<:AbstractBlockSparseArrayStyle})
+  return BlockSparseArrayInterface()
+end
+
+struct BlockSparseArrayStyle{N} <: AbstractBlockSparseArrayStyle{N} end
 
 # Define for new sparse array types.
 # function Broadcast.BroadcastStyle(arraytype::Type{<:MyBlockSparseArray})
@@ -25,15 +32,18 @@ end
 
 function Base.similar(bc::Broadcasted{<:BlockSparseArrayStyle}, elt::Type)
   # TODO: Make sure this handles GPU arrays properly.
-  return similar(first(map_args(bc)), elt, combine_axes(axes.(map_args(bc))...))
+  m = Mapped(bc)
+  return similar(first(m.args), elt, combine_axes(axes.(m.args)...))
 end
 
 # Broadcasting implementation
+# TODO: Delete this in favor of `DerivableInterfaces` version.
 function Base.copyto!(
   dest::AbstractArray{<:Any,N}, bc::Broadcasted{BlockSparseArrayStyle{N}}
 ) where {N}
   # convert to map
   # flatten and only keep the AbstractArray arguments
-  sparse_map!(map_function(bc), dest, map_args(bc)...)
+  m = Mapped(bc)
+  @interface interface(bc) map!(m.f, dest, m.args...)
   return dest
 end

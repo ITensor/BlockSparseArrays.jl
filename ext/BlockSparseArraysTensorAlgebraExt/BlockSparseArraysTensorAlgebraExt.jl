@@ -1,4 +1,30 @@
-module BlockSparseArraysGradedUnitRangesExt
+module BlockSparseArraysTensorAlgebraExt
+using BlockArrays: AbstractBlockedUnitRange
+using GradedUnitRanges: tensor_product
+using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
+
+function TensorAlgebra.:⊗(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
+  return tensor_product(a1, a2)
+end
+
+using BlockArrays: AbstractBlockedUnitRange
+using BlockSparseArrays: AbstractBlockSparseArray, blockreshape
+using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
+
+TensorAlgebra.FusionStyle(::AbstractBlockedUnitRange) = BlockReshapeFusion()
+
+function TensorAlgebra.fusedims(
+  ::BlockReshapeFusion, a::AbstractArray, axes::AbstractUnitRange...
+)
+  return blockreshape(a, axes)
+end
+
+function TensorAlgebra.splitdims(
+  ::BlockReshapeFusion, a::AbstractArray, axes::AbstractUnitRange...
+)
+  return blockreshape(a, axes)
+end
+
 using BlockArrays:
   AbstractBlockVector,
   AbstractBlockedUnitRange,
@@ -6,14 +32,17 @@ using BlockArrays:
   BlockIndexRange,
   blockedrange,
   blocks
-using ..BlockSparseArrays:
+using BlockSparseArrays:
   BlockSparseArrays,
   AbstractBlockSparseArray,
+  AbstractBlockSparseArrayInterface,
   AbstractBlockSparseMatrix,
   BlockSparseArray,
+  BlockSparseArrayInterface,
   BlockSparseMatrix,
   BlockSparseVector,
   block_merge
+using DerivableInterfaces: @interface
 using GradedUnitRanges:
   GradedUnitRanges,
   AbstractGradedUnitRange,
@@ -109,7 +138,7 @@ end
 # with mixed dual and non-dual axes. This shouldn't be needed once
 # GradedUnitRanges is rewritten using BlockArrays v1.
 # TODO: Delete this once GradedUnitRanges is rewritten.
-function blocksparse_show(
+@interface ::AbstractBlockSparseArrayInterface function Base.show(
   io::IO, mime::MIME"text/plain", a::AbstractArray, axes_a::Tuple; kwargs...
 )
   println(io, "typeof(axes) = ", typeof(axes_a), "\n")
@@ -127,7 +156,7 @@ end
 function Base.show(io::IO, mime::MIME"text/plain", a::BlockSparseArray; kwargs...)
   axes_a = axes(a)
   a_nondual = BlockSparseArray(blocks(a), nondual.(axes(a)))
-  return blocksparse_show(io, mime, a_nondual, axes_a; kwargs...)
+  return @interface BlockSparseArrayInterface() show(io, mime, a_nondual, axes_a; kwargs...)
 end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays
@@ -139,7 +168,7 @@ function Base.show(
 )
   axes_a = axes(a)
   a_nondual = BlockSparseArray(blocks(a'), dual.(nondual.(axes(a'))))'
-  return blocksparse_show(io, mime, a_nondual, axes_a; kwargs...)
+  return @interface BlockSparseArrayInterface() show(io, mime, a_nondual, axes_a; kwargs...)
 end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays
@@ -151,6 +180,6 @@ function Base.show(
 )
   axes_a = axes(a)
   a_nondual = tranpose(BlockSparseArray(transpose(blocks(a)), nondual.(axes(a))))
-  return blocksparse_show(io, mime, a_nondual, axes_a; kwargs...)
+  return @interface BlockSparseArrayInterface() show(io, mime, a_nondual, axes_a; kwargs...)
 end
 end

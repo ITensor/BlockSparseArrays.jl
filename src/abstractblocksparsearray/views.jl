@@ -39,7 +39,7 @@ function Base.view(
   },
   I::Block{N},
 ) where {N}
-  return blocksparse_view(a, I)
+  return @interface BlockSparseArrayInterface() view(a, I)
 end
 function Base.view(
   a::SubArray{
@@ -47,13 +47,13 @@ function Base.view(
   },
   I::Vararg{Block{1},N},
 ) where {N}
-  return blocksparse_view(a, I...)
+  return @interface BlockSparseArrayInterface() view(a, I...)
 end
 function Base.view(
   V::SubArray{<:Any,1,<:AnyAbstractBlockSparseArray,<:Tuple{BlockSlice{<:BlockRange{1}}}},
   I::Block{1},
 )
-  return blocksparse_view(a, I)
+  return @interface BlockSparseArrayInterface() view(a, I)
 end
 
 # Specialized code for getting the view of a block.
@@ -63,13 +63,13 @@ function BlockArrays.viewblock(
   return viewblock(a, Tuple(block)...)
 end
 
-# TODO: Define `blocksparse_viewblock`.
+# TODO: Define `@interface BlockSparseArrayInterface() viewblock`.
 function BlockArrays.viewblock(
   a::AbstractBlockSparseArray{<:Any,N}, block::Vararg{Block{1},N}
 ) where {N}
   I = CartesianIndex(Int.(block))
-  # TODO: Use `block_stored_indices`.
-  if I ∈ stored_indices(blocks(a))
+  # TODO: Use `eachblockstoredindex`.
+  if I ∈ eachstoredindex(blocks(a))
     return blocks(a)[I]
   end
   return BlockView(a, block)
@@ -177,16 +177,16 @@ end
 
 # XXX: TODO: Distinguish if a sub-view of the block needs to be taken!
 # Define a new `SubBlockSlice` which is used in:
-# `blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})`
+# `@interface BlockSparseArrayInterface() to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})`
 # in `blocksparsearrayinterface/blocksparsearrayinterface.jl`.
-# TODO: Define `blocksparse_viewblock`.
+# TODO: Define `@interface BlockSparseArrayInterface() viewblock`.
 function BlockArrays.viewblock(
   a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSliceCollection,N}}},
   block::Vararg{Block{1},N},
 ) where {T,N}
   I = CartesianIndex(Int.(block))
-  # TODO: Use `block_stored_indices`.
-  if I ∈ stored_indices(blocks(a))
+  # TODO: Use `eachblockstoredindex`.
+  if I ∈ eachstoredindex(blocks(a))
     return blocks(a)[I]
   end
   return BlockView(parent(a), Block.(Base.reindex(parentindices(blocks(a)), Tuple(I))))
@@ -220,7 +220,7 @@ function BlockArrays.viewblock(
   return @view parent(a)[brs...]
 end
 
-# TODO: Define `blocksparse_viewblock`.
+# TODO: Define `@interface BlockSparseArrayInterface() viewblock`.
 function BlockArrays.viewblock(
   a::SubArray{
     T,
@@ -257,7 +257,7 @@ function BlockArrays.viewblock(
 ) where {T,N}
   return viewblock(a, to_tuple(block)...)
 end
-# TODO: Define `blocksparse_viewblock`.
+# TODO: Define `@interface BlockSparseArrayInterface() viewblock`.
 function BlockArrays.viewblock(
   a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockedSlice,N}}},
   I::Vararg{Block{1},N},
@@ -271,7 +271,7 @@ function BlockArrays.viewblock(
   end
   return @view parent(a)[brs...]
 end
-# TODO: Define `blocksparse_viewblock`.
+# TODO: Define `@interface BlockSparseArrayInterface() viewblock`.
 function BlockArrays.viewblock(
   a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockedSlice,N}}},
   block::Vararg{BlockIndexRange{1},N},

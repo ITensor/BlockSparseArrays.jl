@@ -38,5 +38,5 @@ function default_blocks(
   block_data::Dictionary{<:CartesianIndex{N},<:AbstractArray{<:Any,N}},
   axes::Tuple{Vararg{AbstractUnitRange,N}},
 ) where {N}
-  return SparseArrayDOK(block_data, blocklength.(axes), BlockZero(axes))
+  return SparseArrayDOK(block_data, blocklength.(axes), GetUnstoredBlock(axes))
 end
