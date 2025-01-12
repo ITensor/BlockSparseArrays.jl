@@ -361,12 +361,7 @@ end
 Base.show(io::IO, c::UnquotedChar) = print(io, c.char)
 Base.show(io::IO, ::MIME"text/plain", c::UnquotedChar) = show(io, c)
 
-# This is copied from `SparseArraysBase.jl` since it is not part
-# of the public interface.
-function getunstoredindex_show(a::AbstractArray, I::Int...)
-  return UnquotedChar('⋅')
-end
-
+using FillArrays: Fill
 struct GetUnstoredBlockShow{Axes}
   axes::Axes
 end
@@ -378,9 +373,7 @@ end
   b_size = ntuple(ndims(a)) do d
     return length(f.axes[d][Block(I[d])])
   end
-  b = similar(SparseArrayDOK{eltype(eltype(a))}, b_size)
-  zero!(b)
-  return ReplacedUnstoredSparseArray(b, getunstoredindex_show)
+  return Fill(UnquotedChar('.'), b_size)
 end
 # TODO: Use `Base.to_indices`.
 @inline function (f::GetUnstoredBlockShow)(
