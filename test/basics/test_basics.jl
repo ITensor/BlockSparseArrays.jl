@@ -1045,4 +1045,16 @@ arrayts = (Array, JLArray)
     @test blockstoredlength(b) == 2
     @test storedlength(b) == 17
   end
+  @testset "show" begin
+    if elt === Float64
+      # Not testing other element types since they change the
+      # spacing so it isn't easy to make the test general.
+      a = BlockSparseArray{elt}([2, 2], [2, 2])
+      a[1, 2] = 12
+      # TODO: Reenable this once we delete the hacky `Base.show` definitions
+      # in `BlockSparseArraysTensorAlgebraExt`.
+      @test_broken sprint(show, "text/plain", a) ==
+        "$(summary(a)):$(zero(eltype(a)))  $(eltype(a)(12))  │  ⋅  ⋅\n $(zero(eltype(a)))   $(zero(eltype(a)))  │  ⋅  ⋅\n ───────────┼──────\n  ⋅     ⋅   │  ⋅  ⋅\n  ⋅     ⋅   │  ⋅  ⋅"
+    end
+  end
 end
