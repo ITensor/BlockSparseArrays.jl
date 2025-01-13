@@ -43,8 +43,8 @@ function _allocate_svd_output(A::AbstractBlockSparseMatrix, full::Bool, ::Algori
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
   # this is a convention, which at least gives the expected results for blockdiagonal
-  emptyrows = findall(∉(browIs), 1:bmn)
-  emptycols = findall(∉(bcolIs), 1:bmn)
+  emptyrows = findall(∉(browIs), 1:bm)
+  emptycols = findall(∉(bcolIs), 1:bn)
   for (row, col) in zip(emptyrows, emptycols)
     slengths[col] = min(brows[row], bcols[col])
   end
@@ -73,5 +73,20 @@ function svd!(
     S[bcol] = bUSV.S
     Vt[bcol, bcol] = bUSV.Vt
   end
+
+  # fill in values for blocks that aren't present, pairing them in order of occurence
+  block_inds_S = eachblockstoredindex(S)
+  i = findfirst(∉(block_inds_S), blockaxes(S, 1))
+  bIs = collect(eachblockstoredindex(U))
+  browIs = Int.(first.(Tuple.(bIs)))
+  emptyrows = findall(∉(browIs), 1:blocksize(U, 1))
+  j = 0
+  while !isnothing(i)
+    copyto!(@view!(Vt[Block(i), Block(i)]), LinearAlgebra.I)
+    j += 1
+    copyto!(@view!(U[Block(emptyrows[j]), Block(i)]), LinearAlgebra.I)
+    i = findnext(∉(block_inds_S), blockaxes(S, 1), i + 1)
+  end
+
   return SVD(U, S, Vt)
 end

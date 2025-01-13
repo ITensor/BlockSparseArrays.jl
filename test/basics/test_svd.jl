@@ -1,14 +1,15 @@
 using Test
 using BlockSparseArrays
-using BlockSparseArrays: BlockSparseArray, svd, BlockDiagonal
+using BlockSparseArrays: BlockSparseArray, svd, BlockDiagonal, eachblockstoredindex
 using BlockArrays
-using LinearAlgebra: LinearAlgebra, Diagonal, svdvals
 using Random
+using DiagonalArrays: diagonal
+using LinearAlgebra: LinearAlgebra
 
 function test_svd(a, usv)
   U, S, V = usv
 
-  @test U * Diagonal(S) * V' ≈ a
+  @test U * diagonal(S) * V' ≈ a
   @test U' * U ≈ LinearAlgebra.I
   @test V' * V ≈ LinearAlgebra.I
 end
@@ -43,33 +44,35 @@ end
   usv = svd(a)
   # TODO: `BlockDiagonal * Adjoint` errors
   test_svd(a, usv)
-  @test usv.U isa BlockDiagonal
-  @test usv.Vt isa BlockDiagonal
-  @test usv.S isa BlockVector
 end
-
-a = mortar([rand(2, 2) for i in 1:2, j in 1:3])
-usv = svd(a)
-test_svd(a, usv)
-
-a = mortar([rand(2, 2) for i in 1:3, j in 1:2])
-usv = svd(a)
-test_svd(a, usv)
 
 # blocksparse 
 # -----------
 @testset "($m, $n) BlockSparseMatrix{$T}" for ((m, n), T) in
                                               Iterators.product(blockszs, eltypes)
   a = BlockSparseArray{T}(m, n)
+
+  # test empty matrix
+  usv_empty = svd(a)
+  test_svd(a, usv_empty)
+
+  # test blockdiagonal
   for i in LinearAlgebra.diagind(blocks(a))
     I = CartesianIndices(blocks(a))[i]
     a[Block(I.I...)] = rand(T, size(blocks(a)[i]))
   end
-  perm = Random.randperm(length(m))
-  a = a[Block.(perm), Block.(1:length(n))]
-
-  # errors because `blocks(a)[CartesianIndex.(...)]` is not implemented
   usv = svd(a)
-  # TODO: `BlockDiagonal * Adjoint` errors
   test_svd(a, usv)
+
+  perm = Random.randperm(length(m))
+  b = a[Block.(perm), Block.(1:length(n))]
+  usv = svd(b)
+  test_svd(b, usv)
+
+  # test permuted blockdiagonal with missing row/col
+  I_removed = rand(eachblockstoredindex(b))
+  c = copy(b)
+  delete!(blocks(c).storage, CartesianIndex(Int.(Tuple(I_removed))))
+  usv = svd(c)
+  test_svd(c, usv)
 end
