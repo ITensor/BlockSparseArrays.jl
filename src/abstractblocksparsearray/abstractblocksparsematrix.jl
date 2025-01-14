@@ -43,8 +43,8 @@ function _allocate_svd_output(A::AbstractBlockSparseMatrix, full::Bool, ::Algori
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
   # this is a convention, which at least gives the expected results for blockdiagonal
-  emptyrows = findall(∉(browIs), 1:bm)
-  emptycols = findall(∉(bcolIs), 1:bn)
+  emptyrows = setdiff(1:bm, browIs)
+  emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
     slengths[col] = min(brows[row], bcols[col])
   end
