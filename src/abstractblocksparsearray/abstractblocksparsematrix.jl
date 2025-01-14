@@ -82,9 +82,9 @@ function svd!(
   emptyrows = findall(∉(browIs), 1:blocksize(U, 1))
   j = 0
   while !isnothing(i)
-    copyto!(@view!(Vt[Block(i), Block(i)]), LinearAlgebra.I)
+    copyto!(@view!(Vt[Block(i, i)]), LinearAlgebra.I)
     j += 1
-    copyto!(@view!(U[Block(emptyrows[j]), Block(i)]), LinearAlgebra.I)
+    copyto!(@view!(U[Block(emptyrows[j], i)]), LinearAlgebra.I)
     i = findnext(∉(block_inds_S), blockaxes(S, 1), i + 1)
   end
 
