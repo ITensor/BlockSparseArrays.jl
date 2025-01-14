@@ -54,6 +54,12 @@ function _allocate_svd_output(A::AbstractBlockSparseMatrix, full::Bool, ::Algori
   S = similar(A, real(eltype(A)), s_axis)
   Vt = similar(A, s_axis, axes(A, 2))
 
+  # also fill in identities for blocks that aren't present
+  for (row, col) in zip(emptyrows, emptycols)
+    copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
+    copyto!(@view!(Vt[Block(col, col)]), LinearAlgebra.I)
+  end
+
   return U, S, Vt
 end
 
@@ -72,20 +78,6 @@ function svd!(
     U[brow, bcol] = bUSV.U
     S[bcol] = bUSV.S
     Vt[bcol, bcol] = bUSV.Vt
-  end
-
-  # fill in values for blocks that aren't present, pairing them in order of occurence
-  block_inds_S = eachblockstoredindex(S)
-  i = findfirst(∉(block_inds_S), blockaxes(S, 1))
-  bIs = collect(eachblockstoredindex(U))
-  browIs = Int.(first.(Tuple.(bIs)))
-  emptyrows = findall(∉(browIs), 1:blocksize(U, 1))
-  j = 0
-  while !isnothing(i)
-    copyto!(@view!(Vt[Block(i, i)]), LinearAlgebra.I)
-    j += 1
-    copyto!(@view!(U[Block(emptyrows[j], i)]), LinearAlgebra.I)
-    i = findnext(∉(block_inds_S), blockaxes(S, 1), i + 1)
   end
 
   return SVD(U, S, Vt)
