@@ -1,4 +1,12 @@
 module BlockSparseArrays
+
+export BlockSparseArray,
+  BlockSparseMatrix,
+  BlockSparseVector,
+  blockstoredlength,
+  eachblockstoredindex,
+  eachstoredblock
+
 include("BlockArraysExtensions/BlockArraysExtensions.jl")
 include("blocksparsearrayinterface/blocksparsearrayinterface.jl")
 include("blocksparsearrayinterface/linearalgebra.jl")
@@ -22,4 +30,5 @@ include("abstractblocksparsearray/cat.jl")
 include("blocksparsearray/defaults.jl")
 include("blocksparsearray/blocksparsearray.jl")
 include("BlockArraysSparseArraysBaseExt/BlockArraysSparseArraysBaseExt.jl")
+
 end
