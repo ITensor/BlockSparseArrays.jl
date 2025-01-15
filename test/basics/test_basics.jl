@@ -192,6 +192,9 @@ arrayts = (Array, JLArray)
       for b in (
         (b = copy(a); @allowscalar b[] = 2; b),
         (b = copy(a); @allowscalar b[CartesianIndex()] = 2; b),
+        (b = copy(a); @allowscalar b[CartesianIndex()] = 2; b),
+        # Regression test for https://github.com/ITensor/BlockSparseArrays.jl/issues/27.
+        (b = copy(a); @allowscalar b[Block()] = dev(fill(2)); b),
       )
         @test size(b) == ()
         @test isone(length(b))
@@ -202,8 +205,7 @@ arrayts = (Array, JLArray)
         @test @allowscalar(b[CartesianIndex()]) == 2
         @test b[Block()] == dev(fill(2))
         @test @allowscalar(b[Block()][]) == 2
-        # Broken:
-        ## @test b[Block()[]] == 2
+        @test b[Block()[]] == 2
       end
     end
 

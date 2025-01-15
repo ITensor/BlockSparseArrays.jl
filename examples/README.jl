@@ -87,8 +87,7 @@ function main()
   @test b[Block(1, 2)] == a₁₂
 
   ## Matrix multiplication
-  ## TODO: Fix this, broken.
-  @test_broken b * b ≈ Array(b) * Array(b)
+  @test b * b ≈ Array(b) * Array(b)
 
   permuted_b = permutedims(b, (2, 1))
   @test permuted_b isa BlockSparseArray
