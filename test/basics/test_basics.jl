@@ -205,7 +205,7 @@ arrayts = (Array, JLArray)
         @test @allowscalar(b[CartesianIndex()]) == 2
         @test b[Block()] == dev(fill(2))
         @test @allowscalar(b[Block()][]) == 2
-        @test b[Block()[]] == 2
+        @test @allowscalar(b[Block()[]]) == 2
       end
     end
 
