@@ -157,7 +157,8 @@ end
   a::AbstractArray{<:Any,0}, value, I::BlockIndex{0}
 )
   a_b = blocks(a)[]
-  a_b[] = value
+  # `value[]` handles scalars and 0-dimensional arrays.
+  a_b[] = value[]
   # Set the block, required if it is structurally zero.
   blocks(a)[] = a_b
   return a
