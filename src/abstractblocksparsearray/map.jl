@@ -1,6 +1,6 @@
 using ArrayLayouts: LayoutArray
 using BlockArrays: blockisequal
-using DerivableInterfaces: @interface, interface
+using DerivableInterfaces: @interface, AbstractArrayInterface, interface
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase: SparseArraysBase, SparseArrayStyle
 
@@ -49,15 +49,30 @@ function reblock(
   return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]
 end
 
+# `map!` specialized to zero-dimensional inputs.
+function map_zero_dim! end
+
+@interface ::AbstractArrayInterface function map_zero_dim!(
+  f, a_dest::AbstractArray, a_srcs::AbstractArray...
+)
+  a_dest[] = f.(map(a_src -> a_src[], a_srcs)...)
+  return a_dest
+end
+
 # TODO: Move to `blocksparsearrayinterface/map.jl`.
 # TODO: Rewrite this so that it takes the blocking structure
 # made by combining the blocking of the axes (i.e. the blocking that
 # is used to determine `union_stored_blocked_cartesianindices(...)`).
 # `reblock` is a partial solution to that, but a bit ad-hoc.
 ## TODO: Make this an `@interface AbstractBlockSparseArrayInterface` function.
-@interface ::AbstractBlockSparseArrayInterface function Base.map!(
+@interface interface::AbstractBlockSparseArrayInterface function Base.map!(
   f, a_dest::AbstractArray, a_srcs::AbstractArray...
 )
+  if iszero(ndims(a_dest))
+    @interface interface map_zero_dim!(f, a_dest, a_srcs...)
+    return a_dest
+  end
+
   a_dest, a_srcs = reblock(a_dest), reblock.(a_srcs)
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
     BI_dest = blockindexrange(a_dest, I)

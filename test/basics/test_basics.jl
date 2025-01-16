@@ -187,8 +187,9 @@ arrayts = (Array, JLArray)
       @test iszero(@allowscalar(a[CartesianIndex()]))
       @test a[Block()] == dev(fill(0))
       @test iszero(@allowscalar(a[Block()][]))
-      # Broken:
-      ## @test b[Block()[]] == 2
+      @test @allowscalar(a[Block()[]]) == 0
+      @test Array(a) isa Array{elt,0}
+      @test Array(a) == fill(0)
       for b in (
         (b = copy(a); @allowscalar b[] = 2; b),
         (b = copy(a); @allowscalar b[CartesianIndex()] = 2; b),
@@ -206,6 +207,8 @@ arrayts = (Array, JLArray)
         @test b[Block()] == dev(fill(2))
         @test @allowscalar(b[Block()][]) == 2
         @test @allowscalar(b[Block()[]]) == 2
+        @test Array(b) isa Array{elt,0}
+        @test Array(b) == fill(2)
       end
     end
 
