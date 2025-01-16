@@ -43,7 +43,9 @@ end
   a = BlockDiagonal([rand(T, i, j) for (i, j) in zip(m, n)])
   usv = svd(a)
   # TODO: `BlockDiagonal * Adjoint` errors
-  test_svd(a, usv)
+  # TODO: This is broken because of https://github.com/JuliaLang/julia/issues/57034,
+  # fix and reenable.
+  #test_svd(a, usv)
 end
 
 # blocksparse 
