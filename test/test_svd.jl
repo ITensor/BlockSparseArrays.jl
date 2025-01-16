@@ -1,15 +1,13 @@
-using Test
-using BlockSparseArrays
-using BlockSparseArrays: BlockSparseArray, svd, BlockDiagonal, eachblockstoredindex
-using BlockArrays
-using Random
+using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
+using BlockSparseArrays: BlockSparseArray, BlockDiagonal, eachblockstoredindex, svd
 using DiagonalArrays: diagonal
 using LinearAlgebra: LinearAlgebra
+using Random: Random
+using Test: @inferred, @testset, @test
 
-function test_svd(a, usv)
+function test_svd(a, usv; broken=false)
   U, S, V = usv
-
-  @test U * diagonal(S) * V' ≈ a
+  @test U * diagonal(S) * V' ≈ a broken = broken
   @test U' * U ≈ LinearAlgebra.I
   @test V' * V ≈ LinearAlgebra.I
 end
@@ -41,11 +39,17 @@ end
 @testset "($m, $n) BlockDiagonal{$T}" for ((m, n), T) in
                                           Iterators.product(blockszs, eltypes)
   a = BlockDiagonal([rand(T, i, j) for (i, j) in zip(m, n)])
-  usv = svd(a)
-  # TODO: `BlockDiagonal * Adjoint` errors
-  # TODO: This is broken because of https://github.com/JuliaLang/julia/issues/57034,
-  # fix and reenable.
-  #test_svd(a, usv)
+  if VERSION ≥ v"1.11"
+    usv = svd(a)
+    # TODO: `BlockDiagonal * Adjoint` errors
+    # TODO: This is broken because of https://github.com/JuliaLang/julia/issues/57034,
+    # fix and reenable.
+    test_svd(a, usv; broken=true)
+  else
+    # `svd(a)` depends on `diagind(::AbstractMatrix, ::IndexStyle)`
+    # being defined, but it was only introduced in Julia v1.11.
+    @test svd(a) broken = true
+  end
 end
 
 # blocksparse 

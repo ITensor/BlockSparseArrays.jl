@@ -35,6 +35,7 @@ include("abstractblocksparsearray/broadcast.jl")
 include("abstractblocksparsearray/map.jl")
 include("abstractblocksparsearray/linearalgebra.jl")
 include("abstractblocksparsearray/cat.jl")
+include("abstractblocksparsearray/adapt.jl")
 
 # functions specifically for BlockSparseArray
 include("blocksparsearray/defaults.jl")
