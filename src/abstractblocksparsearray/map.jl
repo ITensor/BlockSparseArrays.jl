@@ -1,6 +1,7 @@
 using ArrayLayouts: LayoutArray
 using BlockArrays: blockisequal
 using DerivableInterfaces: @interface, AbstractArrayInterface, interface
+using GPUArraysCore: @allowscalar
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase: SparseArraysBase, SparseArrayStyle
 
@@ -55,7 +56,7 @@ function map_zero_dim! end
 @interface ::AbstractArrayInterface function map_zero_dim!(
   f, a_dest::AbstractArray, a_srcs::AbstractArray...
 )
-  a_dest[] = f.(map(a_src -> a_src[], a_srcs)...)
+  @allowscalar a_dest[] = f.(map(a_src -> a_src[], a_srcs)...)
   return a_dest
 end
 

@@ -15,7 +15,6 @@ using BlockArrays:
   blocks,
   findblockindex
 using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface
-using GPUArraysCore: @allowscalar
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
   AbstractSparseArrayInterface,
@@ -66,7 +65,7 @@ end
 @interface ::AbstractBlockSparseArrayInterface function Base.getindex(
   a::AbstractArray{<:Any,0}
 )
-  return @allowscalar a[Block()[]]
+  return a[Block()[]]
 end
 
 # a[1:2, 1:2]
@@ -157,7 +156,7 @@ end
 )
   a_b = blocks(a)[]
   # `value[]` handles scalars and 0-dimensional arrays.
-  @allowscalar a_b[] = value[]
+  a_b[] = value[]
   # Set the block, required if it is structurally zero.
   blocks(a)[] = a_b
   return a

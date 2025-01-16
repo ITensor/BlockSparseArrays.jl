@@ -57,6 +57,12 @@ function Base.setindex!(a::AbstractBlockSparseArray{<:Any,0}, value)
   return a
 end
 
+# Catch zero-dimensional case to avoid scalar indexing.
+function Base.setindex!(a::AbstractBlockSparseArray{<:Any,0}, value, ::Block{0})
+  blocks(a)[] = value
+  return a
+end
+
 function Base.setindex!(
   a::AbstractBlockSparseArray{<:Any,N}, value, I::Vararg{Block{1},N}
 ) where {N}

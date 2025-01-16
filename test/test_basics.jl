@@ -183,17 +183,17 @@ arrayts = (Array, JLArray)
       @test blocksize(a) == ()
       @test blocksizes(a) == fill(())
       @test iszero(blockstoredlength(a))
-      @test iszero(a[])
-      @test iszero([CartesianIndex()])
+      @test iszero(@allowscalar(a[]))
+      @test iszero(@allowscalar(a[CartesianIndex()]))
       @test a[Block()] == dev(fill(0))
-      @test iszero(a[Block()][])
-      @test iszero(a[Block()[]])
+      @test iszero(@allowscalar(a[Block()][]))
+      @test iszero(@allowscalar(a[Block()[]]))
       @test Array(a) isa Array{elt,0}
       @test Array(a) == fill(0)
       for b in (
-        (b = copy(a);  b[] = 2; b),
-        (b = copy(a); b[CartesianIndex()] = 2; b),
-        (b = copy(a); b[CartesianIndex()] = 2; b),
+        (b = copy(a); @allowscalar(b[] = 2); b),
+        (b = copy(a); @allowscalar(b[CartesianIndex()] = 2); b),
+        (b = copy(a); @allowscalar(b[Block()[]] = 2); b),
         # Regression test for https://github.com/ITensor/BlockSparseArrays.jl/issues/27.
         (b = copy(a); b[Block()] = dev(fill(2)); b),
       )
@@ -202,11 +202,11 @@ arrayts = (Array, JLArray)
         @test blocksize(b) == ()
         @test blocksizes(b) == fill(())
         @test isone(blockstoredlength(b))
-        @test b[] == 2
-        @test b[CartesianIndex()] == 2
+        @test @allowscalar(b[]) == 2
+        @test @allowscalar(b[CartesianIndex()]) == 2
         @test b[Block()] == dev(fill(2))
-        @test b[Block()][] == 2
-        @test b[Block()[]] == 2
+        @test @allowscalar(b[Block()][]) == 2
+        @test @allowscalar(b[Block()[]]) == 2
         @test Array(b) isa Array{elt,0}
         @test Array(b) == fill(2)
       end
