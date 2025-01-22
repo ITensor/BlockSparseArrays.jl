@@ -7,7 +7,9 @@ using Test: @inferred, @testset, @test
 
 function test_svd(a, usv)
   U, S, V = usv
-  return (U * diagonal(S) * V' ≈ a) && (U' * U ≈ LinearAlgebra.I) && (V' * V ≈ LinearAlgebra.I)
+  return (U * diagonal(S) * V' ≈ a) &&
+         (U' * U ≈ LinearAlgebra.I) &&
+         (V' * V ≈ LinearAlgebra.I)
 end
 
 # regular matrix
