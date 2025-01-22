@@ -68,11 +68,8 @@ function BlockArrays.viewblock(
   a::AbstractBlockSparseArray{<:Any,N}, block::Vararg{Block{1},N}
 ) where {N}
   I = CartesianIndex(Int.(block))
-  # TODO: Use `eachblockstoredindex`.
-  if I ∈ eachstoredindex(blocks(a))
-    return blocks(a)[I]
-  end
-  return BlockView(a, block)
+  # TODO: isblockstored
+  return isstored(blocks(a), I) ? blocks(a)[I] : BlockView(a, block)
 end
 
 # Specialized code for getting the view of a subblock.
