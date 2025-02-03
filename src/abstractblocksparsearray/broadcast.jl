@@ -46,3 +46,23 @@ function Broadcast.BroadcastStyle(
 )
   return BlockSparseArrayStyle{ndims(arraytype)}()
 end
+
+# These catch cases that aren't caught by the standard
+# `BlockSparseArrayStyle` definition, and also fix
+# ambiguity issues.
+function Base.copyto!(dest::AnyAbstractBlockSparseArray, bc::Broadcasted)
+  copyto_blocksparse!(dest, bc)
+  return dest
+end
+function Base.copyto!(
+  dest::AnyAbstractBlockSparseArray, bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}}
+)
+  copyto_blocksparse!(dest, bc)
+  return dest
+end
+function Base.copyto!(
+  dest::AnyAbstractBlockSparseArray{<:Any,N}, bc::Broadcasted{BlockSparseArrayStyle{N}}
+) where {N}
+  copyto_blocksparse!(dest, bc)
+  return dest
+end
