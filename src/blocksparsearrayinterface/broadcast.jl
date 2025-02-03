@@ -44,6 +44,46 @@ function Base.copyto!(
   # convert to map
   # flatten and only keep the AbstractArray arguments
   m = Mapped(bc)
-  @interface interface(bc) map!(m.f, dest, m.args...)
+  @interface interface(dest, bc) map!(m.f, dest, m.args...)
+  return dest
+end
+
+# Broadcasting implementation
+# TODO: Delete this in favor of `DerivableInterfaces` version.
+function Base.copyto!(dest::AnyAbstractBlockSparseArray, bc::Broadcasted)
+  # convert to map
+  # flatten and only keep the AbstractArray arguments
+  m = Mapped(bc)
+  # TODO: Include `bc` when determining interface, currently
+  # `interface(::Type{<:Base.Broadcast.DefaultArrayStyle})`
+  # isn't defined.
+  @interface interface(dest) map!(m.f, dest, m.args...)
+  return dest
+end
+
+# Broadcasting implementation
+# TODO: Delete this in favor of `DerivableInterfaces` version.
+function Base.copyto!(
+  dest::AnyAbstractBlockSparseArray, bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}}
+)
+  # convert to map
+  # flatten and only keep the AbstractArray arguments
+  m = Mapped(bc)
+  # TODO: Include `bc` when determining interface, currently
+  # `interface(::Type{<:Base.Broadcast.DefaultArrayStyle})`
+  # isn't defined.
+  @interface interface(dest) map!(m.f, dest, m.args...)
+  return dest
+end
+
+# Broadcasting implementation
+# TODO: Delete this in favor of `DerivableInterfaces` version.
+function Base.copyto!(
+  dest::AnyAbstractBlockSparseArray{<:Any,N}, bc::Broadcasted{BlockSparseArrayStyle{N}}
+) where {N}
+  # convert to map
+  # flatten and only keep the AbstractArray arguments
+  m = Mapped(bc)
+  @interface interface(dest, bc) map!(m.f, dest, m.args...)
   return dest
 end

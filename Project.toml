@@ -25,6 +25,7 @@ LabelledNumbers = "f856a3a6-4152-4ec4-b2a7-02c1a55d7993"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 
 [extensions]
+BlockSparseArraysGradedUnitRangesExt = "GradedUnitRanges"
 BlockSparseArraysTensorAlgebraExt = ["LabelledNumbers", "TensorAlgebra"]
 
 [compat]

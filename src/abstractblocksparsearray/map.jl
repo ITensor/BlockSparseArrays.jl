@@ -69,10 +69,18 @@ end
 @interface interface::AbstractBlockSparseArrayInterface function Base.map!(
   f, a_dest::AbstractArray, a_srcs::AbstractArray...
 )
+  if isempty(a_srcs)
+    # Broadcast expressions of the form `a .= 2`.
+    error("Not implemented.")
+  end
   if iszero(ndims(a_dest))
     @interface interface map_zero_dim!(f, a_dest, a_srcs...)
     return a_dest
   end
+
+  # TODO: This assumes element types are numbers, generalize this logic.
+  elt = promote_type(eltype.(a_srcs)...)
+  f_preserves_zeros = f(zero(elt)) == zero(elt)
 
   a_dest, a_srcs = reblock(a_dest), reblock.(a_srcs)
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
@@ -88,11 +96,13 @@ end
     end
     subblock_dest = @view block_dest[BI_dest.indices...]
     subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
-    # TODO: Use `map!!` to handle immutable blocks.
-    map!(f, subblock_dest, subblock_srcs...)
-    # Replace the entire block, handles initializing new blocks
-    # or if blocks are immutable.
-    blocks(a_dest)[Int.(Tuple(_block(BI_dest)))...] = block_dest
+    if f_preserves_zeros && any(!iszero, subblock_srcs)
+      # TODO: Use `map!!` to handle immutable blocks.
+      map!(f, subblock_dest, subblock_srcs...)
+      # Replace the entire block, handles initializing new blocks
+      # or if blocks are immutable.
+      blocks(a_dest)[Int.(Tuple(_block(BI_dest)))...] = block_dest
+    end
   end
   return a_dest
 end
@@ -120,7 +130,17 @@ end
 end
 
 function Base.map!(f, a_dest::AbstractArray, a_srcs::AnyAbstractBlockSparseArray...)
-  @interface interface(a_srcs...) map!(f, a_dest, a_srcs...)
+  @interface interface(a_dest, a_srcs...) map!(f, a_dest, a_srcs...)
+  return a_dest
+end
+function Base.map!(f, a_dest::AnyAbstractBlockSparseArray, a_srcs::AbstractArray...)
+  @interface interface(a_dest, a_srcs...) map!(f, a_dest, a_srcs...)
+  return a_dest
+end
+function Base.map!(
+  f, a_dest::AnyAbstractBlockSparseArray, a_srcs::AnyAbstractBlockSparseArray...
+)
+  @interface interface(a_dest, a_srcs...) map!(f, a_dest, a_srcs...)
   return a_dest
 end
 
