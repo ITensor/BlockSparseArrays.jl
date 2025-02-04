@@ -2,7 +2,7 @@
 using Test: @test, @testset
 using BlockArrays:
   AbstractBlockArray, Block, BlockedOneTo, blockedrange, blocklengths, blocksize
-using BlockSparseArrays: BlockSparseArray, blockstoredlength
+using BlockSparseArrays: BlockSparseArray, BlockSparseMatrix, blockstoredlength
 using GradedUnitRanges:
   GradedUnitRanges,
   GradedOneTo,
@@ -317,6 +317,21 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     a2[Block(2, 1)] = randn(elt, size(@view(a2[Block(2, 1)])))
     @test Array(a1' * a2) ≈ Array(a1') * Array(a2)
     @test Array(a1 * a2') ≈ Array(a1) * Array(a2')
+  end
+  @testset "Construct from dense" begin
+    r = gradedrange([U1(0) => 2, U1(1) => 3])
+    a1 = randn(elt, 2, 2)
+    a2 = randn(elt, 3, 3)
+    a = cat(a1, a2; dims=(1, 2))
+    b = a[r, dual(r)]
+    @test eltype(b) === elt
+    @test b isa BlockSpareMatrix{elt}
+    @test blockstoredlength(b) == 2
+    @test b[Block(1, 1)] == a1
+    @test iszero(b[Block(2, 1)])
+    @test iszero(b[Block(1, 2)])
+    @test b[Block(2, 2)] == a2
+    @test all(GradedUnitRanges.space_isequal.(axes(b), (r, dual(r))))
   end
 end
 end
