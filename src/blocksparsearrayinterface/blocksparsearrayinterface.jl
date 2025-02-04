@@ -11,6 +11,7 @@ using BlockArrays:
   BlockedVector,
   block,
   blockcheckbounds,
+  blockisequal,
   blocklengths,
   blocks,
   findblockindex
