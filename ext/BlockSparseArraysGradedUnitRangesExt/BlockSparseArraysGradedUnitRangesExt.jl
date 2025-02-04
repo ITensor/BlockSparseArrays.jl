@@ -35,7 +35,9 @@ function Base.similar(
   return similar_blocksparse(a, elt, axes)
 end
 
-function Base.getindex(a::AbstractArray, I::AbstractGradedUnitRange...)
+function Base.getindex(
+  a::AbstractArray, I1::AbstractGradedUnitRange, I_rest::AbstractGradedUnitRange...
+)
   a′ = similar(a, only.(axes.(I))...)
   a′ .= a
   return a′
