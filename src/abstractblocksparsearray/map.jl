@@ -71,7 +71,8 @@ end
 )
   if isempty(a_srcs)
     # Broadcast expressions of the form `a .= 2`.
-    error("Not implemented.")
+    @interface interface fill!(a_dest, f())
+    return a_dest
   end
   if iszero(ndims(a_dest))
     @interface interface map_zero_dim!(f, a_dest, a_srcs...)

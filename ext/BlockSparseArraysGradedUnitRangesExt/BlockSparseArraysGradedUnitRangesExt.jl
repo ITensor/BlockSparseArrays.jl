@@ -1,7 +1,8 @@
 module BlockSparseArraysGradedUnitRangesExt
 
-using BlockSparseArrays: BlockSparseArray
+using BlockSparseArrays: AnyAbstractBlockSparseArray, BlockSparseArray, blocktype
 using GradedUnitRanges: AbstractGradedUnitRange
+using TypeParameterAccessors: set_ndims, unwrap_array_type
 
 # A block spare array similar to the input (dense) array.
 # TODO: Make `BlockSparseArrays.blocksparse_similar` more general and use that,
@@ -13,7 +14,11 @@ function similar_blocksparse(
 )
   # TODO: Probably need to unwrap the type of `a` in certain cases
   # to make a proper block type.
-  return BlockSparseArray{elt,length(axes),typeof(a)}(axes)
+  return BlockSparseArray{
+    elt,length(axes),set_ndims(unwrap_array_type(blocktype(a)), length(axes))
+  }(
+    axes
+  )
 end
 
 function Base.similar(
@@ -35,12 +40,43 @@ function Base.similar(
   return similar_blocksparse(a, elt, axes)
 end
 
-function Base.getindex(
-  a::AbstractArray, I1::AbstractGradedUnitRange, I_rest::AbstractGradedUnitRange...
+# Fix ambiguity error with `BlockSparseArrays.jl`.
+function Base.similar(
+  a::AnyAbstractBlockSparseArray,
+  elt::Type,
+  axes::Tuple{
+    AbstractGradedUnitRange,AbstractGradedUnitRange,Vararg{AbstractGradedUnitRange}
+  },
 )
+  return similar_blocksparse(a, elt, axes)
+end
+
+function getindex_blocksparse(a::AbstractArray, I::AbstractUnitRange...)
   a′ = similar(a, only.(axes.(I))...)
   a′ .= a
   return a′
+end
+
+function Base.getindex(
+  a::AbstractArray, I1::AbstractGradedUnitRange, I_rest::AbstractGradedUnitRange...
+)
+  return getindex_blocksparse(a, I1, I_rest...)
+end
+
+# Fix ambiguity errors.
+function Base.getindex(
+  a::AnyAbstractBlockSparseArray,
+  I1::AbstractGradedUnitRange,
+  I_rest::AbstractGradedUnitRange...,
+)
+  return getindex_blocksparse(a, I1, I_rest...)
+end
+function Base.getindex(
+  a::AnyAbstractBlockSparseArray{<:Any,2},
+  I1::AbstractGradedUnitRange,
+  I2::AbstractGradedUnitRange,
+)
+  return getindex_blocksparse(a, I1, I2)
 end
 
 end
