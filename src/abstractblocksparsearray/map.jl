@@ -77,11 +77,8 @@ end
     @interface interface map_zero_dim!(f, a_dest, a_srcs...)
     return a_dest
   end
-
   # TODO: This assumes element types are numbers, generalize this logic.
-  elt = promote_type(eltype.(a_srcs)...)
-  f_preserves_zeros = f(zero(elt)) == zero(elt)
-
+  f_preserves_zeros = f(zero.(eltype.(a_srcs))...) == zero(eltype(a_dest))
   a_dest, a_srcs = reblock(a_dest), reblock.(a_srcs)
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
     BI_dest = blockindexrange(a_dest, I)
