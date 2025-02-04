@@ -40,6 +40,31 @@ function eachstoredblock(a::AbstractArray)
   return storedvalues(blocks(a))
 end
 
+# TODO: Generalize this, this catches simple cases
+# where the more general definition isn't specific enough.
+blocktype(a::Array) = typeof(a)
+# TODO: Maybe unwrap SubArrays?
+function blocktype(a::AbstractArray)
+  # TODO: Unfortunately, this doesn't always give
+  # a concrete type, even when it could be concrete, i.e.
+  #=
+  ```julia
+  julia> eltype(blocks(BlockArray(randn(2, 2), [1, 1], [1, 1])))
+  Matrix{Float64} (alias for Array{Float64, 2})
+
+  julia> eltype(blocks(BlockedArray(randn(2, 2), [1, 1], [1, 1])))
+  AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
+
+  julia> eltype(blocks(randn(2, 2)))
+  AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
+  ```
+  =#
+  if isempty(blocks(a))
+    return eltype(blocks(a))
+  end
+  return eltype(first(blocks(a)))
+end
+
 abstract type AbstractBlockSparseArrayInterface <: AbstractSparseArrayInterface end
 
 # TODO: Also support specifying the `blocktype` along with the `eltype`.
