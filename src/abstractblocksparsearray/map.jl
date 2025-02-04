@@ -1,5 +1,39 @@
 using ArrayLayouts: LayoutArray
+using BlockArrays: AbstractBlockVector, Block
 using LinearAlgebra: Adjoint, Transpose
+
+# TODO: Make this more general, independent of `AbstractBlockSparseArray`.
+# If the blocking of the slice doesn't match the blocking of the
+# parent array, reblock according to the blocking of the parent array.
+function reblock(
+  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{AbstractUnitRange}}}
+)
+  # TODO: This relies on the behavior that slicing a block sparse
+  # array with a UnitRange inherits the blocking of the underlying
+  # block sparse array, we might change that default behavior
+  # so this might become something like `@blocked parent(a)[...]`.
+  return @view parent(a)[UnitRange{Int}.(parentindices(a))...]
+end
+
+# TODO: Make this more general, independent of `AbstractBlockSparseArray`.
+function reblock(
+  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{NonBlockedArray}}}
+)
+  return @view parent(a)[map(I -> I.array, parentindices(a))...]
+end
+
+# TODO: Make this more general, independent of `AbstractBlockSparseArray`.
+function reblock(
+  a::SubArray{
+    <:Any,
+    <:Any,
+    <:AbstractBlockSparseArray,
+    <:Tuple{Vararg{BlockIndices{<:AbstractBlockVector{<:Block{1}}}}},
+  },
+)
+  # Remove the blocking.
+  return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]
+end
 
 function Base.map!(f, a_dest::AbstractArray, a_srcs::AnyAbstractBlockSparseArray...)
   @interface interface(a_dest, a_srcs...) map!(f, a_dest, a_srcs...)
