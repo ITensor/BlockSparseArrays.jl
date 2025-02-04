@@ -36,6 +36,14 @@ function Base.similar(bc::Broadcasted{<:BlockSparseArrayStyle}, elt::Type)
   return similar(first(m.args), elt, combine_axes(axes.(m.args)...))
 end
 
+# Catches cases like `dest .= value` or `dest .= value1 .+ value2`.
+# If the RHS is zero, this makes sure that the storage is emptied,
+# which is logic that is handled by `fill!`.
+function copyto_blocksparse!(dest::AbstractArray, bc::Broadcasted{<:AbstractArrayStyle{0}})
+  value = bc.f(bc.args...)
+  return fill!(dest, value)
+end
+
 # Broadcasting implementation
 # TODO: Delete this in favor of `DerivableInterfaces` version.
 function copyto_blocksparse!(dest::AbstractArray, bc::Broadcasted)

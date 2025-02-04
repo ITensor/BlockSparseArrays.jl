@@ -325,7 +325,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     a = cat(a1, a2; dims=(1, 2))
     b = a[r, dual(r)]
     @test eltype(b) === elt
-    @test b isa BlockSpareMatrix{elt}
+    @test b isa BlockSparseMatrix{elt}
     @test blockstoredlength(b) == 2
     @test b[Block(1, 1)] == a1
     @test iszero(b[Block(2, 1)])
