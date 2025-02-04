@@ -41,7 +41,7 @@ end
 # which is logic that is handled by `fill!`.
 function copyto_blocksparse!(dest::AbstractArray, bc::Broadcasted{<:AbstractArrayStyle{0}})
   value = bc.f(bc.args...)
-  return fill!(dest, value)
+  return @interface BlockSparseArrayInterface() fill!(dest, value)
 end
 
 # Broadcasting implementation
