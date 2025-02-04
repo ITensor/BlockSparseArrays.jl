@@ -96,13 +96,18 @@ end
     end
     subblock_dest = @view block_dest[BI_dest.indices...]
     subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
-    if f_preserves_zeros && any(!iszero, subblock_srcs)
-      # TODO: Use `map!!` to handle immutable blocks.
-      map!(f, subblock_dest, subblock_srcs...)
-      # Replace the entire block, handles initializing new blocks
-      # or if blocks are immutable.
-      blocks(a_dest)[Int.(Tuple(_block(BI_dest)))...] = block_dest
+    I_dest = CartesianIndex(Int.(Tuple(_block(BI_dest))))
+    # If the function preserves zero values and all of the source blocks are zero,
+    # the output block will be zero. In that case, if the block isn't stored yet,
+    # don't do anything.
+    if f_preserves_zeros && all(iszero, subblock_srcs) && !isstored(blocks(a_dest), I_dest)
+      continue
     end
+    # TODO: Use `map!!` to handle immutable blocks.
+    map!(f, subblock_dest, subblock_srcs...)
+    # Replace the entire block, handles initializing new blocks
+    # or if blocks are immutable.
+    blocks(a_dest)[I_dest] = block_dest
   end
   return a_dest
 end
