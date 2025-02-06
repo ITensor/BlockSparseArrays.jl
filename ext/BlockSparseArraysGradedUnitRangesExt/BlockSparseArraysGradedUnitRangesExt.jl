@@ -77,7 +77,7 @@ function Base.getindex(a::Vector, I::AbstractGradedUnitRange)
   return getindex_blocksparse(a, I)
 end
 
-# Fix ambiguity errors.
+# Fix ambiguity error with BlockSparseArrays.jl.
 function Base.getindex(
   a::AnyAbstractBlockSparseArray,
   I1::AbstractGradedUnitRange,
@@ -85,6 +85,8 @@ function Base.getindex(
 )
   return getindex_blocksparse(a, I1, I_rest...)
 end
+
+# Fix ambiguity error with BlockSparseArrays.jl.
 function Base.getindex(
   a::AnyAbstractBlockSparseArray{<:Any,2},
   I1::AbstractGradedUnitRange,
