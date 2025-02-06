@@ -33,6 +33,15 @@ end
 function Base.similar(
   a::StridedArray,
   elt::Type,
+  axes::Tuple{AbstractGradedUnitRange,Vararg{AbstractGradedUnitRange}},
+)
+  return similar_blocksparse(a, elt, axes)
+end
+
+# Fix ambiguity error with `BlockArrays.jl`.
+function Base.similar(
+  a::StridedArray,
+  elt::Type,
   axes::Tuple{
     AbstractGradedUnitRange,AbstractGradedUnitRange,Vararg{AbstractGradedUnitRange}
   },
@@ -61,6 +70,11 @@ function Base.getindex(
   a::AbstractArray, I1::AbstractGradedUnitRange, I_rest::AbstractGradedUnitRange...
 )
   return getindex_blocksparse(a, I1, I_rest...)
+end
+
+# Fix ambiguity error with Base.
+function Base.getindex(a::Vector, I::AbstractGradedUnitRange)
+  return getindex_blocksparse(a, I)
 end
 
 # Fix ambiguity errors.

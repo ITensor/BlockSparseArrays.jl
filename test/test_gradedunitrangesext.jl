@@ -2,7 +2,8 @@
 using Test: @test, @testset
 using BlockArrays:
   AbstractBlockArray, Block, BlockedOneTo, blockedrange, blocklengths, blocksize
-using BlockSparseArrays: BlockSparseArray, BlockSparseMatrix, blockstoredlength
+using BlockSparseArrays:
+  BlockSparseArray, BlockSparseMatrix, BlockSparseVector, blockstoredlength
 using GradedUnitRanges:
   GradedUnitRanges,
   GradedOneTo,
@@ -332,6 +333,20 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test iszero(b[Block(1, 2)])
     @test b[Block(2, 2)] == a2
     @test all(GradedUnitRanges.space_isequal.(axes(b), (r, dual(r))))
+
+    # Regression test for Vector, which caused
+    # an ambiguity error with Base.
+    r = gradedrange([U1(0) => 2, U1(1) => 3])
+    a1 = randn(elt, 2)
+    a2 = zeros(elt, 3)
+    a = vcat(a1, a2)
+    b = a[r]
+    @test eltype(b) === elt
+    @test b isa BlockSparseVector{elt}
+    @test blockstoredlength(b) == 1
+    @test b[Block(1)] == a1
+    @test iszero(b[Block(2)])
+    @test all(GradedUnitRanges.space_isequal.(axes(b), (r,)))
   end
 end
 end
