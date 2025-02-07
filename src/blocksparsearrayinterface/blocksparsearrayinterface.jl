@@ -44,24 +44,28 @@ end
 function blockstype(a::AbstractArray)
   return typeof(blocks(a))
 end
+
+#=
+Ideally this would just be defined as `eltype(blockstype(a))`.
+However, BlockArrays.jl doesn't make `eltype(blocks(a))` concrete
+even when it could be
+(https://github.com/JuliaArrays/BlockArrays.jl/blob/v1.4.0/src/blocks.jl#L71-L74):
+```julia
+julia> eltype(blocks(BlockArray(randn(2, 2), [1, 1], [1, 1])))
+Matrix{Float64} (alias for Array{Float64, 2})
+
+julia> eltype(blocks(BlockedArray(randn(2, 2), [1, 1], [1, 1])))
+AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
+
+julia> eltype(blocks(randn(2, 2)))
+AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
+```
+Also note the current definition doesn't handle the limit
+when `blocks(a)` is empty
+=#
 function blocktype(a::AbstractArray)
   if isempty(blocks(a))
-    # TODO: Unfortunately, this doesn't always give
-    # a concrete type, even when it could be concrete, i.e.
-    #=
-    ```julia
-    julia> eltype(blocks(BlockArray(randn(2, 2), [1, 1], [1, 1])))
-    Matrix{Float64} (alias for Array{Float64, 2})
-
-    julia> eltype(blocks(BlockedArray(randn(2, 2), [1, 1], [1, 1])))
-    AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
-
-    julia> eltype(blocks(randn(2, 2)))
-    AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
-    ```
-    =#
-    # That is an issue in BlockArrays.jl that we should address.
-    return eltype(blocks(a))
+    error("`blocktype` can't be determined if `isempty(blocks(a))`.")
   end
   return mapreduce(typeof, promote_type, blocks(a))
 end
