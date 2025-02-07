@@ -84,8 +84,6 @@ struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
 @interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::AbstractArray) =
   error("Not implemented")
 
-blockstype(a::AbstractArray) = blockstype(typeof(a))
-
 @interface ::AbstractBlockSparseArrayInterface function Base.getindex(
   a::AbstractArray{<:Any,N}, I::Vararg{Int,N}
 ) where {N}
