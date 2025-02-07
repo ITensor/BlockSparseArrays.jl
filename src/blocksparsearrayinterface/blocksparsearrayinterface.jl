@@ -41,6 +41,9 @@ function eachstoredblock(a::AbstractArray)
   return storedvalues(blocks(a))
 end
 
+function blockstype(a::AbstractArray)
+  return typeof(blocks(a))
+end
 function blocktype(a::AbstractArray)
   if isempty(blocks(a))
     # TODO: Unfortunately, this doesn't always give
@@ -62,6 +65,12 @@ function blocktype(a::AbstractArray)
   end
   return mapreduce(typeof, promote_type, blocks(a))
 end
+
+using BlockArrays: BlockArray
+blockstype(::Type{<:BlockArray{<:Any,<:Any,B}}) where {B} = B
+blockstype(a::BlockArray) = blockstype(typeof(a))
+blocktype(arraytype::Type{<:BlockArray}) = eltype(blockstype(arraytype))
+blocktype(a::BlockArray) = eltype(blocks(a))
 
 abstract type AbstractBlockSparseArrayInterface <: AbstractSparseArrayInterface end
 
