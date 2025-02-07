@@ -1,13 +1,16 @@
 using Adapt: adapt
 using ArrayLayouts: zero!
 using BlockArrays:
+  BlockArrays,
   Block,
+  BlockArray,
   BlockIndexRange,
   BlockRange,
   BlockSlice,
   BlockVector,
   BlockedOneTo,
   BlockedUnitRange,
+  BlockedArray,
   BlockedVector,
   blockedrange,
   blocklength,
