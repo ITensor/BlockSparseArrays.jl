@@ -41,30 +41,51 @@ function eachstoredblock(a::AbstractArray)
   return storedvalues(blocks(a))
 end
 
-# TODO: Generalize this, this catches simple cases
-# where the more general definition isn't specific enough.
-blocktype(a::Array) = typeof(a)
-# TODO: Maybe unwrap SubArrays?
-function blocktype(a::AbstractArray)
-  # TODO: Unfortunately, this doesn't always give
-  # a concrete type, even when it could be concrete, i.e.
-  #=
-  ```julia
-  julia> eltype(blocks(BlockArray(randn(2, 2), [1, 1], [1, 1])))
-  Matrix{Float64} (alias for Array{Float64, 2})
-
-  julia> eltype(blocks(BlockedArray(randn(2, 2), [1, 1], [1, 1])))
-  AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
-
-  julia> eltype(blocks(randn(2, 2)))
-  AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
-  ```
-  =#
-  if isempty(blocks(a))
-    return eltype(blocks(a))
-  end
-  return eltype(first(blocks(a)))
+function blockstype(a::AbstractArray)
+  return typeof(blocks(a))
 end
+
+#=
+Ideally this would just be defined as `eltype(blockstype(a))`.
+However, BlockArrays.jl doesn't make `eltype(blocks(a))` concrete
+even when it could be
+(https://github.com/JuliaArrays/BlockArrays.jl/blob/v1.4.0/src/blocks.jl#L71-L74):
+```julia
+julia> eltype(blocks(BlockArray(randn(2, 2), [1, 1], [1, 1])))
+Matrix{Float64} (alias for Array{Float64, 2})
+
+julia> eltype(blocks(BlockedArray(randn(2, 2), [1, 1], [1, 1])))
+AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
+
+julia> eltype(blocks(randn(2, 2)))
+AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
+```
+Also note the current definition errors in the limit
+when `blocks(a)` is empty, but even empty arrays generally
+have at least one block:
+```julia
+julia> length(blocks(randn(0)))
+1
+
+julia> length(blocks(BlockVector{Float64}(randn(0))))
+1
+
+julia> length(blocks(BlockedVector{Float64}(randn(0))))
+1
+```
+=#
+function blocktype(a::AbstractArray)
+  if isempty(blocks(a))
+    error("`blocktype` can't be determined if `isempty(blocks(a))`.")
+  end
+  return mapreduce(typeof, promote_type, blocks(a))
+end
+
+using BlockArrays: BlockArray
+blockstype(::Type{<:BlockArray{<:Any,<:Any,B}}) where {B} = B
+blockstype(a::BlockArray) = blockstype(typeof(a))
+blocktype(arraytype::Type{<:BlockArray}) = eltype(blockstype(arraytype))
+blocktype(a::BlockArray) = eltype(blocks(a))
 
 abstract type AbstractBlockSparseArrayInterface <: AbstractSparseArrayInterface end
 
@@ -77,8 +98,6 @@ struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
 
 @interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::AbstractArray) =
   error("Not implemented")
-
-blockstype(a::AbstractArray) = blockstype(typeof(a))
 
 @interface ::AbstractBlockSparseArrayInterface function Base.getindex(
   a::AbstractArray{<:Any,N}, I::Vararg{Int,N}
