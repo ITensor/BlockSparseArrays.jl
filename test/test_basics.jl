@@ -132,6 +132,9 @@ arrayts = (Array, JLArray)
       end
     end
   end
+  @testset "blocktype" begin
+    @test blocktype(arrayt(randn(elt, 2, 2))) <: SubArray{elt,2,arrayt{elt,2}}
+  end
   @testset "Basics" begin
     a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
     @allowscalar @test a == dev(
