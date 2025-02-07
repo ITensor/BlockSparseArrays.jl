@@ -60,8 +60,19 @@ AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
 julia> eltype(blocks(randn(2, 2)))
 AbstractMatrix{Float64} (alias for AbstractArray{Float64, 2})
 ```
-Also note the current definition doesn't handle the limit
-when `blocks(a)` is empty
+Also note the current definition errors in the limit
+when `blocks(a)` is empty, but even empty arrays generally
+have at least one block:
+```julia
+julia> length(blocks(randn(0)))
+1
+
+julia> length(blocks(BlockVector{Float64}(randn(0))))
+1
+
+julia> length(blocks(BlockedVector{Float64}(randn(0))))
+1
+```
 =#
 function blocktype(a::AbstractArray)
   if isempty(blocks(a))
