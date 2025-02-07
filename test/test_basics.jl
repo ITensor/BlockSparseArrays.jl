@@ -37,6 +37,7 @@ using LinearAlgebra: Adjoint, Transpose, dot, mul!, norm
 using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, storedlength
 using TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
+using TestExtras: @constinferred
 include("TestBlockSparseArraysUtils.jl")
 
 arrayts = (Array, JLArray)
@@ -137,30 +138,30 @@ arrayts = (Array, JLArray)
   end
   @testset "blockstype, blocktype" begin
     a = arrayt(randn(elt, 2, 2))
-    @test blockstype(a) <: BlockArrays.BlocksView{elt,2}
+    @test (@constinferred blockstype(a)) <: BlockArrays.BlocksView{elt,2}
     # TODO: This is difficult to determine just from type information.
     @test_broken blockstype(typeof(a)) <: BlockArrays.BlocksView{elt,2}
-    @test blocktype(a) <: SubArray{elt,2,arrayt{elt,2}}
+    @test (@constinferred blocktype(a)) <: SubArray{elt,2,arrayt{elt,2}}
     # TODO: This is difficult to determine just from type information.
     @test_broken blocktype(typeof(a)) <: SubArray{elt,2,arrayt{elt,2}}
 
     a = BlockSparseMatrix{elt,arrayt{elt,2}}([1, 1], [1, 1])
-    @test blockstype(a) <: SparseMatrixDOK{arrayt{elt,2}}
-    @test blockstype(typeof(a)) <: SparseMatrixDOK{arrayt{elt,2}}
-    @test blocktype(a) <: arrayt{elt,2}
-    @test blocktype(typeof(a)) <: arrayt{elt,2}
+    @test (@constinferred blockstype(a)) <: SparseMatrixDOK{arrayt{elt,2}}
+    @test (@constinferred blockstype(typeof(a))) <: SparseMatrixDOK{arrayt{elt,2}}
+    @test (@constinferred blocktype(a)) <: arrayt{elt,2}
+    @test (@constinferred blocktype(typeof(a))) <: arrayt{elt,2}
 
     a = BlockArray(arrayt(randn(elt, (2, 2))), [1, 1], [1, 1])
-    @test blockstype(a) === Matrix{arrayt{elt,2}}
-    @test blockstype(typeof(a)) === Matrix{arrayt{elt,2}}
-    @test blocktype(a) <: arrayt{elt,2}
-    @test blocktype(typeof(a)) <: arrayt{elt,2}
+    @test (@constinferred blockstype(a)) === Matrix{arrayt{elt,2}}
+    @test (@constinferred blockstype(typeof(a))) === Matrix{arrayt{elt,2}}
+    @test (@constinferred blocktype(a)) <: arrayt{elt,2}
+    @test (@constinferred blocktype(typeof(a))) <: arrayt{elt,2}
 
     a = BlockedArray(arrayt(randn(elt, 2, 2)), [1, 1], [1, 1])
-    @test blockstype(a) <: BlockArrays.BlocksView{elt,2}
+    @test (@constinferred blockstype(a)) <: BlockArrays.BlocksView{elt,2}
     # TODO: This is difficult to determine just from type information.
     @test_broken blockstype(typeof(a)) <: BlockArrays.BlocksView{elt,2}
-    @test blocktype(a) <: SubArray{elt,2,arrayt{elt,2}}
+    @test (@constinferred blocktype(a)) <: SubArray{elt,2,arrayt{elt,2}}
     # TODO: This is difficult to determine just from type information.
     @test_broken blocktype(typeof(a)) <: SubArray{elt,2,arrayt{elt,2}}
   end
