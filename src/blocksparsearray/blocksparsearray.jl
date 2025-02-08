@@ -205,7 +205,9 @@ using TypeParameterAccessors: TypeParameterAccessors, Position, set_type_paramet
 TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(eltype)) = Position(1)
 TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(ndims)) = Position(2)
 TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(blocktype)) = Position(3)
-TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(blockstype)) = Position(4)
+function TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(blockstype))
+  return Position(4)
+end
 
 # TODO: Make this generic to `AbstractBlockSparseVector` using
 # TypeParameterAccessors.jl, for example using:

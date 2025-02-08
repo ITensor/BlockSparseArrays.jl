@@ -93,7 +93,7 @@ function show_typeof_blocksparse(io::IO, a::AbstractBlockSparseArray)
 end
 
 # Copied from `BlockArrays.jl`.
-block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
+block2string(b, s) = string(join(map(string, b), '×'), "-blocked ", Base.dims2string(s))
 
 function summary_blocksparse(io::IO, a::AbstractArray)
   print(io, block2string(blocksize(a), size(a)))
