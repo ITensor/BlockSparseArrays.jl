@@ -77,3 +77,42 @@ function Base.setindex!(
   blocks(a)[Int.(I)...] = value
   return a
 end
+
+using TypeParameterAccessors: unspecify_type_parameters
+function show_typeof_blocksparse(io::IO, a::AbstractBlockSparseArray)
+  Base.show(io, unspecify_type_parameters(typeof(a)))
+  print(io, '{')
+  show(io, eltype(a))
+  print(io, ", ")
+  show(io, ndims(a))
+  print(io, ", ")
+  show(io, blocktype(a))
+  print(io, ", …")
+  print(io, '}')
+  return nothing
+end
+
+# Copied from `BlockArrays.jl`.
+block2string(b, s) = string(join(map(string, b), '×'), "-blocked ", Base.dims2string(s))
+
+function summary_blocksparse(io::IO, a::AbstractArray)
+  print(io, block2string(blocksize(a), size(a)))
+  print(io, ' ')
+  show_typeof_blocksparse(io, a)
+  return nothing
+end
+
+function Base.summary(io::IO, a::AbstractBlockSparseArray)
+  summary_blocksparse(io, a)
+  return nothing
+end
+
+function Base.showarg(io::IO, a::AbstractBlockSparseArray, toplevel::Bool)
+  if toplevel
+    show_typeof_blocksparse(io, a)
+  else
+    print(io, "::")
+    show_typeof_blocksparse(io, a)
+  end
+  return nothing
+end

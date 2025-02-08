@@ -199,3 +199,40 @@ blockstype(arraytype::Type{<:BlockSparseArray}) = SparseArrayDOK{AbstractArray}
 ##   # TODO: Preserve GPU data!
 ##   return BlockSparseArray{elt}(undef, axes)
 ## end
+
+# TypeParameterAccessors.jl interface
+using TypeParameterAccessors: TypeParameterAccessors, Position, set_type_parameters
+TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(eltype)) = Position(1)
+TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(ndims)) = Position(2)
+TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(blocktype)) = Position(3)
+function TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(blockstype))
+  return Position(4)
+end
+
+# TODO: Make this generic to `AbstractBlockSparseVector` using
+# TypeParameterAccessors.jl, for example using:
+# `set_ndims(unspecify_type_parameters(typeof(a)), 1)`.
+function show_typeof_blocksparse(io::IO, a::BlockSparseVector)
+  print(io, "BlockSparseVector")
+  print(io, '{')
+  show(io, eltype(a))
+  print(io, ", ")
+  show(io, blocktype(a))
+  print(io, ", …")
+  print(io, '}')
+  return nothing
+end
+
+# TODO: Make this generic to `AbstractBlockSparseMatrix` using
+# TypeParameterAccessors.jl, for example using:
+# `set_ndims(unspecify_type_parameters(typeof(a)), 2)`.
+function show_typeof_blocksparse(io::IO, a::BlockSparseMatrix)
+  print(io, "BlockSparseMatrix")
+  print(io, '{')
+  show(io, eltype(a))
+  print(io, ", ")
+  show(io, blocktype(a))
+  print(io, ", …")
+  print(io, '}')
+  return nothing
+end
