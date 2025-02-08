@@ -202,10 +202,10 @@ blockstype(arraytype::Type{<:BlockSparseArray}) = SparseArrayDOK{AbstractArray}
 
 # TypeParameterAccessors.jl interface
 using TypeParameterAccessors: TypeParameterAccessors, Position, set_type_parameters
-TypeParameterAccessors.position(::Type{BlockSparseArray}, eltype) = Position(1)
-TypeParameterAccessors.position(::Type{BlockSparseArray}, ndims) = Position(2)
-TypeParameterAccessors.position(::Type{BlockSparseArray}, blocktype) = Position(3)
-TypeParameterAccessors.position(::Type{BlockSparseArray}, blockstype) = Position(4)
+TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(eltype)) = Position(1)
+TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(ndims)) = Position(2)
+TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(blocktype)) = Position(3)
+TypeParameterAccessors.position(::Type{BlockSparseArray}, ::typeof(blockstype)) = Position(4)
 
 # TODO: Make this generic to `AbstractBlockSparseVector` using
 # TypeParameterAccessors.jl, for example using:
