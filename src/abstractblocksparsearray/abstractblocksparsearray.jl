@@ -116,10 +116,3 @@ function Base.showarg(io::IO, a::AbstractBlockSparseArray, toplevel::Bool)
   end
   return nothing
 end
-
-# TypeParameterAccessors.jl interface
-using TypeParameterAccessors: TypeParameterAccessors, Position, set_type_parameters
-TypeParameterAccessors.position(::Type{BlockSparseArray}, eltype) = Position(1)
-TypeParameterAccessors.position(::Type{BlockSparseArray}, ndims) = Position(2)
-TypeParameterAccessors.position(::Type{BlockSparseArray}, blocktype) = Position(3)
-TypeParameterAccessors.position(::Type{BlockSparseArray}, blockstype) = Position(4)
