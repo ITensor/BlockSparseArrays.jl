@@ -10,6 +10,7 @@ using BlockArrays:
   mortar,
   unblock
 using DerivableInterfaces: DerivableInterfaces, @interface
+using GPUArraysCore: @allowscalar
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
 
@@ -390,6 +391,6 @@ function Base.show(io::IO, mime::MIME"text/plain", a::AnyAbstractBlockSparseArra
   print(io, ":")
   println(io)
   a′ = ReplacedUnstoredBlockSparseArray(a, GetUnstoredBlockShow(axes(a)))
-  Base.print_array(io, a′)
+  @allowscalar Base.print_array(io, a′)
   return nothing
 end

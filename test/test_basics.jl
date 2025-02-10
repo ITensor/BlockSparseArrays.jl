@@ -1090,22 +1090,40 @@ arrayts = (Array, JLArray)
     arrayt_elt = arrayt{elt,3}
 
     a = BlockSparseVector{elt,arrayt{elt,1}}([2, 2])
-    @test sprint(summary, a) ==
+    # Either option is possible depending on namespacing.
+    @test (
+      sprint(summary, a) ==
       "2-blocked 4-element BlockSparseVector{$(elt), $(vectort_elt), …}"
+    ) || (
+      sprint(summary, a) ==
+      "2-blocked 4-element BlockSparseArrays.BlockSparseVector{$(elt), $(vectort_elt), …}"
+    )
 
     a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
-    @test sprint(summary, a) ==
-      "2×2-blocked 4×4 BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
+    # Either option is possible depending on namespacing.
+    @test (
+      sprint(summary, a) == "2×2-blocked 4×4 BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
+    ) || (
+      sprint(summary, a) ==
+      "2×2-blocked 4×4 BlockSparseArrays.BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
+    )
 
     a = BlockSparseArray{elt,3,arrayt{elt,3}}([2, 2], [2, 2], [2, 2])
-    @test sprint(summary, a) ==
+
+    # Either option is possible depending on namespacing.
+    @test (
+      sprint(summary, a) ==
       "2×2×2-blocked 4×4×4 BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
+    ) || (
+      sprint(summary, a) ==
+      "2×2×2-blocked 4×4×4 BlockSparseArrays.BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
+    )
 
     if elt === Float64
       # Not testing other element types since they change the
       # spacing so it isn't easy to make the test general.
       a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
-      a[1, 2] = 12
+      @allowscalar a[1, 2] = 12
       @test sprint(show, "text/plain", a) ==
         "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │  .  .\n $(zero(eltype(a)))   $(zero(eltype(a)))  │  .  .\n ───────────┼──────\n  .     .   │  .  .\n  .     .   │  .  ."
     end
