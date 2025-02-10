@@ -325,7 +325,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test iszero(b[Block(2, 1)])
     @test iszero(b[Block(1, 2)])
     @test b[Block(2, 2)] == a2
-    @test all(GradedUnitRanges.space_isequal.(axes(b), (r, dual(r))))
+    @test all(GradedUnitRanges.labelled_isequal.(axes(b), (r, dual(r))))
 
     # Regression test for Vector, which caused
     # an ambiguity error with Base.
@@ -339,7 +339,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test blockstoredlength(b) == 1
     @test b[Block(1)] == a1
     @test iszero(b[Block(2)])
-    @test all(GradedUnitRanges.space_isequal.(axes(b), (r,)))
+    @test all(GradedUnitRanges.labelled_isequal.(axes(b), (r,)))
   end
 end
 end
