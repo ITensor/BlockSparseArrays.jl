@@ -38,6 +38,7 @@ using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, stored
 using TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
 using TestExtras: @constinferred
+using TypeParameterAccessors: TypeParameterAccessors, Position
 include("TestBlockSparseArraysUtils.jl")
 
 arrayts = (Array, JLArray)
@@ -1084,13 +1085,35 @@ arrayts = (Array, JLArray)
     @test storedlength(b) == 17
   end
   @testset "show" begin
+    vectort_elt = arrayt{elt,1}
+    matrixt_elt = arrayt{elt,2}
+    arrayt_elt = arrayt{elt,3}
+
+    a = BlockSparseVector{elt,arrayt{elt,1}}([2, 2])
+    @test sprint(summary, a) ==
+      "2-blocked 4-element BlockSparseVector{$(elt), $(vectort_elt), …}"
+
+    a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
+    @test sprint(summary, a) ==
+      "2×2-blocked 4×4 BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
+
+    a = BlockSparseArray{elt,3,arrayt{elt,3}}([2, 2], [2, 2], [2, 2])
+    @test sprint(summary, a) ==
+      "2×2×2-blocked 4×4×4 BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
+
     if elt === Float64
       # Not testing other element types since they change the
       # spacing so it isn't easy to make the test general.
-      a = BlockSparseArray{elt}([2, 2], [2, 2])
+      a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
       a[1, 2] = 12
       @test sprint(show, "text/plain", a) ==
         "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │  .  .\n $(zero(eltype(a)))   $(zero(eltype(a)))  │  .  .\n ───────────┼──────\n  .     .   │  .  .\n  .     .   │  .  ."
     end
+  end
+  @testset "TypeParameterAccessors.position" begin
+    @test TypeParameterAccessors.position(BlockSparseArray, eltype) == Position(1)
+    @test TypeParameterAccessors.position(BlockSparseArray, ndims) == Position(2)
+    @test TypeParameterAccessors.position(BlockSparseArray, blocktype) == Position(3)
+    @test TypeParameterAccessors.position(BlockSparseArray, blockstype) == Position(4)
   end
 end
