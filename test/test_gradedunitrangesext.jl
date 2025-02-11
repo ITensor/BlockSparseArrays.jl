@@ -5,14 +5,7 @@ using BlockArrays:
 using BlockSparseArrays:
   BlockSparseArray, BlockSparseMatrix, BlockSparseVector, blockstoredlength
 using GradedUnitRanges:
-  GradedUnitRanges,
-  GradedOneTo,
-  GradedUnitRange,
-  GradedUnitRangeDual,
-  blocklabels,
-  dual,
-  gradedrange,
-  isdual
+  GradedUnitRanges, GradedOneTo, GradedUnitRange, blocklabels, dual, gradedrange, isdual
 using LabelledNumbers: label
 using SparseArraysBase: storedlength
 using SymmetrySectors: U1
@@ -208,8 +201,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test blockstoredlength(b) == 2
       @test Array(b) == 2 * Array(a)
       for i in 1:2
-        @test axes(b, i) isa GradedUnitRangeDual
-        @test axes(a[:, :], i) isa GradedUnitRangeDual
+        @test isdual(axes(b, i))
+        @test isdual(axes(a[:, :], i))
       end
       I = [Block(1)[1:1]]
       @test a[I, :] isa AbstractBlockArray
@@ -233,8 +226,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test blockstoredlength(b) == 2
       @test Array(b) == 2 * Array(a)
       for i in 1:2
-        @test axes(b, i) isa GradedUnitRangeDual
-        @test axes(a[:, :], i) isa GradedUnitRangeDual
+        @test isdual(axes(b, i))
+        @test isdual(axes(a[:, :], i))
       end
 
       I = [Block(1)[1:1]]
