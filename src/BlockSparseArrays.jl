@@ -25,9 +25,9 @@ include("blocksparsearrayinterface/cat.jl")
 
 # functions defined for any abstractblocksparsearray
 include("abstractblocksparsearray/abstractblocksparsearray.jl")
-include("abstractblocksparsearray/wrappedabstractblocksparsearray.jl")
 include("abstractblocksparsearray/abstractblocksparsematrix.jl")
 include("abstractblocksparsearray/abstractblocksparsevector.jl")
+include("abstractblocksparsearray/wrappedabstractblocksparsearray.jl")
 include("abstractblocksparsearray/views.jl")
 include("abstractblocksparsearray/arraylayouts.jl")
 include("abstractblocksparsearray/sparsearrayinterface.jl")

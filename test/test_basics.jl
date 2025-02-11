@@ -1,13 +1,16 @@
 using Adapt: adapt
 using ArrayLayouts: zero!
 using BlockArrays:
+  BlockArrays,
   Block,
+  BlockArray,
   BlockIndexRange,
   BlockRange,
   BlockSlice,
   BlockVector,
   BlockedOneTo,
   BlockedUnitRange,
+  BlockedArray,
   BlockedVector,
   blockedrange,
   blocklength,
@@ -34,6 +37,8 @@ using LinearAlgebra: Adjoint, Transpose, dot, mul!, norm
 using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, storedlength
 using TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
+using TestExtras: @constinferred
+using TypeParameterAccessors: TypeParameterAccessors, Position
 include("TestBlockSparseArraysUtils.jl")
 
 arrayts = (Array, JLArray)
@@ -131,6 +136,35 @@ arrayts = (Array, JLArray)
         @test iszero(storedlength(a))
       end
     end
+  end
+  @testset "blockstype, blocktype" begin
+    a = arrayt(randn(elt, 2, 2))
+    @test (@constinferred blockstype(a)) <: BlockArrays.BlocksView{elt,2}
+    # TODO: This is difficult to determine just from type information.
+    @test_broken blockstype(typeof(a)) <: BlockArrays.BlocksView{elt,2}
+    @test (@constinferred blocktype(a)) <: SubArray{elt,2,arrayt{elt,2}}
+    # TODO: This is difficult to determine just from type information.
+    @test_broken blocktype(typeof(a)) <: SubArray{elt,2,arrayt{elt,2}}
+
+    a = BlockSparseMatrix{elt,arrayt{elt,2}}([1, 1], [1, 1])
+    @test (@constinferred blockstype(a)) <: SparseMatrixDOK{arrayt{elt,2}}
+    @test (@constinferred blockstype(typeof(a))) <: SparseMatrixDOK{arrayt{elt,2}}
+    @test (@constinferred blocktype(a)) <: arrayt{elt,2}
+    @test (@constinferred blocktype(typeof(a))) <: arrayt{elt,2}
+
+    a = BlockArray(arrayt(randn(elt, (2, 2))), [1, 1], [1, 1])
+    @test (@constinferred blockstype(a)) === Matrix{arrayt{elt,2}}
+    @test (@constinferred blockstype(typeof(a))) === Matrix{arrayt{elt,2}}
+    @test (@constinferred blocktype(a)) <: arrayt{elt,2}
+    @test (@constinferred blocktype(typeof(a))) <: arrayt{elt,2}
+
+    a = BlockedArray(arrayt(randn(elt, 2, 2)), [1, 1], [1, 1])
+    @test (@constinferred blockstype(a)) <: BlockArrays.BlocksView{elt,2}
+    # TODO: This is difficult to determine just from type information.
+    @test_broken blockstype(typeof(a)) <: BlockArrays.BlocksView{elt,2}
+    @test (@constinferred blocktype(a)) <: SubArray{elt,2,arrayt{elt,2}}
+    # TODO: This is difficult to determine just from type information.
+    @test_broken blocktype(typeof(a)) <: SubArray{elt,2,arrayt{elt,2}}
   end
   @testset "Basics" begin
     a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
@@ -1051,13 +1085,53 @@ arrayts = (Array, JLArray)
     @test storedlength(b) == 17
   end
   @testset "show" begin
+    vectort_elt = arrayt{elt,1}
+    matrixt_elt = arrayt{elt,2}
+    arrayt_elt = arrayt{elt,3}
+
+    a = BlockSparseVector{elt,arrayt{elt,1}}([2, 2])
+    # Either option is possible depending on namespacing.
+    @test (
+      sprint(summary, a) ==
+      "2-blocked 4-element BlockSparseVector{$(elt), $(vectort_elt), …}"
+    ) || (
+      sprint(summary, a) ==
+      "2-blocked 4-element BlockSparseArrays.BlockSparseVector{$(elt), $(vectort_elt), …}"
+    )
+
+    a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
+    # Either option is possible depending on namespacing.
+    @test (
+      sprint(summary, a) == "2×2-blocked 4×4 BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
+    ) || (
+      sprint(summary, a) ==
+      "2×2-blocked 4×4 BlockSparseArrays.BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
+    )
+
+    a = BlockSparseArray{elt,3,arrayt{elt,3}}([2, 2], [2, 2], [2, 2])
+
+    # Either option is possible depending on namespacing.
+    @test (
+      sprint(summary, a) ==
+      "2×2×2-blocked 4×4×4 BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
+    ) || (
+      sprint(summary, a) ==
+      "2×2×2-blocked 4×4×4 BlockSparseArrays.BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
+    )
+
     if elt === Float64
       # Not testing other element types since they change the
       # spacing so it isn't easy to make the test general.
-      a = BlockSparseArray{elt}([2, 2], [2, 2])
-      a[1, 2] = 12
+      a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
+      @allowscalar a[1, 2] = 12
       @test sprint(show, "text/plain", a) ==
         "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │  .  .\n $(zero(eltype(a)))   $(zero(eltype(a)))  │  .  .\n ───────────┼──────\n  .     .   │  .  .\n  .     .   │  .  ."
     end
+  end
+  @testset "TypeParameterAccessors.position" begin
+    @test TypeParameterAccessors.position(BlockSparseArray, eltype) == Position(1)
+    @test TypeParameterAccessors.position(BlockSparseArray, ndims) == Position(2)
+    @test TypeParameterAccessors.position(BlockSparseArray, blocktype) == Position(3)
+    @test TypeParameterAccessors.position(BlockSparseArray, blockstype) == Position(4)
   end
 end
