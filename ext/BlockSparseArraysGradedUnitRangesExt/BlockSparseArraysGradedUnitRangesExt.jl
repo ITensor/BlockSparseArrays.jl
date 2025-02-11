@@ -2,7 +2,7 @@ module BlockSparseArraysGradedUnitRangesExt
 
 using BlockSparseArrays: AnyAbstractBlockSparseArray, BlockSparseArray, blocktype
 using GradedUnitRanges: AbstractGradedUnitRange
-using TypeParameterAccessors: set_ndims, unwrap_array_type
+using TypeParameterAccessors: set_eltype, set_ndims, unwrap_array_type
 
 # A block spare array similar to the input (dense) array.
 # TODO: Make `BlockSparseArrays.blocksparse_similar` more general and use that,
@@ -15,7 +15,9 @@ function similar_blocksparse(
   # TODO: Probably need to unwrap the type of `a` in certain cases
   # to make a proper block type.
   return BlockSparseArray{
-    elt,length(axes),set_ndims(unwrap_array_type(blocktype(a)), length(axes))
+    elt,
+    length(axes),
+    set_eltype(set_ndims(unwrap_array_type(blocktype(a)), length(axes)), elt),
   }(
     axes
   )

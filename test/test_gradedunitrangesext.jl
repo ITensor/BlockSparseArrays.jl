@@ -53,6 +53,9 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test 2 * Array(a) == b
     end
 
+    b = similar(a, ComplexF64)
+    @test eltype(b) === ComplexF64
+
     # Test mixing graded axes and dense axes
     # in addition/broadcasting.
     for b in (a + Array(a), Array(a) + a)
