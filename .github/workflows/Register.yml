@@ -1,16 +1,17 @@
 name: Register Package
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: Version to register or component to bump
-        required: true
+  pull_request:
+    types:
+      - closed
+    paths:
+      - 'Project.toml'
+    branches:
+      - 'master'
+      - 'main'
 jobs:
-  register:
-    runs-on: ubuntu-latest
-    permissions:
-        contents: write
-    steps:
-      - uses: julia-actions/RegisterAction@latest
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+  Register:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    uses: "ITensor/ITensorActions/.github/workflows/Registrator.yml@main"
+    with:
+      localregistry: ITensor/ITensorRegistry
