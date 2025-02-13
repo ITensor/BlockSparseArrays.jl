@@ -350,6 +350,21 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test b[Block(1)] == a1
     @test iszero(b[Block(2)])
     @test all(GradedUnitRanges.space_isequal.(axes(b), (r,)))
+
+    # Regression test for BitArray
+    r = gradedrange([U1(0) => 2, U1(1) => 3])
+    a1 = trues(2, 2)
+    a2 = trues(3, 3)
+    a = cat(a1, a2; dims=(1, 2))
+    b = a[r, dual(r)]
+    @test eltype(b) === Bool
+    @test b isa BlockSparseMatrix{Bool}
+    @test blockstoredlength(b) == 2
+    @test b[Block(1, 1)] == a1
+    @test iszero(b[Block(2, 1)])
+    @test iszero(b[Block(1, 2)])
+    @test b[Block(2, 2)] == a2
+    @test all(GradedUnitRanges.space_isequal.(axes(b), (r, dual(r))))
   end
 end
 end
