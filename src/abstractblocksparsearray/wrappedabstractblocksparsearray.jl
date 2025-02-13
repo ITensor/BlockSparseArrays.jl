@@ -1,4 +1,4 @@
-using Adapt: Adapt, WrappedArray
+using Adapt: Adapt, WrappedArray, adapt
 using ArrayLayouts: zero!
 using BlockArrays:
   BlockArrays,
@@ -349,4 +349,17 @@ function Base.replace_in_print_matrix(
   A::AnyAbstractBlockSparseArray{<:Any,2}, i::Integer, j::Integer, s::AbstractString
 )
   return isstored(A, i, j) ? s : Base.replace_with_centered_mark(s)
+end
+
+# attempt to catch things that wrap GPU arrays
+function Base.print_array(io::IO, X::AnyAbstractBlockSparseArray)
+  X_cpu = adapt(Array, X)
+  if typeof(X_cpu) === typeof(X) # prevent infinite recursion
+    # need to specify ndims to allow specialized code for vector/matrix
+    @allowscalar @invoke Base.print_array(
+      io, X_cpu::AbstractArray{eltype(X_cpu),ndims(X_cpu)}
+    )
+  else
+    Base.print_array(io, X_cpu)
+  end
 end
