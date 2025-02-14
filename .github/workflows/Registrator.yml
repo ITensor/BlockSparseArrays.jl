@@ -9,9 +9,16 @@ on:
     branches:
       - 'master'
       - 'main'
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   Register:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     uses: "ITensor/ITensorActions/.github/workflows/Registrator.yml@main"
     with:
       localregistry: ITensor/ITensorRegistry
+    secrets:
+      REGISTRATOR_KEY: ${{ secrets.REGISTRATOR_KEY }}
