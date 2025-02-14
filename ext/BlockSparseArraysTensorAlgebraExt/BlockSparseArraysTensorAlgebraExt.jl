@@ -1,6 +1,6 @@
 module BlockSparseArraysTensorAlgebraExt
 using BlockArrays: AbstractBlockedUnitRange
-using GradedUnitRanges: tensor_product
+using GradedUnitRanges: tensor_product, gradedrange
 using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
 
 function TensorAlgebra.:⊗(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
@@ -94,13 +94,17 @@ function TensorAlgebra.splitdims(
     groupreducewhile(tensor_product, split_axes, ndims(a); init=OneToOne()) do i, axis
       return length(axis) ≤ length(axes(a, i))
     end
-  blockperms = invblockperm.(blocksortperm.(axes_prod))
+  blockperms = blocksortperm.(axes_prod)
+  sorted_axes = ntuple(
+    i -> gradedrange(map(b -> length(axes_prod[i][b]), blockperms[i])), ndims(a)
+  )
+
   # TODO: This is doing extra copies of the blocks,
   # use `@view a[axes_prod...]` instead.
   # That will require implementing some reindexing logic
   # for this combination of slicing.
-  a_unblocked = a[axes_prod...]
-  a_blockpermed = a_unblocked[blockperms...]
+  a_unblocked = a[sorted_axes...]
+  a_blockpermed = a_unblocked[invblockperm.(blockperms)...]
   return splitdims(BlockReshapeFusion(), a_blockpermed, split_axes...)
 end
 
