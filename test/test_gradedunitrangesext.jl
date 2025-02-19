@@ -5,14 +5,7 @@ using BlockArrays:
 using BlockSparseArrays:
   BlockSparseArray, BlockSparseMatrix, BlockSparseVector, blockstoredlength
 using GradedUnitRanges:
-  GradedUnitRanges,
-  GradedOneTo,
-  GradedUnitRange,
-  GradedUnitRangeDual,
-  blocklabels,
-  dual,
-  gradedrange,
-  isdual
+  GradedUnitRanges, GradedOneTo, GradedUnitRange, blocklabels, dual, gradedrange, isdual
 using LabelledNumbers: label
 using SparseArraysBase: storedlength
 using SymmetrySectors: U1
@@ -216,8 +209,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test blockstoredlength(b) == 2
       @test Array(b) == 2 * Array(a)
       for i in 1:2
-        @test axes(b, i) isa GradedUnitRangeDual
-        @test axes(a[:, :], i) isa GradedUnitRangeDual
+        @test isdual(axes(b, i))
+        @test isdual(axes(a[:, :], i))
       end
       I = [Block(1)[1:1]]
       @test a[I, :] isa AbstractBlockArray
@@ -241,8 +234,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test blockstoredlength(b) == 2
       @test Array(b) == 2 * Array(a)
       for i in 1:2
-        @test axes(b, i) isa GradedUnitRangeDual
-        @test axes(a[:, :], i) isa GradedUnitRangeDual
+        @test isdual(axes(b, i))
+        @test isdual(axes(a[:, :], i))
       end
 
       I = [Block(1)[1:1]]
@@ -340,7 +333,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test iszero(b[Block(2, 1)])
     @test iszero(b[Block(1, 2)])
     @test b[Block(2, 2)] == a2
-    @test all(GradedUnitRanges.space_isequal.(axes(b), (r, dual(r))))
+    @test all(GradedUnitRanges.labelled_isequal.(axes(b), (r, dual(r))))
 
     # Regression test for Vector, which caused
     # an ambiguity error with Base.
@@ -354,7 +347,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test blockstoredlength(b) == 1
     @test b[Block(1)] == a1
     @test iszero(b[Block(2)])
-    @test all(GradedUnitRanges.space_isequal.(axes(b), (r,)))
+    @test all(GradedUnitRanges.labelled_isequal.(axes(b), (r,)))
 
     # Regression test for BitArray
     r = gradedrange([U1(0) => 2, U1(1) => 3])
@@ -369,7 +362,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test iszero(b[Block(2, 1)])
     @test iszero(b[Block(1, 2)])
     @test b[Block(2, 2)] == a2
-    @test all(GradedUnitRanges.space_isequal.(axes(b), (r, dual(r))))
+    @test all(GradedUnitRanges.labelled_isequal.(axes(b), (r, dual(r))))
   end
 end
 end
