@@ -12,10 +12,12 @@ using SymmetrySectors: U1
 using TensorAlgebra: fusedims, splitdims
 using LinearAlgebra: adjoint
 using Random: randn!
-function blockdiagonal!(f, a::AbstractArray)
-  for i in 1:minimum(blocksize(a))
+function randn_blockdiagonal(elt::Type, axes::Tuple)
+  a = BlockSparseArray{elt}(axes)
+  blockdiaglength = minimum(blocksize(a))
+  for i in 1:blockdiaglength
     b = Block(ntuple(Returns(i), ndims(a)))
-    a[b] = f(a[b])
+    a[b] = randn!(a[b])
   end
   return a
 end
@@ -25,8 +27,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   @testset "map" begin
     d1 = gradedrange([U1(0) => 2, U1(1) => 2])
     d2 = gradedrange([U1(0) => 2, U1(1) => 2])
-    a = BlockSparseArray{elt}(d1, d2, d1, d2)
-    blockdiagonal!(randn!, a)
+    a = randn_blockdiagonal(elt, (d1, d2, d1, d2))
     @test axes(a, 1) isa GradedOneTo
     @test axes(view(a, 1:4, 1:4, 1:4, 1:4), 1) isa GradedOneTo
 
@@ -82,8 +83,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   @testset "fusedims" begin
     d1 = gradedrange([U1(0) => 1, U1(1) => 1])
     d2 = gradedrange([U1(0) => 1, U1(1) => 1])
-    a = BlockSparseArray{elt}(d1, d2, d1, d2)
-    blockdiagonal!(randn!, a)
+    a = randn_blockdiagonal(elt, (d1, d2, d1, d2))
     m = fusedims(a, (1, 2), (3, 4))
     for ax in axes(m)
       @test ax isa GradedOneTo
@@ -100,6 +100,11 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test a[2, 2, 2, 2] == m[4, 4]
     @test blocksize(m) == (3, 3)
     @test a == splitdims(m, (d1, d2), (d1, d2))
+
+    # check block fusing and splitting
+    d = gradedrange([U1(0) => 2, U1(1) => 1])
+    a = randn_blockdiagonal(elt, (d, d, dual(d), dual(d)))
+    @test splitdims(fusedims(a, (1, 2), (3, 4)), axes(a)...) == a
   end
 
   @testset "dual axes" begin
@@ -343,6 +348,21 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test b[Block(1)] == a1
     @test iszero(b[Block(2)])
     @test all(GradedUnitRanges.labelled_isequal.(axes(b), (r,)))
+
+    # Regression test for BitArray
+    r = gradedrange([U1(0) => 2, U1(1) => 3])
+    a1 = trues(2, 2)
+    a2 = trues(3, 3)
+    a = cat(a1, a2; dims=(1, 2))
+    b = a[r, dual(r)]
+    @test eltype(b) === Bool
+    @test b isa BlockSparseMatrix{Bool}
+    @test blockstoredlength(b) == 2
+    @test b[Block(1, 1)] == a1
+    @test iszero(b[Block(2, 1)])
+    @test iszero(b[Block(1, 2)])
+    @test b[Block(2, 2)] == a2
+    @test all(GradedUnitRanges.labelled_isequal.(axes(b), (r, dual(r))))
   end
 end
 end

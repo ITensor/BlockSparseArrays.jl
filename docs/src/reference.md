@@ -1,4 +1,4 @@
-# Library
+# Reference
 
 ```@autodocs
 Modules = [BlockSparseArrays]

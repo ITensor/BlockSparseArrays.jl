@@ -94,13 +94,15 @@ function TensorAlgebra.splitdims(
     groupreducewhile(tensor_product, split_axes, ndims(a); init=OneToOne()) do i, axis
       return length(axis) ≤ length(axes(a, i))
     end
-  blockperms = invblockperm.(blocksortperm.(axes_prod))
+  blockperms = blocksortperm.(axes_prod)
+  sorted_axes = map((r, I) -> only(axes(r[I])), axes_prod, blockperms)
+
   # TODO: This is doing extra copies of the blocks,
   # use `@view a[axes_prod...]` instead.
   # That will require implementing some reindexing logic
   # for this combination of slicing.
-  a_unblocked = a[axes_prod...]
-  a_blockpermed = a_unblocked[blockperms...]
+  a_unblocked = a[sorted_axes...]
+  a_blockpermed = a_unblocked[invblockperm.(blockperms)...]
   return splitdims(BlockReshapeFusion(), a_blockpermed, split_axes...)
 end
 
