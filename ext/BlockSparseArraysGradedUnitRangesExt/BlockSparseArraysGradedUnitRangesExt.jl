@@ -53,6 +53,13 @@ end
 function Base.similar(
   a::AnyAbstractBlockSparseArray,
   elt::Type,
+  axes::Tuple{AbstractGradedUnitRange,Vararg{AbstractGradedUnitRange}},
+)
+  return similar_blocksparse(a, elt, axes)
+end
+function Base.similar(
+  a::AnyAbstractBlockSparseArray,
+  elt::Type,
   axes::Tuple{
     AbstractGradedUnitRange,AbstractGradedUnitRange,Vararg{AbstractGradedUnitRange}
   },
