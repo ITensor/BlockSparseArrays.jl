@@ -342,7 +342,7 @@ arrayts = (Array, JLArray)
     bc = Broadcast.broadcasted(+, a, a)
     a′ = similar(bc, Float32)
     @test a′ isa BlockSparseArray{Float32}
-    @test blocktype(a′) <: arrayt{Float32,3}
+    @test blocktype(a′) <: arrayt{Float32,2}
     @test axes(a) == (blockedrange([2, 3]), blockedrange([3, 4]))
 
     # Test similar on broadcasted expressions with axes specified.
