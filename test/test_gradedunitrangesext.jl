@@ -38,6 +38,9 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test axes(a, 1) isa GradedOneTo
     @test axes(view(a, 1:4, 1:4, 1:4, 1:4), 1) isa GradedOneTo
 
+    d1 = gradedrange([U1(0) => 2, U1(1) => 2])
+    d2 = gradedrange([U1(0) => 2, U1(1) => 2])
+    a = randn_blockdiagonal(elt, (d1, d2, d1, d2))
     for b in (a + a, 2 * a)
       @test size(b) == (4, 4, 4, 4)
       @test blocksize(b) == (2, 2, 2, 2)
@@ -54,11 +57,23 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test 2 * Array(a) == b
     end
 
+    d1 = gradedrange([U1(0) => 2, U1(1) => 2])
+    d2 = gradedrange([U1(0) => 2, U1(1) => 2])
+    a = randn_blockdiagonal(elt, (d1, d2, d1, d2))
     b = similar(a, ComplexF64)
+    @test b isa BlockSparseArray{ComplexF64}
     @test eltype(b) === ComplexF64
+
+    a = BlockSparseVector{Float64}(undef, gradedrange([U1(0) => 1, U1(1) => 1]))
+    b = similar(a, Float32)
+    @test b isa BlockSparseVector{Float32}
+    @test eltype(b) == Float32
 
     # Test mixing graded axes and dense axes
     # in addition/broadcasting.
+    d1 = gradedrange([U1(0) => 2, U1(1) => 2])
+    d2 = gradedrange([U1(0) => 2, U1(1) => 2])
+    a = randn_blockdiagonal(elt, (d1, d2, d1, d2))
     for b in (a + Array(a), Array(a) + a)
       @test size(b) == (4, 4, 4, 4)
       @test blocksize(b) == (2, 2, 2, 2)
@@ -73,6 +88,9 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test 2 * Array(a) == b
     end
 
+    d1 = gradedrange([U1(0) => 2, U1(1) => 2])
+    d2 = gradedrange([U1(0) => 2, U1(1) => 2])
+    a = randn_blockdiagonal(elt, (d1, d2, d1, d2))
     b = a[2:3, 2:3, 2:3, 2:3]
     @test size(b) == (2, 2, 2, 2)
     @test blocksize(b) == (2, 2, 2, 2)
