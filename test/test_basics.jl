@@ -337,6 +337,24 @@ arrayts = (Array, JLArray)
     @test blockstoredlength(a) == 1
     @test storedlength(a) == 2 * 4
 
+    # Test similar on broadcasted expressions.
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
+    bc = Broadcast.broadcasted(+, a, a)
+    a′ = similar(bc, Float32)
+    @test a′ isa BlockSparseArray{Float32}
+    @test blocktype(a′) <: arrayt{Float32,2}
+    @test axes(a) == (blockedrange([2, 3]), blockedrange([3, 4]))
+
+    # Test similar on broadcasted expressions with axes specified.
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
+    bc = Broadcast.broadcasted(+, a, a)
+    a′ = similar(
+      bc, Float32, (blockedrange([2, 4]), blockedrange([2, 5]), blockedrange([2, 2]))
+    )
+    @test a′ isa BlockSparseArray{Float32}
+    @test blocktype(a′) <: arrayt{Float32,3}
+    @test axes(a′) == (blockedrange([2, 4]), blockedrange([2, 5]), blockedrange([2, 2]))
+
     a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]
       a[b] = dev(randn(elt, size(a[b])))

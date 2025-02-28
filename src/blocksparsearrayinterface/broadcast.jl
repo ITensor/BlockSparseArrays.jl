@@ -31,10 +31,10 @@ function Broadcast.BroadcastStyle(
   return DefaultArrayStyle{N}()
 end
 
-function Base.similar(bc::Broadcasted{<:BlockSparseArrayStyle}, elt::Type)
-  # TODO: Make sure this handles GPU arrays properly.
+function Base.similar(bc::Broadcasted{<:BlockSparseArrayStyle}, elt::Type, ax)
+  # TODO: Make this more generic, base it off sure this handles GPU arrays properly.
   m = Mapped(bc)
-  return similar(first(m.args), elt, combine_axes(axes.(m.args)...))
+  return similar(first(m.args), elt, ax)
 end
 
 # Catches cases like `dest .= value` or `dest .= value1 .+ value2`.
