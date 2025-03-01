@@ -1108,34 +1108,27 @@ arrayts = (Array, JLArray)
     arrayt_elt = arrayt{elt,3}
 
     a = BlockSparseVector{elt,arrayt{elt,1}}([2, 2])
+    res = sprint(summary, a)
+    ref_vec(elt, arrayt, prefix="") =
+      "2-blocked 4-element $(prefix)BlockSparseVector{$(elt), $(arrayt), …, …}"
     # Either option is possible depending on namespacing.
-    @test (
-      sprint(summary, a) ==
-      "2-blocked 4-element BlockSparseVector{$(elt), $(vectort_elt), …}"
-    ) || (
-      sprint(summary, a) ==
-      "2-blocked 4-element BlockSparseArrays.BlockSparseVector{$(elt), $(vectort_elt), …}"
-    )
+    @test (res == ref_vec(elt, vectort_elt)) ||
+      (res == ref_vec(elt, vectort_elt, "BlockSparseArrays."))
 
     a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
+    res = sprint(summary, a)
+    ref_mat(elt, arrayt, prefix="") =
+      "2×2-blocked 4×4 $(prefix)BlockSparseMatrix{$(elt), $(arrayt), …, …}"
     # Either option is possible depending on namespacing.
-    @test (
-      sprint(summary, a) == "2×2-blocked 4×4 BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
-    ) || (
-      sprint(summary, a) ==
-      "2×2-blocked 4×4 BlockSparseArrays.BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
-    )
+    @test (res == ref_mat(elt, matrixt_elt)) ||
+      (res == ref_mat(elt, matrixt_elt, "BlockSparseArrays."))
 
     a = BlockSparseArray{elt,3,arrayt{elt,3}}([2, 2], [2, 2], [2, 2])
-
-    # Either option is possible depending on namespacing.
-    @test (
-      sprint(summary, a) ==
-      "2×2×2-blocked 4×4×4 BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
-    ) || (
-      sprint(summary, a) ==
-      "2×2×2-blocked 4×4×4 BlockSparseArrays.BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
-    )
+    res = sprint(summary, a)
+    ref_arr(elt, arrayt, prefix="") =
+      "2×2×2-blocked 4×4×4 BlockSparseArray{$(elt), 3, $(arrayt), …, …}"
+    @test (res == ref_arr(elt, arrayt_elt)) ||
+      (res == ref_arr(elt, arrayt_elt, "BlockSparseArrays."))
 
     if elt === Float64
       # Not testing other element types since they change the
