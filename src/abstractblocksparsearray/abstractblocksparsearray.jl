@@ -92,27 +92,52 @@ function show_typeof_blocksparse(io::IO, a::AbstractBlockSparseArray)
   return nothing
 end
 
-# Copied from `BlockArrays.jl`.
-block2string(b, s) = string(join(map(string, b), '×'), "-blocked ", Base.dims2string(s))
+# Copy of `Base.dims2string` defined in `show.jl`.
+function dims_to_string(d)
+  isempty(d) && return "0-dimensional"
+  length(d) == 1 && return "$(d[1])-element"
+  return join(map(string, d), '×')
+end
 
-function summary_blocksparse(io::IO, a::AbstractArray)
-  print(io, block2string(blocksize(a), size(a)))
-  print(io, ' ')
-  show_typeof_blocksparse(io, a)
-  return nothing
+# Copy of `BlockArrays.block2string` from `BlockArrays.jl`.
+block_to_string(b, s) = string(join(map(string, b), '×'), "-blocked ", dims_to_string(s))
+
+using TypeParameterAccessors: type_parameters, unspecify_type_parameters
+function concretetype_to_string_truncated(type::Type; param_truncation_length=typemax(Int))
+  isconcretetype(type) || throw(ArgumentError("Type must be concrete."))
+  alias = Base.make_typealias(type)
+  base_type, params = if isnothing(alias)
+    unspecify_type_parameters(type), type_parameters(type)
+  else
+    base_type_globalref, params_svec = alias
+    base_type_globalref.name, params_svec
+  end
+  str = string(base_type)
+  if isempty(params)
+    return str
+  end
+  str *= '{'
+  param_strings = map(params) do param
+    param_string = string(param)
+    if length(param_string) > param_truncation_length
+      return "…"
+    end
+    return param_string
+  end
+  str *= join(param_strings, ", ")
+  str *= '}'
+  return str
 end
 
 function Base.summary(io::IO, a::AbstractBlockSparseArray)
-  summary_blocksparse(io, a)
+  print(io, block_to_string(blocksize(a), size(a)))
+  print(io, ' ')
+  print(io, concretetype_to_string_truncated(typeof(a); param_truncation_length=40))
   return nothing
 end
 
 function Base.showarg(io::IO, a::AbstractBlockSparseArray, toplevel::Bool)
-  if toplevel
-    show_typeof_blocksparse(io, a)
-  else
-    print(io, "::")
-    show_typeof_blocksparse(io, a)
-  end
+  !toplevel && print(io, "::")
+  print(io, concretetype_to_string_truncated(typeof(a); param_truncation_length=40))
   return nothing
 end
