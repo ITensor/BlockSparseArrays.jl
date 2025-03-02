@@ -1109,24 +1109,27 @@ arrayts = (Array, JLArray)
 
     a = BlockSparseVector{elt,arrayt{elt,1}}([2, 2])
     res = sprint(summary, a)
-    ref_vec(elt, arrayt, prefix="") =
-      "2-blocked 4-element $(prefix)BlockSparseVector{$(elt), $(arrayt), …, …}"
+    function ref_vec(elt, arrayt, prefix="")
+      return "2-blocked 4-element $(prefix)BlockSparseVector{$(elt), $(arrayt), …, …}"
+    end
     # Either option is possible depending on namespacing.
     @test (res == ref_vec(elt, vectort_elt)) ||
       (res == ref_vec(elt, vectort_elt, "BlockSparseArrays."))
 
     a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
     res = sprint(summary, a)
-    ref_mat(elt, arrayt, prefix="") =
-      "2×2-blocked 4×4 $(prefix)BlockSparseMatrix{$(elt), $(arrayt), …, …}"
+    function ref_mat(elt, arrayt, prefix="")
+      return "2×2-blocked 4×4 $(prefix)BlockSparseMatrix{$(elt), $(arrayt), …, …}"
+    end
     # Either option is possible depending on namespacing.
     @test (res == ref_mat(elt, matrixt_elt)) ||
       (res == ref_mat(elt, matrixt_elt, "BlockSparseArrays."))
 
     a = BlockSparseArray{elt,3,arrayt{elt,3}}([2, 2], [2, 2], [2, 2])
     res = sprint(summary, a)
-    ref_arr(elt, arrayt, prefix="") =
-      "2×2×2-blocked 4×4×4 BlockSparseArray{$(elt), 3, $(arrayt), …, …}"
+    function ref_arr(elt, arrayt, prefix="")
+      return "2×2×2-blocked 4×4×4 $(prefix)BlockSparseArray{$(elt), 3, $(arrayt), …, …}"
+    end
     @test (res == ref_arr(elt, arrayt_elt)) ||
       (res == ref_arr(elt, arrayt_elt, "BlockSparseArrays."))
 
