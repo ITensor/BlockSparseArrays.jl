@@ -16,12 +16,12 @@ jobs:
     name: "IntegrationTest"
     strategy:
        matrix:
-         repo:
-           - 'ITensor/ITensorBase.jl'
-           - 'ITensor/NamedDimsArrays.jl'
-           - 'ITensor/QuantumOperatorDefinitions.jl'
-           - 'ITensor/TensorAlgebra.jl'
+         pkg:
+           - 'ITensorBase'
+           - 'NamedDimsArrays'
+           - 'QuantumOperatorDefinitions'
+           - 'TensorAlgebra'
     uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@main"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
-      repo: "${{ matrix.repo }}"
+      pkg: "${{ matrix.pkg }}"
