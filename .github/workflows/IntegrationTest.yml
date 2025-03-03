@@ -20,7 +20,6 @@ jobs:
            - 'ITensorBase'
            - 'NamedDimsArrays'
            - 'QuantumOperatorDefinitions'
-           - 'TensorAlgebra'
     uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@main"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
