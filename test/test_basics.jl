@@ -48,20 +48,20 @@ arrayts = (Array, JLArray)
   dev(a) = adapt(arrayt, a)
   @testset "Broken" begin
     # TODO: Fix this and turn it into a proper test.
-    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
     @test_broken a[:, 4]
 
     # TODO: Fix this and turn it into a proper test.
-    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
     @test_broken a[:, [2, 4]]
     @test_broken a[[3, 5], [2, 4]]
 
     # TODO: Fix this and turn it into a proper test.
-    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
     @allowscalar @test a[2:4, 4] == Array(a)[2:4, 4]
@@ -85,10 +85,6 @@ arrayts = (Array, JLArray)
       ## BlockSparseMatrix{elt,Matrix{elt},SparseMatrixDOK{Matrix{elt}}}, # TODO
     )
       for args in (
-        bs,
-        (bs,),
-        blockedrange.(bs),
-        (blockedrange.(bs),),
         (undef, bs),
         (undef, bs...),
         (undef, blockedrange.(bs)),
@@ -117,10 +113,6 @@ arrayts = (Array, JLArray)
       ## BlockSparseVector{elt,Vector{elt},SparseVectorDOK{Vector{elt}}}, # TODO
     )
       for args in (
-        bs,
-        (bs,),
-        blockedrange.(bs),
-        (blockedrange.(bs),),
         (undef, bs),
         (undef, bs...),
         (undef, blockedrange.(bs)),
@@ -146,7 +138,7 @@ arrayts = (Array, JLArray)
     # TODO: This is difficult to determine just from type information.
     @test_broken blocktype(typeof(a)) <: SubArray{elt,2,arrayt{elt,2}}
 
-    a = BlockSparseMatrix{elt,arrayt{elt,2}}([1, 1], [1, 1])
+    a = BlockSparseMatrix{elt,arrayt{elt,2}}(undef, [1, 1], [1, 1])
     @test (@constinferred blockstype(a)) <: SparseMatrixDOK{arrayt{elt,2}}
     @test (@constinferred blockstype(typeof(a))) <: SparseMatrixDOK{arrayt{elt,2}}
     @test (@constinferred blocktype(a)) <: arrayt{elt,2}
@@ -167,9 +159,9 @@ arrayts = (Array, JLArray)
     @test_broken blocktype(typeof(a)) <: SubArray{elt,2,arrayt{elt,2}}
   end
   @testset "Basics" begin
-    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     @allowscalar @test a == dev(
-      BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
+      BlockSparseArray{elt}(undef, blockedrange([2, 3]), blockedrange([2, 3]))
     )
     @test eltype(a) === elt
     @test axes(a) == (1:5, 1:5)
@@ -182,7 +174,7 @@ arrayts = (Array, JLArray)
     @allowscalar @test all(I -> iszero(a[I]), eachindex(a))
     @test_throws DimensionMismatch a[Block(1, 1)] = randn(elt, 2, 3)
 
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     a[3, 3] = 33
     @test eltype(a) === elt
     @test axes(a) == (1:5, 1:5)
@@ -201,7 +193,7 @@ arrayts = (Array, JLArray)
       end
     end
 
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     a[Block(2, 1)] = randn(elt, 3, 2)
     a[Block(1, 2)] = randn(elt, 2, 3)
     @test issetequal(eachstoredblock(a), [a[Block(2, 1)], a[Block(1, 2)]])
@@ -211,7 +203,7 @@ arrayts = (Array, JLArray)
     @test isnan(norm(a))
 
     # Empty constructor
-    for a in (dev(BlockSparseArray{elt}()), dev(BlockSparseArray{elt}(undef)))
+    for a in (dev(BlockSparseArray{elt}(undef)),)
       @test size(a) == ()
       @test isone(length(a))
       @test blocksize(a) == ()
@@ -247,7 +239,7 @@ arrayts = (Array, JLArray)
     end
 
     @testset "Transpose" begin
-      a = dev(BlockSparseArray{elt}([2, 2], [3, 3, 1]))
+      a = dev(BlockSparseArray{elt}(undef, [2, 2], [3, 3, 1]))
       a[Block(1, 1)] = dev(randn(elt, 2, 3))
       a[Block(2, 3)] = dev(randn(elt, 2, 1))
 
@@ -271,7 +263,7 @@ arrayts = (Array, JLArray)
     end
 
     @testset "Adjoint" begin
-      a = dev(BlockSparseArray{elt}([2, 2], [3, 3, 1]))
+      a = dev(BlockSparseArray{elt}(undef, [2, 2], [3, 3, 1]))
       a[Block(1, 1)] = dev(randn(elt, 2, 3))
       a[Block(2, 3)] = dev(randn(elt, 2, 1))
 
@@ -305,12 +297,12 @@ arrayts = (Array, JLArray)
 
     # TODO: Broken on GPU.
     if arrayt ≠ Array
-      a = dev(BlockSparseArray{elt}([2, 3], [3, 4]))
+      a = dev(BlockSparseArray{elt}(undef, [2, 3], [3, 4]))
       @test_broken a[Block(1, 2)] .= 2
     end
 
     # TODO: Broken on GPU.
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     a[Block(1, 2)] .= 2
     @test eltype(a) == elt
     @test all(==(2), a[Block(1, 2)])
@@ -322,12 +314,12 @@ arrayts = (Array, JLArray)
 
     # TODO: Broken on GPU.
     if arrayt ≠ Array
-      a = dev(BlockSparseArray{elt}([2, 3], [3, 4]))
+      a = dev(BlockSparseArray{elt}(undef, [2, 3], [3, 4]))
       @test_broken a[Block(1, 2)] .= 0
     end
 
     # TODO: Broken on GPU.
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     a[Block(1, 2)] .= 0
     @test eltype(a) == elt
     @test iszero(a[Block(1, 1)])
@@ -367,7 +359,7 @@ arrayts = (Array, JLArray)
     @test size(b) == size(a)
     @test blocksize(b) == blocksize(a)
 
-    a = dev(BlockSparseArray{elt}([2, 3], [3, 4]))
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [3, 4]))
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
     c = @view b[Block(1, 1)]
     @test iszero(a)
@@ -468,7 +460,7 @@ arrayts = (Array, JLArray)
     @test blockstoredlength(b) == 2
     @test storedlength(b) == 2 * 4 + 3 * 3
 
-    a = dev(BlockSparseArray{elt}([1, 1, 1], [1, 2, 3], [2, 2, 1], [1, 2, 1]))
+    a = dev(BlockSparseArray{elt}(undef, [1, 1, 1], [1, 2, 3], [2, 2, 1], [1, 2, 1]))
     a[Block(3, 2, 2, 3)] = dev(randn(elt, 1, 2, 2, 1))
     perm = (2, 3, 4, 1)
     for b in (PermutedDimsArray(a, perm), permutedims(a, perm))
@@ -623,7 +615,7 @@ arrayts = (Array, JLArray)
     b[Block(1, 1)] .= 1
     @test b[Block(1, 1)] == trues(blocksizes(b)[1, 1])
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     b = @view a[Block(2, 2)]
     @test size(b) == (3, 4)
     for i in parentindices(b)
@@ -632,7 +624,7 @@ arrayts = (Array, JLArray)
     @test parentindices(b)[1] == 1:3
     @test parentindices(b)[2] == 1:4
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     b = @view a[Block(2, 2)[1:2, 2:2]]
     @test size(b) == (2, 1)
     for i in parentindices(b)
@@ -655,7 +647,7 @@ arrayts = (Array, JLArray)
     @test @view(a[Block(2, 2)])[1:1, 1:2] == x
     @test a[3:3, 4:5] == x
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     b = @views a[Block(2, 2)][1:2, 2:3]
     @test b isa SubArray{<:Any,<:Any,<:BlockView}
     for i in parentindices(b)
@@ -667,7 +659,7 @@ arrayts = (Array, JLArray)
     @test a[Block(2, 2)[1:2, 2:3]] == b
     @test blockstoredlength(a) == 1
 
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
       a[b] = randn(elt, size(a[b]))
     end
@@ -681,7 +673,7 @@ arrayts = (Array, JLArray)
       end
     end
 
-    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     @views for b in [Block(1, 1), Block(2, 2)]
       # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
       a[b] = dev(randn(elt, size(a[b])))
@@ -768,7 +760,7 @@ arrayts = (Array, JLArray)
     @test !isassigned(a, Block(1)[1], Block(0)[1])
     @test !isassigned(a, Block(3)[3], Block(2)[4])
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     @test iszero(a)
     @test iszero(blockstoredlength(a))
     fill!(a, 0)
@@ -782,7 +774,7 @@ arrayts = (Array, JLArray)
     @test iszero(a)
     @test iszero(blockstoredlength(a))
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     @test iszero(a)
     @test iszero(blockstoredlength(a))
     zero!(a)
@@ -796,7 +788,7 @@ arrayts = (Array, JLArray)
     @test iszero(a)
     @test iszero(blockstoredlength(a))
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     @test iszero(a)
     @test iszero(blockstoredlength(a))
     a .= 0
@@ -811,7 +803,7 @@ arrayts = (Array, JLArray)
     @test iszero(blockstoredlength(a))
 
     # TODO: Broken on GPU.
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     for I in (Block.(1:2), [Block(1), Block(2)])
       b = @view a[I, I]
       x = randn(elt, 3, 4)
@@ -831,14 +823,14 @@ arrayts = (Array, JLArray)
     end
 
     function f1()
-      a = BlockSparseArray{elt}([2, 3], [3, 4])
+      a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
       b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
       x = randn(elt, 3, 4)
       b[Block(1, 1)] .= x
       return (; a, b, x)
     end
     function f2()
-      a = BlockSparseArray{elt}([2, 3], [3, 4])
+      a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
       b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
       x = randn(elt, 3, 4)
       b[Block(1, 1)] = x
@@ -861,7 +853,7 @@ arrayts = (Array, JLArray)
       @test_throws DimensionMismatch b[Block(1, 1)] .= randn(2, 3)
     end
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(2, 1)]
     @test iszero(b)
     @test size(b) == (2, 4)
@@ -871,7 +863,7 @@ arrayts = (Array, JLArray)
     @test a[Block(1, 2)] == x
     @test blockstoredlength(a) == 1
 
-    a = BlockSparseArray{elt}([4, 3, 2], [4, 3, 2])
+    a = BlockSparseArray{elt}(undef, [4, 3, 2], [4, 3, 2])
     @views for B in [Block(1, 1), Block(2, 2), Block(3, 3)]
       a[B] = randn(elt, size(a[B]))
     end
@@ -897,13 +889,13 @@ arrayts = (Array, JLArray)
     @test c[Block(2, 2)] == x
     @test a[Block(1, 1)[1:3, 1:3]] == x
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
     for index in parentindices(@view(b[Block(1, 1)]))
       @test index isa Base.OneTo{Int}
     end
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
     a[Block(1, 1)] = randn(elt, 2, 3)
     b = @view a[Block(1, 1)[1:2, 1:1]]
     @test b isa SubArray{elt,2,Matrix{elt}}
@@ -911,7 +903,7 @@ arrayts = (Array, JLArray)
       @test i isa UnitRange{Int}
     end
 
-    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
+    a = BlockSparseArray{elt}(undef, [2, 2, 2, 2], [2, 2, 2, 2])
     @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
       a[I] = randn(elt, size(a[I]))
     end
@@ -932,7 +924,7 @@ arrayts = (Array, JLArray)
       @test c == a[Block.(3:4), Block.(3:4)]
     end
 
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = randn(elt, 2, 2)
     a[Block(2, 2)] = randn(elt, 3, 3)
     for I in (mortar([Block(1)[2:2], Block(2)[2:3]]), [Block(1)[2:2], Block(2)[2:3]])
@@ -941,7 +933,7 @@ arrayts = (Array, JLArray)
     end
 
     # Merge and permute blocks.
-    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
+    a = BlockSparseArray{elt}(undef, [2, 2, 2, 2], [2, 2, 2, 2])
     @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
       a[I] = randn(elt, size(a[I]))
     end
@@ -966,7 +958,7 @@ arrayts = (Array, JLArray)
 
     # TODO: Add more tests of this, it may
     # only be working accidentally.
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = randn(elt, 2, 2)
     a[Block(2, 2)] = randn(elt, 3, 3)
     @test a[2:4, 4] == Array(a)[2:4, 4]
@@ -975,7 +967,7 @@ arrayts = (Array, JLArray)
   end
   @testset "view!" begin
     for blk in ((Block(2, 2),), (Block(2), Block(2)))
-      a = BlockSparseArray{elt}([2, 3], [2, 3])
+      a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
       b = view!(a, blk...)
       x = randn(elt, 3, 3)
       b .= x
@@ -986,7 +978,7 @@ arrayts = (Array, JLArray)
       @test @view!(a[blk...]) == x
     end
     for blk in ((Block(2, 2),), (Block(2), Block(2)))
-      a = BlockSparseArray{elt}([2, 3], [2, 3])
+      a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
       b = @view! a[blk...]
       x = randn(elt, 3, 3)
       b .= x
@@ -997,7 +989,7 @@ arrayts = (Array, JLArray)
       @test @view!(a[blk...]) == x
     end
     for blk in ((Block(2, 2)[2:3, 1:2],), (Block(2)[2:3], Block(2)[1:2]))
-      a = BlockSparseArray{elt}([2, 3], [2, 3])
+      a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
       b = view!(a, blk...)
       x = randn(elt, 2, 2)
       b .= x
@@ -1008,7 +1000,7 @@ arrayts = (Array, JLArray)
       @test @view!(a[blk...]) == x
     end
     for blk in ((Block(2, 2)[2:3, 1:2],), (Block(2)[2:3], Block(2)[1:2]))
-      a = BlockSparseArray{elt}([2, 3], [2, 3])
+      a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
       b = @view! a[blk...]
       x = randn(elt, 2, 2)
       b .= x
@@ -1020,9 +1012,9 @@ arrayts = (Array, JLArray)
     end
   end
   @testset "LinearAlgebra" begin
-    a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a1 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a1[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
-    a2 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a2 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a2[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
     a_dest = a1 * a2
     @allowscalar @test Array(a_dest) ≈ Array(a1) * Array(a2)
@@ -1030,10 +1022,10 @@ arrayts = (Array, JLArray)
     @test blockstoredlength(a_dest) == 1
   end
   @testset "Matrix multiplication" begin
-    a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a1 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a1[Block(1, 2)] = dev(randn(elt, size(@view(a1[Block(1, 2)]))))
     a1[Block(2, 1)] = dev(randn(elt, size(@view(a1[Block(2, 1)]))))
-    a2 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a2 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a2[Block(1, 2)] = dev(randn(elt, size(@view(a2[Block(1, 2)]))))
     a2[Block(2, 1)] = dev(randn(elt, size(@view(a2[Block(2, 1)]))))
     for (a1′, a2′) in ((a1, a2), (a1', a2), (a1, a2'), (a1', a2'))
@@ -1042,19 +1034,19 @@ arrayts = (Array, JLArray)
     end
   end
   @testset "Dot product" begin
-    a1 = dev(BlockSparseArray{elt}([2, 3, 4]))
+    a1 = dev(BlockSparseArray{elt}(undef, [2, 3, 4]))
     a1[Block(1)] = dev(randn(elt, size(@view(a1[Block(1)]))))
     a1[Block(3)] = dev(randn(elt, size(@view(a1[Block(3)]))))
-    a2 = dev(BlockSparseArray{elt}([2, 3, 4]))
+    a2 = dev(BlockSparseArray{elt}(undef, [2, 3, 4]))
     a2[Block(2)] = dev(randn(elt, size(@view(a1[Block(2)]))))
     a2[Block(3)] = dev(randn(elt, size(@view(a1[Block(3)]))))
     @test a1' * a2 ≈ Array(a1)' * Array(a2)
     @test dot(a1, a2) ≈ a1' * a2
   end
   @testset "cat" begin
-    a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a1 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a1[Block(2, 1)] = dev(randn(elt, size(@view(a1[Block(2, 1)]))))
-    a2 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a2 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a2[Block(1, 2)] = dev(randn(elt, size(@view(a2[Block(1, 2)]))))
 
     a_dest = cat(a1, a2; dims=1)
@@ -1079,9 +1071,9 @@ arrayts = (Array, JLArray)
     @test a_dest[Block(3, 4)] == a2[Block(1, 2)]
   end
   @testset "TensorAlgebra" begin
-    a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a1 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a1[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
-    a2 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a2 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a2[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
     # TODO: Make this work, requires customization of `TensorAlgebra.fusedims` and
     # `TensorAlgebra.splitdims` in terms of `BlockSparseArrays.blockreshape`,
@@ -1107,7 +1099,7 @@ arrayts = (Array, JLArray)
     matrixt_elt = arrayt{elt,2}
     arrayt_elt = arrayt{elt,3}
 
-    a = BlockSparseVector{elt,arrayt{elt,1}}([2, 2])
+    a = BlockSparseVector{elt,arrayt{elt,1}}(undef, [2, 2])
     res = sprint(summary, a)
     function ref_vec(elt, arrayt, prefix="")
       return "2-blocked 4-element $(prefix)BlockSparseVector{$(elt), $(arrayt), …, …}"
@@ -1116,7 +1108,7 @@ arrayts = (Array, JLArray)
     @test (res == ref_vec(elt, vectort_elt)) ||
       (res == ref_vec(elt, vectort_elt, "BlockSparseArrays."))
 
-    a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
+    a = BlockSparseMatrix{elt,arrayt{elt,2}}(undef, [2, 2], [2, 2])
     res = sprint(summary, a)
     function ref_mat(elt, arrayt, prefix="")
       return "2×2-blocked 4×4 $(prefix)BlockSparseMatrix{$(elt), $(arrayt), …, …}"
@@ -1125,7 +1117,7 @@ arrayts = (Array, JLArray)
     @test (res == ref_mat(elt, matrixt_elt)) ||
       (res == ref_mat(elt, matrixt_elt, "BlockSparseArrays."))
 
-    a = BlockSparseArray{elt,3,arrayt{elt,3}}([2, 2], [2, 2], [2, 2])
+    a = BlockSparseArray{elt,3,arrayt{elt,3}}(undef, [2, 2], [2, 2], [2, 2])
     res = sprint(summary, a)
     function ref_arr(elt, arrayt, prefix="")
       return "2×2×2-blocked 4×4×4 $(prefix)BlockSparseArray{$(elt), 3, $(arrayt), …, …}"
@@ -1136,7 +1128,7 @@ arrayts = (Array, JLArray)
     if elt === Float64
       # Not testing other element types since they change the
       # spacing so it isn't easy to make the test general.
-      a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
+      a = BlockSparseMatrix{elt,arrayt{elt,2}}(undef, [2, 2], [2, 2])
       @allowscalar a[1, 2] = 12
       @test sprint(show, "text/plain", a) ==
         "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │   ⋅    ⋅ \n $(zero(eltype(a)))   $(zero(eltype(a)))  │   ⋅    ⋅ \n ───────────┼──────────\n  ⋅     ⋅   │   ⋅    ⋅ \n  ⋅     ⋅   │   ⋅    ⋅ "

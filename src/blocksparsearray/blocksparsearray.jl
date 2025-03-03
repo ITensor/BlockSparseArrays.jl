@@ -3,9 +3,6 @@ using DerivableInterfaces: @interface
 using Dictionaries: Dictionary
 using SparseArraysBase: SparseArrayDOK
 
-# TODO: Delete this.
-## using BlockArrays: blocks
-
 struct BlockSparseArray{
   T,
   N,
@@ -27,40 +24,48 @@ const BlockSparseVector{T,A<:AbstractVector{T},Blocks<:AbstractVector{A},Axes<:T
   T,1,A,Blocks,Axes
 }
 
+# TODO: Rename to `sparsemortar`.
 function BlockSparseArray(
   block_data::Dictionary{<:Block{N},<:AbstractArray{<:Any,N}},
   axes::Tuple{Vararg{AbstractUnitRange,N}},
 ) where {N}
   blocks = default_blocks(block_data, axes)
+  # TODO: Rename to `sparsemortar`.
   return BlockSparseArray(blocks, axes)
 end
 
+# TODO: Rename to `sparsemortar`.
 function BlockSparseArray(
   block_indices::Vector{<:Block{N}},
   block_data::Vector{<:AbstractArray{<:Any,N}},
   axes::Tuple{Vararg{AbstractUnitRange,N}},
 ) where {N}
+  # TODO: Rename to `sparsemortar`.
   return BlockSparseArray(Dictionary(block_indices, block_data), axes)
 end
 
+# TODO: Rename to `sparsemortar`.
 function BlockSparseArray{T,N,A,Blocks}(
   blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
 ) where {T,N,A<:AbstractArray{T,N},Blocks<:AbstractArray{A,N}}
   return BlockSparseArray{T,N,A,Blocks,typeof(axes)}(blocks, axes)
 end
 
+# TODO: Rename to `sparsemortar`.
 function BlockSparseArray{T,N,A}(
   blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
 ) where {T,N,A<:AbstractArray{T,N}}
   return BlockSparseArray{T,N,A,typeof(blocks)}(blocks, axes)
 end
 
+# TODO: Rename to `sparsemortar`.
 function BlockSparseArray{T,N}(
   blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
 ) where {T,N}
   return BlockSparseArray{T,N,eltype(blocks),typeof(blocks),typeof(axes)}(blocks, axes)
 end
 
+# TODO: Rename to `sparsemortar`.
 function BlockSparseArray{T,N}(
   block_data::Dictionary{Block{N,Int},<:AbstractArray{T,N}},
   axes::Tuple{Vararg{AbstractUnitRange,N}},
@@ -70,99 +75,88 @@ function BlockSparseArray{T,N}(
 end
 
 function BlockSparseArray{T,N,A}(
-  axes::Tuple{Vararg{AbstractUnitRange,N}}
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}
 ) where {T,N,A<:AbstractArray{T,N}}
   blocks = default_blocks(A, axes)
   return BlockSparseArray{T,N,A}(blocks, axes)
 end
 
 function BlockSparseArray{T,N,A}(
-  axes::Vararg{AbstractUnitRange,N}
+  ::UndefInitializer, axes::Vararg{AbstractUnitRange,N}
 ) where {T,N,A<:AbstractArray{T,N}}
-  return BlockSparseArray{T,N,A}(axes)
+  return BlockSparseArray{T,N,A}(undef, axes)
 end
 
 function BlockSparseArray{T,N,A}(
-  dims::Tuple{Vararg{Vector{Int},N}}
+  ::UndefInitializer, dims::Tuple{Vararg{Vector{Int},N}}
 ) where {T,N,A<:AbstractArray{T,N}}
-  return BlockSparseArray{T,N,A}(blockedrange.(dims))
+  return BlockSparseArray{T,N,A}(undef, blockedrange.(dims))
 end
 
 # Fix ambiguity error.
-function BlockSparseArray{T,0,A}(axes::Tuple{}) where {T,A<:AbstractArray{T,0}}
+function BlockSparseArray{T,0,A}(
+  ::UndefInitializer, axes::Tuple{}
+) where {T,A<:AbstractArray{T,0}}
   blocks = default_blocks(A, axes)
   return BlockSparseArray{T,0,A}(blocks, axes)
 end
 
 function BlockSparseArray{T,N,A}(
-  dims::Vararg{Vector{Int},N}
+  ::UndefInitializer, dims::Vararg{Vector{Int},N}
 ) where {T,N,A<:AbstractArray{T,N}}
-  return BlockSparseArray{T,N,A}(dims)
+  return BlockSparseArray{T,N,A}(undef, dims)
 end
 
-function BlockSparseArray{T,N}(axes::Tuple{Vararg{AbstractUnitRange,N}}) where {T,N}
-  return BlockSparseArray{T,N,default_arraytype(T, axes)}(axes)
+function BlockSparseArray{T,N}(
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}
+) where {T,N}
+  return BlockSparseArray{T,N,default_arraytype(T, axes)}(undef, axes)
 end
 
-function BlockSparseArray{T,N}(axes::Vararg{AbstractUnitRange,N}) where {T,N}
-  return BlockSparseArray{T,N}(axes)
+function BlockSparseArray{T,N}(
+  ::UndefInitializer, axes::Vararg{AbstractUnitRange,N}
+) where {T,N}
+  return BlockSparseArray{T,N}(undef, axes)
 end
 
-function BlockSparseArray{T,0}(axes::Tuple{}) where {T}
-  return BlockSparseArray{T,0,default_arraytype(T, axes)}(axes)
+function BlockSparseArray{T,0}(::UndefInitializer, axes::Tuple{}) where {T}
+  return BlockSparseArray{T,0,default_arraytype(T, axes)}(undef, axes)
 end
 
-function BlockSparseArray{T,N}(dims::Tuple{Vararg{Vector{Int},N}}) where {T,N}
-  return BlockSparseArray{T,N}(blockedrange.(dims))
+function BlockSparseArray{T,N}(
+  ::UndefInitializer, dims::Tuple{Vararg{Vector{Int},N}}
+) where {T,N}
+  return BlockSparseArray{T,N}(undef, blockedrange.(dims))
 end
 
-function BlockSparseArray{T,N}(dims::Vararg{Vector{Int},N}) where {T,N}
-  return BlockSparseArray{T,N}(dims)
+function BlockSparseArray{T,N}(::UndefInitializer, dims::Vararg{Vector{Int},N}) where {T,N}
+  return BlockSparseArray{T,N}(undef, dims)
 end
 
-function BlockSparseArray{T}(dims::Tuple{Vararg{Vector{Int}}}) where {T}
-  return BlockSparseArray{T,length(dims)}(dims)
+function BlockSparseArray{T}(::UndefInitializer, dims::Tuple{Vararg{Vector{Int}}}) where {T}
+  return BlockSparseArray{T,length(dims)}(undef, dims)
 end
 
-function BlockSparseArray{T}(axes::Tuple{Vararg{AbstractUnitRange}}) where {T}
-  return BlockSparseArray{T,length(axes)}(axes)
+function BlockSparseArray{T}(
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange}}
+) where {T}
+  return BlockSparseArray{T,length(axes)}(undef, axes)
 end
 
-function BlockSparseArray{T}(axes::Tuple{}) where {T}
-  return BlockSparseArray{T,length(axes)}(axes)
+function BlockSparseArray{T}(::UndefInitializer, axes::Tuple{}) where {T}
+  return BlockSparseArray{T,length(axes)}(undef, axes)
 end
 
-function BlockSparseArray{T}(dims::Vararg{Vector{Int}}) where {T}
-  return BlockSparseArray{T}(dims)
+function BlockSparseArray{T}(::UndefInitializer, dims::Vararg{Vector{Int}}) where {T}
+  return BlockSparseArray{T}(undef, dims)
 end
 
-function BlockSparseArray{T}(axes::Vararg{AbstractUnitRange}) where {T}
-  return BlockSparseArray{T}(axes)
+function BlockSparseArray{T}(::UndefInitializer, axes::Vararg{AbstractUnitRange}) where {T}
+  return BlockSparseArray{T}(undef, axes)
 end
 
-function BlockSparseArray{T}() where {T}
-  return BlockSparseArray{T}(())
-end
-
-# undef
-function BlockSparseArray{T,N,A,Blocks}(
-  ::UndefInitializer, args...
-) where {T,N,A<:AbstractArray{T,N},Blocks<:AbstractArray{A,N}}
-  return BlockSparseArray{T,N,A,Blocks}(args...)
-end
-
-function BlockSparseArray{T,N,A}(
-  ::UndefInitializer, args...
-) where {T,N,A<:AbstractArray{T,N}}
-  return BlockSparseArray{T,N,A}(args...)
-end
-
-function BlockSparseArray{T,N}(::UndefInitializer, args...) where {T,N}
-  return BlockSparseArray{T,N}(args...)
-end
-
-function BlockSparseArray{T}(::UndefInitializer, args...) where {T}
-  return BlockSparseArray{T}(args...)
+function BlockSparseArray{T}(::UndefInitializer) where {T}
+  return BlockSparseArray{T}(undef, ())
 end
 
 # Base `AbstractArray` interface

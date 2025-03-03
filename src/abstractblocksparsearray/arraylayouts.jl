@@ -38,7 +38,7 @@ function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, ax
   # TODO: Define `blocktype`/`blockstype` for `SubArray` wrapping `BlockSparseArray`.
   # TODO: Use `similar`?
   blocktype_a = blocktype(parent(a))
-  a_dest = BlockSparseArray{eltype(a),length(axes),blocktype_a}(axes)
+  a_dest = BlockSparseArray{eltype(a),length(axes),blocktype_a}(undef, axes)
   a_dest .= a
   return a_dest
 end
