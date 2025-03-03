@@ -337,6 +337,24 @@ arrayts = (Array, JLArray)
     @test blockstoredlength(a) == 1
     @test storedlength(a) == 2 * 4
 
+    # Test similar on broadcasted expressions.
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
+    bc = Broadcast.broadcasted(+, a, a)
+    a′ = similar(bc, Float32)
+    @test a′ isa BlockSparseArray{Float32}
+    @test blocktype(a′) <: arrayt{Float32,2}
+    @test axes(a) == (blockedrange([2, 3]), blockedrange([3, 4]))
+
+    # Test similar on broadcasted expressions with axes specified.
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
+    bc = Broadcast.broadcasted(+, a, a)
+    a′ = similar(
+      bc, Float32, (blockedrange([2, 4]), blockedrange([2, 5]), blockedrange([2, 2]))
+    )
+    @test a′ isa BlockSparseArray{Float32}
+    @test blocktype(a′) <: arrayt{Float32,3}
+    @test axes(a′) == (blockedrange([2, 4]), blockedrange([2, 5]), blockedrange([2, 2]))
+
     a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]
       a[b] = dev(randn(elt, size(a[b])))
@@ -1090,34 +1108,30 @@ arrayts = (Array, JLArray)
     arrayt_elt = arrayt{elt,3}
 
     a = BlockSparseVector{elt,arrayt{elt,1}}([2, 2])
+    res = sprint(summary, a)
+    function ref_vec(elt, arrayt, prefix="")
+      return "2-blocked 4-element $(prefix)BlockSparseVector{$(elt), $(arrayt), …, …}"
+    end
     # Either option is possible depending on namespacing.
-    @test (
-      sprint(summary, a) ==
-      "2-blocked 4-element BlockSparseVector{$(elt), $(vectort_elt), …}"
-    ) || (
-      sprint(summary, a) ==
-      "2-blocked 4-element BlockSparseArrays.BlockSparseVector{$(elt), $(vectort_elt), …}"
-    )
+    @test (res == ref_vec(elt, vectort_elt)) ||
+      (res == ref_vec(elt, vectort_elt, "BlockSparseArrays."))
 
     a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
+    res = sprint(summary, a)
+    function ref_mat(elt, arrayt, prefix="")
+      return "2×2-blocked 4×4 $(prefix)BlockSparseMatrix{$(elt), $(arrayt), …, …}"
+    end
     # Either option is possible depending on namespacing.
-    @test (
-      sprint(summary, a) == "2×2-blocked 4×4 BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
-    ) || (
-      sprint(summary, a) ==
-      "2×2-blocked 4×4 BlockSparseArrays.BlockSparseMatrix{$(elt), $(matrixt_elt), …}"
-    )
+    @test (res == ref_mat(elt, matrixt_elt)) ||
+      (res == ref_mat(elt, matrixt_elt, "BlockSparseArrays."))
 
     a = BlockSparseArray{elt,3,arrayt{elt,3}}([2, 2], [2, 2], [2, 2])
-
-    # Either option is possible depending on namespacing.
-    @test (
-      sprint(summary, a) ==
-      "2×2×2-blocked 4×4×4 BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
-    ) || (
-      sprint(summary, a) ==
-      "2×2×2-blocked 4×4×4 BlockSparseArrays.BlockSparseArray{$(elt), 3, $(arrayt_elt), …}"
-    )
+    res = sprint(summary, a)
+    function ref_arr(elt, arrayt, prefix="")
+      return "2×2×2-blocked 4×4×4 $(prefix)BlockSparseArray{$(elt), 3, $(arrayt), …, …}"
+    end
+    @test (res == ref_arr(elt, arrayt_elt)) ||
+      (res == ref_arr(elt, arrayt_elt, "BlockSparseArrays."))
 
     if elt === Float64
       # Not testing other element types since they change the
