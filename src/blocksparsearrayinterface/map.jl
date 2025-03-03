@@ -112,5 +112,5 @@ function map_stored_blocks(f, a::AbstractArray)
   # since they can't necessarily by `Diagonal` if there are rectangular blocks.
   mapped_blocks = Dictionary{eltype(bs),eltype(ds)}(bs, ds)
   # TODO: Use `similartype(typeof(a), eltype(eltype(mapped_blocks)))(...)`.
-  return BlockSparseArray(mapped_blocks, axes(a))
+  return sparsemortar(mapped_blocks, axes(a))
 end

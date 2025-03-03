@@ -24,61 +24,62 @@ const BlockSparseVector{T,A<:AbstractVector{T},Blocks<:AbstractVector{A},Axes<:T
   T,1,A,Blocks,Axes
 }
 
-# TODO: Rename to `sparsemortar`.
-function BlockSparseArray(
-  block_data::Dictionary{<:Block{N},<:AbstractArray{<:Any,N}},
-  axes::Tuple{Vararg{AbstractUnitRange,N}},
-) where {N}
-  blocks = default_blocks(block_data, axes)
-  # TODO: Rename to `sparsemortar`.
-  return BlockSparseArray(blocks, axes)
-end
+"""
+    sparsemortar(blocks::AbstractArray{<:AbstractArray{T,N},N}, axes) -> ::BlockSparseArray{T,N}
 
-# TODO: Rename to `sparsemortar`.
-function BlockSparseArray(
-  block_indices::Vector{<:Block{N}},
-  block_data::Vector{<:AbstractArray{<:Any,N}},
-  axes::Tuple{Vararg{AbstractUnitRange,N}},
-) where {N}
-  # TODO: Rename to `sparsemortar`.
-  return BlockSparseArray(Dictionary(block_indices, block_data), axes)
-end
-
-# TODO: Rename to `sparsemortar`.
-function BlockSparseArray{T,N,A,Blocks}(
-  blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
-) where {T,N,A<:AbstractArray{T,N},Blocks<:AbstractArray{A,N}}
-  return BlockSparseArray{T,N,A,Blocks,typeof(axes)}(blocks, axes)
-end
-
-# TODO: Rename to `sparsemortar`.
-function BlockSparseArray{T,N,A}(
-  blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
-) where {T,N,A<:AbstractArray{T,N}}
-  return BlockSparseArray{T,N,A,typeof(blocks)}(blocks, axes)
-end
-
-# TODO: Rename to `sparsemortar`.
-function BlockSparseArray{T,N}(
+Construct a block sparse array from a sparse array of arrays and specified blocked axes.
+The block sizes must be commensurate with the blocks of the axes.
+"""
+function sparsemortar(
   blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
 ) where {T,N}
   return BlockSparseArray{T,N,eltype(blocks),typeof(blocks),typeof(axes)}(blocks, axes)
 end
 
-# TODO: Rename to `sparsemortar`.
-function BlockSparseArray{T,N}(
-  block_data::Dictionary{Block{N,Int},<:AbstractArray{T,N}},
+"""
+    sparsemortar(blocks::Dictionary{<:Block{N},<:AbstractArray{T,N}}, axes) -> ::BlockSparseArray{T,N}
+
+Construct a block sparse array from a dictionary mapping the locations of the stored/nonzero
+blocks to the data of those blocks, along with a set of blocked axes.
+The block sizes must be commensurate with the blocks of the specified axes.
+"""
+function sparsemortar(
+  block_data::Dictionary{<:Block{N},<:AbstractArray{<:Any,N}},
   axes::Tuple{Vararg{AbstractUnitRange,N}},
-) where {T,N}
+) where {N}
   blocks = default_blocks(block_data, axes)
-  return BlockSparseArray{T,N}(blocks, axes)
+  return sparsemortar(blocks, axes)
 end
+
+"""
+    sparsemortar(block_indices::Vector{<:Block{N}}, block_data::Vector{<:AbstractArray{T,N}}, axes) -> ::BlockSparseArray{T,N}
+
+Construct a block sparse array from a list of locations of the stored/nonzero blocks,
+a corresponding list of the data of those blocks, along with a set of blocked axes.
+The block sizes must be commensurate with the blocks of the specified axes.
+"""
+function sparsemortar(
+  block_indices::Vector{<:Block{N}},
+  block_data::Vector{<:AbstractArray{<:Any,N}},
+  axes::Tuple{Vararg{AbstractUnitRange,N}},
+) where {N}
+  return sparsemortar(Dictionary(block_indices, block_data), axes)
+end
+
+@doc """
+    BlockSparseArray{T}(undef, dims)
+    BlockSparseArray{T,N}(undef, dims)
+    BlockSparseArray{T,N,A}(undef, dims)
+
+Construct an uninitialized N-dimensional BlockSparseArray containing elements of type T. `dims` should be a list
+of block lengths in each dimension or a list of blocked ranges representing the axes.
+""" BlockSparseArray
 
 function BlockSparseArray{T,N,A}(
   ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}
 ) where {T,N,A<:AbstractArray{T,N}}
   blocks = default_blocks(A, axes)
-  return BlockSparseArray{T,N,A}(blocks, axes)
+  return sparsemortar(blocks, axes)
 end
 
 function BlockSparseArray{T,N,A}(
@@ -98,7 +99,7 @@ function BlockSparseArray{T,0,A}(
   ::UndefInitializer, axes::Tuple{}
 ) where {T,A<:AbstractArray{T,0}}
   blocks = default_blocks(A, axes)
-  return BlockSparseArray{T,0,A}(blocks, axes)
+  return sparsemortar(blocks, axes)
 end
 
 function BlockSparseArray{T,N,A}(

@@ -17,7 +17,7 @@ function similar_blocksparse(
   return BlockSparseArray{
     elt,length(axes),similartype(unwrap_array_type(blocktype(a)), elt, axes)
   }(
-    axes
+    undef, axes
   )
 end
 

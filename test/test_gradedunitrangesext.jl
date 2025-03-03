@@ -20,7 +20,7 @@ using TensorAlgebra: fusedims, splitdims
 using LinearAlgebra: adjoint
 using Random: randn!
 function randn_blockdiagonal(elt::Type, axes::Tuple)
-  a = BlockSparseArray{elt}(axes)
+  a = BlockSparseArray{elt}(undef, axes)
   blockdiaglength = minimum(blocksize(a))
   for i in 1:blockdiaglength
     b = Block(ntuple(Returns(i), ndims(a)))
@@ -135,7 +135,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   @testset "dual axes" begin
     r = gradedrange([U1(0) => 2, U1(1) => 2])
     for ax in ((r, r), (dual(r), r), (r, dual(r)), (dual(r), dual(r)))
-      a = BlockSparseArray{elt}(ax...)
+      a = BlockSparseArray{elt}(undef, ax...)
       @views for b in [Block(1, 1), Block(2, 2)]
         a[b] = randn(elt, size(a[b]))
       end
@@ -178,7 +178,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 
     @testset "GradedOneTo" begin
       r = gradedrange([U1(0) => 2, U1(1) => 2])
-      a = BlockSparseArray{elt}(r, r)
+      a = BlockSparseArray{elt}(undef, r, r)
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
       end
@@ -199,7 +199,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 
     @testset "GradedUnitRange" begin
       r = gradedrange([U1(0) => 2, U1(1) => 2])[1:3]
-      a = BlockSparseArray{elt}(r, r)
+      a = BlockSparseArray{elt}(undef, r, r)
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
       end
@@ -226,7 +226,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     # Test case when all axes are dual.
     @testset "dual GradedOneTo" begin
       r = gradedrange([U1(-1) => 2, U1(1) => 2])
-      a = BlockSparseArray{elt}(dual(r), dual(r))
+      a = BlockSparseArray{elt}(undef, dual(r), dual(r))
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
       end
@@ -251,7 +251,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 
     @testset "dual GradedUnitRange" begin
       r = gradedrange([U1(0) => 2, U1(1) => 2])[1:3]
-      a = BlockSparseArray{elt}(dual(r), dual(r))
+      a = BlockSparseArray{elt}(undef, dual(r), dual(r))
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
       end
@@ -277,7 +277,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 
     @testset "dual BlockedUnitRange" begin    # self dual
       r = blockedrange([2, 2])
-      a = BlockSparseArray{elt}(dual(r), dual(r))
+      a = BlockSparseArray{elt}(undef, dual(r), dual(r))
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
       end
@@ -302,7 +302,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       gradedrange([U1(0) => 2, U1(1) => 2]),
       gradedrange([U1(0) => 2, U1(1) => 2])[begin:end],
     )
-      a = BlockSparseArray{elt}(r, r)
+      a = BlockSparseArray{elt}(undef, r, r)
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
       end
@@ -330,16 +330,16 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   end
   @testset "Matrix multiplication" begin
     r = gradedrange([U1(0) => 2, U1(1) => 3])
-    a1 = BlockSparseArray{elt}(dual(r), r)
+    a1 = BlockSparseArray{elt}(undef, dual(r), r)
     a1[Block(1, 2)] = randn(elt, size(@view(a1[Block(1, 2)])))
     a1[Block(2, 1)] = randn(elt, size(@view(a1[Block(2, 1)])))
-    a2 = BlockSparseArray{elt}(dual(r), r)
+    a2 = BlockSparseArray{elt}(undef, dual(r), r)
     a2[Block(1, 2)] = randn(elt, size(@view(a2[Block(1, 2)])))
     a2[Block(2, 1)] = randn(elt, size(@view(a2[Block(2, 1)])))
     @test Array(a1 * a2) ≈ Array(a1) * Array(a2)
     @test Array(a1' * a2') ≈ Array(a1') * Array(a2')
 
-    a2 = BlockSparseArray{elt}(r, dual(r))
+    a2 = BlockSparseArray{elt}(undef, r, dual(r))
     a2[Block(1, 2)] = randn(elt, size(@view(a2[Block(1, 2)])))
     a2[Block(2, 1)] = randn(elt, size(@view(a2[Block(2, 1)])))
     @test Array(a1' * a2) ≈ Array(a1') * Array(a2)

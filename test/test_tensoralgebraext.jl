@@ -9,7 +9,7 @@ using SymmetrySectors: U1
 using TensorAlgebra: contract
 
 function randn_blockdiagonal(elt::Type, axes::Tuple)
-  a = BlockSparseArray{elt}(axes)
+  a = BlockSparseArray{elt}(undef, axes)
   blockdiaglength = minimum(blocksize(a))
   for i in 1:blockdiaglength
     b = Block(ntuple(Returns(i), ndims(a)))

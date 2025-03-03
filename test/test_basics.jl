@@ -30,6 +30,7 @@ using BlockSparseArrays:
   eachstoredblock,
   blockstype,
   blocktype,
+  sparsemortar,
   view!
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray

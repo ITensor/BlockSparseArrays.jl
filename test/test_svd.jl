@@ -47,7 +47,7 @@ end
 # -----------
 @testset "($m, $n) BlockSparseMatrix{$T}" for ((m, n), T) in
                                               Iterators.product(blockszs, eltypes)
-  a = BlockSparseArray{T}(m, n)
+  a = BlockSparseArray{T}(undef, m, n)
 
   # test empty matrix
   usv_empty = svd(a)
