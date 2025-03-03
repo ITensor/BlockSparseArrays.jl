@@ -78,20 +78,6 @@ function Base.setindex!(
   return a
 end
 
-using TypeParameterAccessors: unspecify_type_parameters
-function show_typeof_blocksparse(io::IO, a::AbstractBlockSparseArray)
-  Base.show(io, unspecify_type_parameters(typeof(a)))
-  print(io, '{')
-  show(io, eltype(a))
-  print(io, ", ")
-  show(io, ndims(a))
-  print(io, ", ")
-  show(io, blocktype(a))
-  print(io, ", …")
-  print(io, '}')
-  return nothing
-end
-
 # Copy of `Base.dims2string` defined in `show.jl`.
 function dims_to_string(d)
   isempty(d) && return "0-dimensional"

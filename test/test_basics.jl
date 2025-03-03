@@ -1139,7 +1139,7 @@ arrayts = (Array, JLArray)
       a = BlockSparseMatrix{elt,arrayt{elt,2}}([2, 2], [2, 2])
       @allowscalar a[1, 2] = 12
       @test sprint(show, "text/plain", a) ==
-        "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │  .  .\n $(zero(eltype(a)))   $(zero(eltype(a)))  │  .  .\n ───────────┼──────\n  .     .   │  .  .\n  .     .   │  .  ."
+        "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │   ⋅    ⋅ \n $(zero(eltype(a)))   $(zero(eltype(a)))  │   ⋅    ⋅ \n ───────────┼──────────\n  ⋅     ⋅   │   ⋅    ⋅ \n  ⋅     ⋅   │   ⋅    ⋅ "
     end
   end
   @testset "TypeParameterAccessors.position" begin
