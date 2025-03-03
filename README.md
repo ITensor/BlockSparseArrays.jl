@@ -35,7 +35,7 @@ julia> Pkg.add("BlockSparseArrays")
 
 ````julia
 using BlockArrays: BlockArrays, BlockedVector, Block, blockedrange
-using BlockSparseArrays: BlockSparseArray, blockstoredlength
+using BlockSparseArrays: BlockSparseArray, blockstoredlength, sparsemortar
 using Test: @test, @test_broken
 
 function main()
@@ -60,13 +60,13 @@ function main()
     reshape(@view(d_data[Block(i)]), block_size(i_axes, nz_blocks[i])) for
     i in 1:length(nz_blocks)
   ]
-  b = BlockSparseArray(nz_blocks, d_blocks, i_axes)
+  b = sparsemortar(nz_blocks, d_blocks, i_axes)
 
   @test blockstoredlength(b) == 2
 
   # Blocks with discontiguous underlying data
   d_blocks = randn.(nz_block_sizes)
-  b = BlockSparseArray(nz_blocks, d_blocks, i_axes)
+  b = sparsemortar(nz_blocks, d_blocks, i_axes)
 
   @test blockstoredlength(b) == 2
 
@@ -114,7 +114,7 @@ using BlockSparseArrays: BlockSparseArray
 
 i1 = [2, 3]
 i2 = [2, 3]
-B = BlockSparseArray{Float64}(i1, i2)
+B = BlockSparseArray{Float64}(undef, i1, i2)
 B[Block(1, 1)] = randn(2, 2)
 B[Block(2, 2)] = randn(3, 3)
 
