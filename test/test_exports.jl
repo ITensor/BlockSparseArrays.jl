@@ -9,6 +9,7 @@ using Test: @test, @testset
     :blockstoredlength,
     :eachblockstoredindex,
     :eachstoredblock,
+    :sparsemortar,
   ]
   @test issetequal(names(BlockSparseArrays), exports)
 end

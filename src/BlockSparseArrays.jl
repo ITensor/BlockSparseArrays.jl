@@ -5,7 +5,8 @@ export BlockSparseArray,
   BlockSparseVector,
   blockstoredlength,
   eachblockstoredindex,
-  eachstoredblock
+  eachstoredblock,
+  sparsemortar
 
 # factorizations
 include("factorizations/svd.jl")
