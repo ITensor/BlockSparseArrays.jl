@@ -1,7 +1,7 @@
-using BlockArrays: blocks, eachstoredindex, undef_blocks
+using BlockArrays: blocks, undef_blocks
 using DerivableInterfaces: @interface, AbstractArrayInterface, interface
 using GPUArraysCore: @allowscalar
-using SparseArraysBase: SparseArrayDOK
+using SparseArraysBase: SparseArrayDOK, eachstoredindex
 
 # TODO: Rewrite this so that it takes the blocking structure
 # made by combining the blocking of the axes (i.e. the blocking that
