@@ -17,7 +17,8 @@ using BlockArrays:
   blocklengths,
   blocksize,
   blocksizes,
-  mortar
+  mortar,
+  undef_blocks
 using BlockSparseArrays:
   @view!,
   BlockSparseArray,
@@ -158,6 +159,24 @@ arrayts = (Array, JLArray)
     @test (@constinferred blocktype(a)) <: SubArray{elt,2,arrayt{elt,2}}
     # TODO: This is difficult to determine just from type information.
     @test_broken blocktype(typeof(a)) <: SubArray{elt,2,arrayt{elt,2}}
+
+    # sparsemortar
+    for ax in (
+      ([2, 3], [2, 3]),
+      (([2, 3], [2, 3]),),
+      blockedrange.(([2, 3], [2, 3])),
+      (blockedrange.(([2, 3], [2, 3])),),
+    )
+      blocks = SparseArrayDOK{arrayt{elt,2}}(undef_blocks, ax...)
+      blocks[2, 1] = arrayt(randn(elt, 3, 2))
+      blocks[1, 2] = arrayt(randn(elt, 2, 3))
+      a = sparsemortar(blocks, ax...)
+      @test a isa BlockSparseArray{elt,2,arrayt{elt,2}}
+      @test iszero(a[Block(1, 1)])
+      @test a[Block(2, 1)] == blocks[2, 1]
+      @test a[Block(1, 2)] == blocks[1, 2]
+      @test iszero(a[Block(2, 2)])
+    end
   end
   @testset "Basics" begin
     a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))

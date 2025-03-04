@@ -12,9 +12,7 @@ const BlockSparseDiagonal{T,A<:AbstractBlockSparseVector{T}} = Diagonal{T,A}
 end
 
 function BlockDiagonal(blocks::AbstractVector{<:AbstractMatrix})
-  return sparsemortar(
-    Diagonal(blocks), (blockedrange(size.(blocks, 1)), blockedrange(size.(blocks, 2)))
-  )
+  return sparsemortar(Diagonal(blocks), size.(blocks, 1), size.(blocks, 2))
 end
 
 function DiagonalArrays.diagonal(S::BlockSparseVector)
