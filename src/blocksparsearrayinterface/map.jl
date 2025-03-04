@@ -1,5 +1,7 @@
+using BlockArrays: blocks, eachstoredindex, undef_blocks
 using DerivableInterfaces: @interface, AbstractArrayInterface, interface
 using GPUArraysCore: @allowscalar
+using SparseArraysBase: SparseArrayDOK
 
 # TODO: Rewrite this so that it takes the blocking structure
 # made by combining the blocking of the axes (i.e. the blocking that
@@ -94,14 +96,17 @@ function map_zero_dim! end
   return a_dest
 end
 
-# TODO: Decide what to do with these.
+# TODO: Do we need this function or can we just use `map`?
+# Probably it should be a special version of `map` where we
+# specify the function preserves zeros, i.e.
+# `map(f, a; preserves_zeros=true)` or `@preserves_zeros map(f, a)`.
 function map_stored_blocks(f, a::AbstractArray)
-  bs = collect(eachblockstoredindex(a))
-  ds = map(b -> f(@view(a[b])), bs)
-  # TODO: Use `similartype` instead?
-  a′ = BlockSparseArray{eltype(eltype(ds)),ndims(a),eltype(ds)}(undef, axes(a))
-  for (b, d) in zip(bs, ds)
-    a′[b] = d
+  blocks_a = blocks(a)
+  stored_indices = collect(eachstoredindex(a))
+  stored_blocks = map(I -> f(blocks_a[I]), stored_indices)
+  blocks_a′ = SparseArrayDOK{eltype(stored_blocks)}(undef_blocks, axes(a))
+  for (I, b) in zip(stored_indices, stored_blocks)
+    blocks_a′[I] = b
   end
-  return a′
+  return sparsemortar(blocks_a′, axes(a))
 end
