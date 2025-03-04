@@ -3,24 +3,34 @@ using DerivableInterfaces: @interface
 using Dictionaries: Dictionary
 using SparseArraysBase: SparseArrayDOK
 
+function _BlockSparseArray end
+
 struct BlockSparseArray{
   T,
   N,
   A<:AbstractArray{T,N},
   Blocks<:AbstractArray{A,N},
-  Axes<:Tuple{Vararg{AbstractUnitRange,N}},
+  Axes<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},
 } <: AbstractBlockSparseArray{T,N}
   blocks::Blocks
   axes::Axes
+  global @inline function _BlockSparseArray(
+    blocks::AbstractArray{<:AbstractArray{T,N},N},
+    axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}},
+  ) where {T,N}
+    Base.require_one_based_indexing(axes...)
+    Base.require_one_based_indexing(blocks)
+    return new{T,N,eltype(blocks),typeof(blocks),typeof(axes)}(blocks, axes)
+  end
 end
 
 # TODO: Can this definition be shortened?
-const BlockSparseMatrix{T,A<:AbstractMatrix{T},Blocks<:AbstractMatrix{A},Axes<:Tuple{AbstractUnitRange,AbstractUnitRange}} = BlockSparseArray{
+const BlockSparseMatrix{T,A<:AbstractMatrix{T},Blocks<:AbstractMatrix{A},Axes<:Tuple{AbstractUnitRange{<:Integer},AbstractUnitRange{<:Integer}}} = BlockSparseArray{
   T,2,A,Blocks,Axes
 }
 
 # TODO: Can this definition be shortened?
-const BlockSparseVector{T,A<:AbstractVector{T},Blocks<:AbstractVector{A},Axes<:Tuple{AbstractUnitRange}} = BlockSparseArray{
+const BlockSparseVector{T,A<:AbstractVector{T},Blocks<:AbstractVector{A},Axes<:Tuple{AbstractUnitRange{<:Integer}}} = BlockSparseArray{
   T,1,A,Blocks,Axes
 }
 
@@ -31,39 +41,17 @@ Construct a block sparse array from a sparse array of arrays and specified block
 The block sizes must be commensurate with the blocks of the axes.
 """
 function sparsemortar(
-  blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
+  blocks::AbstractArray{<:AbstractArray{T,N},N},
+  axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}},
 ) where {T,N}
-  return BlockSparseArray{T,N,eltype(blocks),typeof(blocks),typeof(axes)}(blocks, axes)
+  return _BlockSparseArray(blocks, axes)
 end
 
-"""
-    sparsemortar(blocks::Dictionary{<:Block{N},<:AbstractArray{T,N}}, axes) -> ::BlockSparseArray{T,N}
-
-Construct a block sparse array from a dictionary mapping the locations of the stored/nonzero
-blocks to the data of those blocks, along with a set of blocked axes.
-The block sizes must be commensurate with the blocks of the specified axes.
-"""
-function sparsemortar(
-  block_data::Dictionary{<:Block{N},<:AbstractArray{<:Any,N}},
-  axes::Tuple{Vararg{AbstractUnitRange,N}},
-) where {N}
-  blocks = default_blocks(block_data, axes)
-  return sparsemortar(blocks, axes)
-end
-
-"""
-    sparsemortar(block_indices::Vector{<:Block{N}}, block_data::Vector{<:AbstractArray{T,N}}, axes) -> ::BlockSparseArray{T,N}
-
-Construct a block sparse array from a list of locations of the stored/nonzero blocks,
-a corresponding list of the data of those blocks, along with a set of blocked axes.
-The block sizes must be commensurate with the blocks of the specified axes.
-"""
-function sparsemortar(
-  block_indices::Vector{<:Block{N}},
-  block_data::Vector{<:AbstractArray{<:Any,N}},
-  axes::Tuple{Vararg{AbstractUnitRange,N}},
-) where {N}
-  return sparsemortar(Dictionary(block_indices, block_data), axes)
+function BlockArrays.mortar(
+  blocks::SparseArrayDOK{<:AbstractArray{T,N},N},
+  axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}},
+) where {T,N}
+  return _BlockSparseArray(blocks, axes)
 end
 
 @doc """
@@ -79,7 +67,7 @@ function BlockSparseArray{T,N,A}(
   ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}
 ) where {T,N,A<:AbstractArray{T,N}}
   blocks = default_blocks(A, axes)
-  return sparsemortar(blocks, axes)
+  return _BlockSparseArray(blocks, axes)
 end
 
 function BlockSparseArray{T,N,A}(
@@ -99,7 +87,7 @@ function BlockSparseArray{T,0,A}(
   ::UndefInitializer, axes::Tuple{}
 ) where {T,A<:AbstractArray{T,0}}
   blocks = default_blocks(A, axes)
-  return sparsemortar(blocks, axes)
+  return _BlockSparseArray(blocks, axes)
 end
 
 function BlockSparseArray{T,N,A}(
