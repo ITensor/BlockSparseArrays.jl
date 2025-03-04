@@ -102,7 +102,7 @@ end
 # `map(f, a; preserves_zeros=true)` or `@preserves_zeros map(f, a)`.
 function map_stored_blocks(f, a::AbstractArray)
   blocks_a = blocks(a)
-  stored_indices = collect(eachstoredindex(a))
+  stored_indices = collect(eachstoredindex(blocks_a))
   stored_blocks = map(I -> f(blocks_a[I]), stored_indices)
   blocks_a′ = SparseArrayDOK{eltype(stored_blocks)}(undef_blocks, axes(a))
   for (I, b) in zip(stored_indices, stored_blocks)
