@@ -17,7 +17,9 @@ using SparseArraysBase: SparseArrayDOK
 Construct the block structure of an undefined BlockSparseArray that will have
 blocked axes `axes`.
 
-See also: [`undef_blocks`](@ref BlockArrays.undef_blocks)`
+Note that `undef_blocks` is defined in
+[BlockArrays.jl](https://juliaarrays.github.io/BlockArrays.jl/stable/lib/public/#BlockArrays.undef_blocks)
+and should be imported from that package to use it as an input to this constructor.
 """
 function SparseArraysBase.SparseArrayDOK{T,N}(
   ::UndefBlocksInitializer, ax::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}
