@@ -13,7 +13,9 @@ const BlockSparseDiagonal{T,A<:AbstractBlockSparseVector{T}} = Diagonal{T,A}
 end
 
 function BlockDiagonal(blocks::AbstractVector{<:AbstractMatrix})
-  return _BlockSparseArray(Diagonal(blocks), blockedrange.((size.(blocks, 1), size.(blocks, 2))))
+  return _BlockSparseArray(
+    Diagonal(blocks), blockedrange.((size.(blocks, 1), size.(blocks, 2)))
+  )
 end
 
 function DiagonalArrays.diagonal(S::BlockSparseVector)
