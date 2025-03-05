@@ -9,7 +9,7 @@ using BlockArrays:
   blockedrange,
   mortar,
   unblock
-using DerivableInterfaces: DerivableInterfaces, @interface
+using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface
 using GPUArraysCore: @allowscalar
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
@@ -348,12 +348,10 @@ end
 # This circumvents issues passing certain kinds of SubArrays
 # to the more generic block sparse `isstored` definition,
 # for example `blocks(a)` is broken for certain slices.
-# TODO: Fix those issues and delete this in favor of using the generic
-# version.
 function SparseArraysBase.isstored(
   a::SubArray{<:Any,N,<:AbstractBlockSparseArray}, I::Vararg{Int,N}
 ) where {N}
-  return isstored(parent(a), Base.reindex(parentindices(a), I)...)
+  return @interface DefaultArrayInterface() isstored(a, I...)
 end
 
 function Base.replace_in_print_matrix(
