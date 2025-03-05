@@ -1,7 +1,5 @@
-using BlockArrays: blocks, undef_blocks
 using DerivableInterfaces: @interface, AbstractArrayInterface, interface
 using GPUArraysCore: @allowscalar
-using SparseArraysBase: SparseArrayDOK, eachstoredindex
 
 # TODO: Rewrite this so that it takes the blocking structure
 # made by combining the blocking of the axes (i.e. the blocking that
@@ -101,12 +99,16 @@ end
 # specify the function preserves zeros, i.e.
 # `map(f, a; preserves_zeros=true)` or `@preserves_zeros map(f, a)`.
 function map_stored_blocks(f, a::AbstractArray)
-  blocks_a = blocks(a)
-  stored_indices = collect(eachstoredindex(blocks_a))
-  stored_blocks = map(I -> f(blocks_a[I]), stored_indices)
-  blocks_a′ = SparseArrayDOK{eltype(stored_blocks)}(undef_blocks, axes(a))
-  for (I, b) in zip(stored_indices, stored_blocks)
-    blocks_a′[I] = b
+  block_stored_indices = collect(eachblockstoredindex(a))
+  if isempty(block_stored_indices)
+    blocktype_a′ = Base.promote_op(f, blocktype(a))
+    return BlockSparseArray{eltype(blocktype_a′),ndims(a),blocktype_a′}(undef, axes(a))
   end
-  return sparsemortar(blocks_a′, axes(a))
+  stored_blocks = map(B -> f(@view!(a[B])), block_stored_indices)
+  blocktype_a′ = eltype(stored_blocks)
+  a′ = BlockSparseArray{eltype(blocktype_a′),ndims(a),blocktype_a′}(undef, axes(a))
+  for (B, b) in zip(block_stored_indices, stored_blocks)
+    a′[B] = b
+  end
+  return a′
 end
