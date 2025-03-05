@@ -338,11 +338,22 @@ function Base.Array(a::AnyAbstractBlockSparseArray)
 end
 
 function SparseArraysBase.isstored(
-  A::AnyAbstractBlockSparseArray{<:Any,N}, I::Vararg{Int,N}
+  a::AnyAbstractBlockSparseArray{<:Any,N}, I::Vararg{Int,N}
 ) where {N}
-  bI = BlockIndex(findblockindex.(axes(A), I))
-  bA = blocks(A)
-  return isstored(bA, bI.I...) && isstored(bA[bI.I...], bI.α...)
+  bI = BlockIndex(findblockindex.(axes(a), I))
+  blocks_a = blocks(a)
+  return isstored(blocks_a, bI.I...) && isstored(blocks_a[bI.I...], bI.α...)
+end
+
+# This circumvents issues passing certain kinds of SubArrays
+# to the more generic block sparse `isstored` definition,
+# such as `blocks(a)`.
+# TODO: Fix those issues and delete this in favor of using the generic
+# version.
+function SparseArraysBase.isstored(
+  a::SubArray{<:Any,N,<:AbstractBlockSparseArray}, I::Vararg{Int,N}
+) where {N}
+  return isstored(parent(a), Base.reindex(parentindices(a), I)...)
 end
 
 function Base.replace_in_print_matrix(

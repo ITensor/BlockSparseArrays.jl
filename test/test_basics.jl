@@ -1148,10 +1148,16 @@ arrayts = (Array, JLArray)
     if elt === Float64
       # Not testing other element types since they change the
       # spacing so it isn't easy to make the test general.
+
       a = BlockSparseMatrix{elt,arrayt{elt,2}}(undef, [2, 2], [2, 2])
       @allowscalar a[1, 2] = 12
       @test sprint(show, "text/plain", a) ==
         "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │   ⋅    ⋅ \n $(zero(eltype(a)))   $(zero(eltype(a)))  │   ⋅    ⋅ \n ───────────┼──────────\n  ⋅     ⋅   │   ⋅    ⋅ \n  ⋅     ⋅   │   ⋅    ⋅ "
+
+      a = BlockSparseArray{elt,3,arrayt{elt,3}}(undef, [2, 2], [2, 2], [2, 2])
+      @allowscalar a[1, 2, 1] = 121
+      @test sprint(show, "text/plain", a) ==
+        "$(summary(a)):\n[:, :, 1] =\n $(zero(eltype(a)))  $(eltype(a)(121))   ⋅    ⋅ \n $(zero(eltype(a)))    $(zero(eltype(a)))   ⋅    ⋅ \n  ⋅      ⋅    ⋅    ⋅ \n  ⋅      ⋅    ⋅    ⋅ \n\n[:, :, 2] =\n $(zero(eltype(a)))  $(zero(eltype(a)))   ⋅    ⋅ \n $(zero(eltype(a)))  $(zero(eltype(a)))   ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n\n[:, :, 3] =\n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n\n[:, :, 4] =\n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ "
     end
   end
   @testset "TypeParameterAccessors.position" begin
