@@ -347,7 +347,7 @@ end
 
 # This circumvents issues passing certain kinds of SubArrays
 # to the more generic block sparse `isstored` definition,
-# such as `blocks(a)`.
+# for example `blocks(a)` is broken for certain slices.
 # TODO: Fix those issues and delete this in favor of using the generic
 # version.
 function SparseArraysBase.isstored(
