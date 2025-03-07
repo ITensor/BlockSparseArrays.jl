@@ -23,6 +23,12 @@ const AnyAbstractBlockSparseArray{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
 
+const AnyAbstractBlockSparseVector{T} = AnyAbstractBlockSparseArray{T,1}
+const AnyAbstractBlockSparseMatrix{T} = AnyAbstractBlockSparseArray{T,2}
+const AnyAbstractBlockSparseVecOrMat{T,N} = Union{
+  AnyAbstractBlockSparseVector{T},AnyAbstractBlockSparseMatrix{T}
+}
+
 function DerivableInterfaces.interface(::Type{<:AnyAbstractBlockSparseArray})
   return BlockSparseArrayInterface()
 end
@@ -355,9 +361,9 @@ function SparseArraysBase.isstored(
 end
 
 function Base.replace_in_print_matrix(
-  A::AnyAbstractBlockSparseArray{<:Any,2}, i::Integer, j::Integer, s::AbstractString
+  a::AnyAbstractBlockSparseVecOrMat, i::Integer, j::Integer, s::AbstractString
 )
-  return isstored(A, i, j) ? s : Base.replace_with_centered_mark(s)
+  return isstored(a, i, j) ? s : Base.replace_with_centered_mark(s)
 end
 
 # attempt to catch things that wrap GPU arrays

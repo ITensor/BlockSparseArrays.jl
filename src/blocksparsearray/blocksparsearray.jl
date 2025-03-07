@@ -175,6 +175,12 @@ function BlockSparseArray{T,N}(
 end
 
 function BlockSparseArray{T,N}(
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}}
+) where {T,N}
+  return throw(ArgumentError("Length of axes doesn't match number of dimensions."))
+end
+
+function BlockSparseArray{T,N}(
   ::UndefInitializer, axes::Vararg{AbstractUnitRange{<:Integer},N}
 ) where {T,N}
   return BlockSparseArray{T,N}(undef, axes)
