@@ -24,7 +24,7 @@ and should be imported from that package to use it as an input to this construct
 function SparseArraysBase.SparseArrayDOK{T,N}(
   ::UndefBlocksInitializer, ax::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}
 ) where {T,N}
-  return SparseArrayDOK{T,N}(undef, blocklength.(ax), GetUnstoredBlock(ax))
+  return SparseArrayDOK{T,N}(undef, blocklength.(ax); getunstored=GetUnstoredBlock(ax))
 end
 function SparseArraysBase.SparseArrayDOK{T,N}(
   ::UndefBlocksInitializer, ax::Vararg{AbstractUnitRange{<:Integer},N}
