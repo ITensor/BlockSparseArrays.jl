@@ -34,7 +34,7 @@ using BlockSparseArrays:
   sparsemortar,
   view!
 using GPUArraysCore: @allowscalar
-using JLArrays: JLArray
+using JLArrays: JLArray, JLMatrix
 using LinearAlgebra: Adjoint, Transpose, dot, mul!, norm
 using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, storedlength
 using TensorAlgebra: contract
@@ -305,6 +305,27 @@ arrayts = (Array, JLArray)
       @test @allowscalar @views(at[Block(1, 2)]) == adjoint(a[Block(2, 1)])
       @test @views(at[Block(1, 2)]) isa Adjoint
     end
+  end
+  @testset "adapt" begin
+    a = BlockSparseArray{elt}(undef, [2, 2], [2, 2])
+    a_12 = randn(elt, 2, 2)
+    a[Block(1, 2)] = a_12
+    a_jl = adapt(JLArray, a)
+    @test a_jl isa BlockSparseMatrix{elt,JLMatrix{elt}}
+    @test blocktype(a_jl) == JLMatrix{elt}
+    @test blockstoredlength(a_jl) == 1
+    @test a_jl[Block(1, 2)] isa JLMatrix{elt}
+    @test adapt(Array, a_jl[Block(1, 2)]) == a_12
+
+    a = BlockSparseArray{elt}(undef, [2, 2], [2, 2])
+    a_12 = randn(elt, 2, 2)
+    a[Block(1, 2)] = a_12
+    a_jl = adapt(JLArray, @view(a[:, :]))
+    @test a_jl isa SubArray{elt,2,<:BlockSparseMatrix{elt,JLMatrix{elt}}}
+    @test blocktype(a_jl) == JLMatrix{elt}
+    @test blockstoredlength(a_jl) == 1
+    @test a_jl[Block(1, 2)] isa JLMatrix{elt}
+    @test adapt(Array, a_jl[Block(1, 2)]) == a_12
   end
   @testset "Tensor algebra" begin
     a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
@@ -1149,15 +1170,19 @@ arrayts = (Array, JLArray)
       # Not testing other element types since they change the
       # spacing so it isn't easy to make the test general.
 
-      a = BlockSparseMatrix{elt,arrayt{elt,2}}(undef, [2, 2], [2, 2])
-      @allowscalar a[1, 2] = 12
-      @test sprint(show, "text/plain", a) ==
-        "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │   ⋅    ⋅ \n $(zero(eltype(a)))   $(zero(eltype(a)))  │   ⋅    ⋅ \n ───────────┼──────────\n  ⋅     ⋅   │   ⋅    ⋅ \n  ⋅     ⋅   │   ⋅    ⋅ "
+      a′ = BlockSparseMatrix{elt,arrayt{elt,2}}(undef, [2, 2], [2, 2])
+      @allowscalar a′[1, 2] = 12
+      for a in (a′, @view(a′[:, :]))
+        @test sprint(show, "text/plain", a) ==
+          "$(summary(a)):\n $(zero(eltype(a)))  $(eltype(a)(12))  │   ⋅    ⋅ \n $(zero(eltype(a)))   $(zero(eltype(a)))  │   ⋅    ⋅ \n ───────────┼──────────\n  ⋅     ⋅   │   ⋅    ⋅ \n  ⋅     ⋅   │   ⋅    ⋅ "
+      end
 
-      a = BlockSparseArray{elt,3,arrayt{elt,3}}(undef, [2, 2], [2, 2], [2, 2])
-      @allowscalar a[1, 2, 1] = 121
-      @test sprint(show, "text/plain", a) ==
-        "$(summary(a)):\n[:, :, 1] =\n $(zero(eltype(a)))  $(eltype(a)(121))   ⋅    ⋅ \n $(zero(eltype(a)))    $(zero(eltype(a)))   ⋅    ⋅ \n  ⋅      ⋅    ⋅    ⋅ \n  ⋅      ⋅    ⋅    ⋅ \n\n[:, :, 2] =\n $(zero(eltype(a)))  $(zero(eltype(a)))   ⋅    ⋅ \n $(zero(eltype(a)))  $(zero(eltype(a)))   ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n\n[:, :, 3] =\n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n\n[:, :, 4] =\n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ "
+      a′ = BlockSparseArray{elt,3,arrayt{elt,3}}(undef, [2, 2], [2, 2], [2, 2])
+      @allowscalar a′[1, 2, 1] = 121
+      for a in (a′, @view(a′[:, :, :]))
+        @test sprint(show, "text/plain", a) ==
+          "$(summary(a)):\n[:, :, 1] =\n $(zero(eltype(a)))  $(eltype(a)(121))   ⋅    ⋅ \n $(zero(eltype(a)))    $(zero(eltype(a)))   ⋅    ⋅ \n  ⋅      ⋅    ⋅    ⋅ \n  ⋅      ⋅    ⋅    ⋅ \n\n[:, :, 2] =\n $(zero(eltype(a)))  $(zero(eltype(a)))   ⋅    ⋅ \n $(zero(eltype(a)))  $(zero(eltype(a)))   ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n\n[:, :, 3] =\n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n\n[:, :, 4] =\n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ \n  ⋅    ⋅    ⋅    ⋅ "
+      end
     end
   end
   @testset "TypeParameterAccessors.position" begin

@@ -361,14 +361,25 @@ function Base.replace_in_print_matrix(
 end
 
 # attempt to catch things that wrap GPU arrays
-function Base.print_array(io::IO, X::AnyAbstractBlockSparseArray)
-  X_cpu = adapt(Array, X)
-  if typeof(X_cpu) === typeof(X) # prevent infinite recursion
+function Base.print_array(io::IO, a::AnyAbstractBlockSparseArray)
+  a_cpu = adapt(Array, a)
+  if typeof(a_cpu) === typeof(a) # prevent infinite recursion
     # need to specify ndims to allow specialized code for vector/matrix
     @allowscalar @invoke Base.print_array(
-      io, X_cpu::AbstractArray{eltype(X_cpu),ndims(X_cpu)}
+      io, a_cpu::AbstractArray{eltype(a_cpu),ndims(a_cpu)}
     )
-  else
-    Base.print_array(io, X_cpu)
+    return nothing
   end
+  Base.print_array(io, a_cpu)
+  return nothing
+end
+
+using Adapt: Adapt, adapt
+function Adapt.adapt_structure(to, a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray})
+  # In the generic definition in Adapt.jl, `parentindices(a)` are also
+  # adapted, but is broken when the parent indices contained blocked unit
+  # ranges since `adapt` is broken on blocked unit ranges.
+  # TODO: Fix adapt for blocked unit ranges by making an AdaptExt for
+  # BlockArrays.jl.
+  return SubArray(adapt(to, parent(a)), parentindices(a))
 end
