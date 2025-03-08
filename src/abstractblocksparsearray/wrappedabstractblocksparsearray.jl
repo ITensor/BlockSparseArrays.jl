@@ -343,9 +343,7 @@ function Base.Array(a::AnyAbstractBlockSparseArray)
   return Array{eltype(a)}(a)
 end
 
-function SparseArraysBase.isstored(
-  a::AnyAbstractBlockSparseArray, I::Int...
-)
+function SparseArraysBase.isstored(a::AnyAbstractBlockSparseArray, I::Int...)
   return @interface interface(a) isstored(a, I...)
 end
 
