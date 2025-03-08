@@ -130,6 +130,15 @@ arrayts = (Array, JLArray)
         @test iszero(storedlength(a))
       end
     end
+
+    for dims in (
+      ([2, 2], [2, 2]),
+      (([2, 2], [2, 2]),),
+      blockedrange.(([2, 2], [2, 2])),
+      (blockedrange.(([2, 2], [2, 2])),),
+    )
+      @test_throws ArgumentError BlockSparseVector{elt}(undef, dims...)
+    end
   end
   @testset "blockstype, blocktype" begin
     a = arrayt(randn(elt, 2, 2))

@@ -100,6 +100,13 @@ struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
 @interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::AbstractArray) =
   error("Not implemented")
 
+@interface ::AbstractBlockSparseArrayInterface function SparseArraysBase.isstored(
+  a::AbstractArray{<:Any,N}, I::Vararg{Int,N}
+) where {N}
+  bI = BlockIndex(findblockindex.(axes(a), I))
+  return isstored(blocks(a), bI.I...) && isstored(blocks(a)[bI.I...], bI.α...)
+end
+
 @interface ::AbstractBlockSparseArrayInterface function Base.getindex(
   a::AbstractArray{<:Any,N}, I::Vararg{Int,N}
 ) where {N}
