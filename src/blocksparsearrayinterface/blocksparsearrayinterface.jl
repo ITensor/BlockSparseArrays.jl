@@ -103,7 +103,7 @@ struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
   a::AbstractArray{<:Any,N}, I::Vararg{Int,N}
 ) where {N}
   bI = BlockIndex(findblockindex.(axes(a), I))
-  return isstored(blocks_a, bI.I...) && isstored(blocks_a[bI.I...], bI.α...)
+  return isstored(blocks(a), bI.I...) && isstored(blocks(a)[bI.I...], bI.α...)
 end
 
 @interface ::AbstractBlockSparseArrayInterface function Base.getindex(
