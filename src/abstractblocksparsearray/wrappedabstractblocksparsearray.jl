@@ -344,11 +344,9 @@ function Base.Array(a::AnyAbstractBlockSparseArray)
 end
 
 function SparseArraysBase.isstored(
-  a::AnyAbstractBlockSparseArray{<:Any,N}, I::Vararg{Int,N}
-) where {N}
-  bI = BlockIndex(findblockindex.(axes(a), I))
-  blocks_a = blocks(a)
-  return isstored(blocks_a, bI.I...) && isstored(blocks_a[bI.I...], bI.α...)
+  a::AnyAbstractBlockSparseArray, I::Int...
+)
+  return @interface interface(a) isstored(a, I...)
 end
 
 # This circumvents issues passing certain kinds of SubArrays
