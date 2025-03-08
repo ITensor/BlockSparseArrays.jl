@@ -130,6 +130,21 @@ function Base.view(
 ) where {T,N}
   return viewblock(a, block)
 end
+
+# Fix ambiguity error with BlockArrays.jl for slices like
+# `a = BlockSparseArray{Float64}(undef, [2, 2], [2, 2]); @view a[:, :]`.
+function Base.view(
+  a::SubArray{
+    T,
+    N,
+    <:AbstractBlockSparseArray{T,N},
+    <:Tuple{Vararg{Union{Base.Slice,BlockSlice{<:BlockRange{1}}},N}},
+  },
+  block::Block{N},
+) where {T,N}
+  return viewblock(a, block)
+end
+
 function Base.view(
   a::SubArray{
     T,
