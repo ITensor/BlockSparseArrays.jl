@@ -343,17 +343,10 @@ function Base.Array(a::AnyAbstractBlockSparseArray)
   return Array{eltype(a)}(a)
 end
 
-function SparseArraysBase.isstored(a::AnyAbstractBlockSparseArray, I::Int...)
-  return @interface interface(a) isstored(a, I...)
-end
-
-# This circumvents issues passing certain kinds of SubArrays
-# to the more generic block sparse `isstored` definition,
-# for example `blocks(a)` is broken for certain slices.
 function SparseArraysBase.isstored(
-  a::SubArray{<:Any,N,<:AbstractBlockSparseArray}, I::Vararg{Int,N}
+  a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Int,N}
 ) where {N}
-  return @interface DefaultArrayInterface() isstored(a, I...)
+  return @interface interface(a) isstored(a, I...)
 end
 
 function Base.replace_in_print_matrix(

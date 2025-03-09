@@ -1179,6 +1179,15 @@ arrayts = (Array, JLArray)
       # Not testing other element types since they change the
       # spacing so it isn't easy to make the test general.
 
+      a′ = BlockSparseVector{elt,arrayt{elt,1}}(undef, [2, 2])
+      @allowscalar a′[1] = 1
+      a = a′
+      @test sprint(show, "text/plain", a) ==
+        "$(summary(a)):\n $(eltype(a)(1))\n $(zero(eltype(a)))\n ───\n  ⋅ \n  ⋅ "
+      a = @view a′[:]
+      @test sprint(show, "text/plain", a) ==
+        "$(summary(a)):\n $(eltype(a)(1))\n $(zero(eltype(a)))\n  ⋅ \n  ⋅ "
+
       a′ = BlockSparseMatrix{elt,arrayt{elt,2}}(undef, [2, 2], [2, 2])
       @allowscalar a′[1, 2] = 12
       for a in (a′, @view(a′[:, :]))
