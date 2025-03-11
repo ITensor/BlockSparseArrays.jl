@@ -1,5 +1,5 @@
 using Adapt: Adapt, WrappedArray, adapt
-using ArrayLayouts: zero!
+using ArrayLayouts: ArrayLayouts
 using BlockArrays:
   BlockArrays,
   AbstractBlockVector,
@@ -9,7 +9,7 @@ using BlockArrays:
   blockedrange,
   mortar,
   unblock
-using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface
+using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface, zero!
 using GPUArraysCore: @allowscalar
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
@@ -154,9 +154,8 @@ function Base.setindex!(a::AnyAbstractBlockSparseArray{<:Any,1}, value, I::Block
   return a
 end
 
-# TODO: Use `@derive`.
 function ArrayLayouts.zero!(a::AnyAbstractBlockSparseArray)
-  return @interface interface(a) zero!(a)
+  return zero!(a)
 end
 
 # TODO: Use `@derive`.
