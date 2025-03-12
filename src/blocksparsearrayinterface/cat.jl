@@ -1,18 +1,14 @@
-using BlockArrays: AbstractBlockedUnitRange, blockedrange, blocklengths
-using DerivableInterfaces: DerivableInterfaces, @interface, cat!
-using SparseArraysBase: SparseArraysBase
+using BlockArrays: blocks
+using DerivableInterfaces.Concatenate: Concatenated, cat!
 
-# TODO: Maybe move to `DerivableInterfacesBlockArraysExt`.
-# TODO: Handle dual graded unit ranges, for example in a new `SparseArraysBaseGradedUnitRangesExt`.
-function DerivableInterfaces.axis_cat(
-  a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange
+function Base.copyto!(
+  dest::AbstractArray, concat::Concatenated{<:BlockSparseArrayInterface}
 )
-  return blockedrange(vcat(blocklengths(a1), blocklengths(a2)))
-end
-
-@interface ::AbstractBlockSparseArrayInterface function DerivableInterfaces.cat!(
-  a_dest::AbstractArray, as::AbstractArray...; dims
-)
-  cat!(blocks(a_dest), blocks.(as)...; dims)
-  return a_dest
+  # TODO: This assumes the destination blocking is commensurate with
+  # the blocking of the sources, for example because it was constructed
+  # based on the input arguments. Maybe check that explicitly.
+  # This should mostly just get called from `cat` anyway and not get
+  # called explicitly.
+  cat!(blocks(dest), blocks.(concat.args)...; dims=concat.dims)
+  return dest
 end

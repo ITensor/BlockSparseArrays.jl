@@ -1,4 +1,4 @@
-using ArrayLayouts: ArrayLayouts, zero!
+using ArrayLayouts: ArrayLayouts
 using BlockArrays:
   BlockArrays,
   AbstractBlockVector,
@@ -16,7 +16,7 @@ using BlockArrays:
   blocklength,
   blocks,
   findblockindex
-using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface
+using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface, zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
   AbstractSparseArrayInterface,
@@ -266,7 +266,9 @@ end
   return a
 end
 
-@interface ::AbstractBlockSparseArrayInterface function ArrayLayouts.zero!(a::AbstractArray)
+@interface ::AbstractBlockSparseArrayInterface function DerivableInterfaces.zero!(
+  a::AbstractArray
+)
   # This will try to empty the storage if possible.
   zero!(blocks(a))
   return a
