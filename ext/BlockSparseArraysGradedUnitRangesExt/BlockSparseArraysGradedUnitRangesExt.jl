@@ -102,4 +102,10 @@ function Base.getindex(
   return getindex_blocksparse(a, I1, I2)
 end
 
+function Base.zeros(
+  elt::Type, ax::Tuple{AbstractGradedUnitRange,Vararg{AbstractGradedUnitRange}}
+)
+  return BlockSparseArray{elt}(undef, ax)
+end
+
 end
