@@ -9,6 +9,12 @@
 
 A block sparse array type in Julia based on the [`BlockArrays.jl`](https://github.com/JuliaArrays/BlockArrays.jl) interface.
 
+## Support
+
+<img src="docs/src/assets/CCQ.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo.">
+
+BlockSparseArrays.jl is supported by the Flatiron Institute, a division of the Simons Foundation.
+
 ## Installation instructions
 
 This package resides in the `ITensor/ITensorRegistry` local registry.
