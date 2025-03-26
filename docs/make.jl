@@ -20,7 +20,7 @@ makedocs(;
   format=Documenter.HTML(;
     canonical="https://ITensor.github.io/BlockSparseArrays.jl",
     edit_link="main",
-    assets=["assets/favicon.ico"],
+    assets=["assets/favicon.ico", "assets/extras.css"],
   ),
   pages=["Home" => "index.md", "Reference" => "reference.md"],
 )
