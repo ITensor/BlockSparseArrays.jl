@@ -108,14 +108,6 @@ function TensorAlgebra.splitdims(
   return splitdims(BlockReshapeFusion(), a_blockpermed, split_axes...)
 end
 
-# This is a temporary fix for `eachindex` being broken for BlockSparseArrays
-# with mixed dual and non-dual axes. This shouldn't be needed once
-# GradedUnitRanges is rewritten using BlockArrays v1.
-# TODO: Delete this once GradedUnitRanges is rewritten.
-function Base.eachindex(a::AbstractBlockSparseArray)
-  return CartesianIndices(nondual.(axes(a)))
-end
-
 # TODO: Handle this through some kind of trait dispatch, maybe
 # a `SymmetryStyle`-like trait to check if the block sparse
 # matrix has graded axes.
