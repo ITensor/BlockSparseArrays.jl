@@ -1,4 +1,3 @@
-@eval module $(gensym())
 using Test: @test, @testset
 using BlockArrays:
   AbstractBlockArray, Block, BlockedOneTo, blockedrange, blocklengths, blocksize
@@ -19,6 +18,7 @@ using SymmetrySectors: U1
 using TensorAlgebra: fusedims, splitdims
 using LinearAlgebra: adjoint
 using Random: randn!
+
 function randn_blockdiagonal(elt::Type, axes::Tuple)
   a = BlockSparseArray{elt}(undef, axes)
   blockdiaglength = minimum(blocksize(a))
@@ -390,4 +390,15 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test all(GradedUnitRanges.space_isequal.(axes(b), (r, dual(r))))
   end
 end
+
+@testset "dag" begin
+  elt = ComplexF64
+  r = gradedrange([U1(0) => 2, U1(1) => 3])
+  a = BlockSparseArray{elt}(undef, r, dual(r))
+  a[Block(1, 1)] = randn(elt, 2, 2)
+  a[Block(2, 2)] = randn(elt, 3, 3)
+  @test isdual.(axes(a)) == (false, true)
+  ad = dag(a)
+  @test Array(ad) == conj(Array(a))
+  @test isdual.(axes(ad)) == (true, false)
 end

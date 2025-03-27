@@ -1,11 +1,6 @@
 module BlockSparseArraysTensorAlgebraExt
 using BlockArrays: AbstractBlockedUnitRange
-using GradedUnitRanges: tensor_product
 using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
-
-function TensorAlgebra.:⊗(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
-  return tensor_product(a1, a2)
-end
 
 using BlockArrays: AbstractBlockedUnitRange
 using BlockSparseArrays: AbstractBlockSparseArray, blockreshape
@@ -46,13 +41,11 @@ using DerivableInterfaces: @interface
 using GradedUnitRanges:
   GradedUnitRanges,
   AbstractGradedUnitRange,
-  OneToOne,
   blockmergesortperm,
   blocksortperm,
   dual,
   invblockperm,
-  nondual,
-  tensor_product
+  nondual
 using LinearAlgebra: Adjoint, Transpose
 using TensorAlgebra:
   TensorAlgebra, FusionStyle, BlockReshapeFusion, SectorFusion, fusedims, splitdims
