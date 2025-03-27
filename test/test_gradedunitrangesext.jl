@@ -9,6 +9,7 @@ using GradedUnitRanges:
   GradedUnitRange,
   GradedUnitRangeDual,
   blocklabels,
+  dag,
   dual,
   gradedrange,
   isdual

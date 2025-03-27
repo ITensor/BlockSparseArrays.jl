@@ -1,10 +1,10 @@
 module BlockSparseArraysTensorAlgebraExt
 using BlockArrays: AbstractBlockedUnitRange
-using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
 
-using BlockArrays: AbstractBlockedUnitRange
-using BlockSparseArrays: AbstractBlockSparseArray, blockreshape
 using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
+using TensorProducts: OneToOne
+
+using BlockSparseArrays: AbstractBlockSparseArray, blockreshape
 
 TensorAlgebra.FusionStyle(::AbstractBlockedUnitRange) = BlockReshapeFusion()
 
@@ -45,7 +45,8 @@ using GradedUnitRanges:
   blocksortperm,
   dual,
   invblockperm,
-  nondual
+  nondual,
+  unmerged_tensor_product
 using LinearAlgebra: Adjoint, Transpose
 using TensorAlgebra:
   TensorAlgebra, FusionStyle, BlockReshapeFusion, SectorFusion, fusedims, splitdims
@@ -70,10 +71,17 @@ function block_mergesort(a::AbstractArray)
 end
 
 function TensorAlgebra.fusedims(
-  ::SectorFusion, a::AbstractArray, axes::AbstractUnitRange...
+  ::SectorFusion, a::AbstractArray, merged_axes::AbstractUnitRange...
 )
   # First perform a fusion using a block reshape.
-  a_reshaped = fusedims(BlockReshapeFusion(), a, axes...)
+  # TODO avoid groupreducewhile. Require refactor of fusedims.
+  unmerged_axes = groupreducewhile(
+    unmerged_tensor_product, axes(a), length(merged_axes); init=OneToOne()
+  ) do i, axis
+    return length(axis) ≤ length(merged_axes[i])
+  end
+
+  a_reshaped = fusedims(BlockReshapeFusion(), a, unmerged_axes...)
   # Sort the blocks by sector and merge the equivalent sectors.
   return block_mergesort(a_reshaped)
 end
@@ -83,10 +91,11 @@ function TensorAlgebra.splitdims(
 )
   # First, fuse axes to get `blockmergesortperm`.
   # Then unpermute the blocks.
-  axes_prod =
-    groupreducewhile(tensor_product, split_axes, ndims(a); init=OneToOne()) do i, axis
-      return length(axis) ≤ length(axes(a, i))
-    end
+  axes_prod = groupreducewhile(
+    unmerged_tensor_product, split_axes, ndims(a); init=OneToOne()
+  ) do i, axis
+    return length(axis) ≤ length(axes(a, i))
+  end
   blockperms = blocksortperm.(axes_prod)
   sorted_axes = map((r, I) -> only(axes(r[I])), axes_prod, blockperms)
 
