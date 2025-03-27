@@ -115,19 +115,4 @@ function Base.axes(a::Adjoint{<:Any,<:AbstractBlockSparseMatrix})
   return dual.(reverse(axes(a')))
 end
 
-# This definition is only needed since calls like
-# `a[[Block(1), Block(2)]]` where `a isa AbstractGradedUnitRange`
-# returns a `BlockSparseVector` instead of a `BlockVector`
-# due to limitations in the `BlockArray` type not allowing
-# axes with non-Int element types.
-# TODO: Remove this once that issue is fixed,
-# see https://github.com/JuliaArrays/BlockArrays.jl/pull/405.
-using BlockArrays: BlockRange
-using LabelledNumbers: label
-function GradedUnitRanges.blocklabels(a::BlockSparseVector)
-  return map(BlockRange(a)) do block
-    return label(blocks(a)[Int(block)])
-  end
-end
-
 end

@@ -21,13 +21,12 @@ SplitApplyCombine = "03a91e81-4c3e-53e1-a0a4-9c0c8f19dd66"
 TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 
 [weakdeps]
-LabelledNumbers = "f856a3a6-4152-4ec4-b2a7-02c1a55d7993"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 TensorProducts = "decf83d6-1968-43f4-96dc-fdb3fe15fc6d"
 
 [extensions]
 BlockSparseArraysGradedUnitRangesExt = "GradedUnitRanges"
-BlockSparseArraysTensorAlgebraExt = ["LabelledNumbers", "TensorProducts", "TensorAlgebra"]
+BlockSparseArraysTensorAlgebraExt = ["TensorProducts", "TensorAlgebra"]
 
 [compat]
 Adapt = "4.1.1"
@@ -40,7 +39,6 @@ Dictionaries = "0.4.3"
 FillArrays = "1.13.0"
 GPUArraysCore = "0.1.0, 0.2"
 GradedUnitRanges = "0.2.2"
-LabelledNumbers = "0.1.0"
 LinearAlgebra = "1.10"
 MacroTools = "0.5.13"
 MapBroadcast = "0.1.5"
