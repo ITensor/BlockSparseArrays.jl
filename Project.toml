@@ -1,7 +1,7 @@
 name = "BlockSparseArrays"
 uuid = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.3.8"
+version = "0.3.9"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -38,7 +38,7 @@ DiagonalArrays = "0.3"
 Dictionaries = "0.4.3"
 FillArrays = "1.13.0"
 GPUArraysCore = "0.1.0, 0.2"
-GradedUnitRanges = "0.1.0"
+GradedUnitRanges = "0.1.0, 0.2"
 LabelledNumbers = "0.1.0"
 LinearAlgebra = "1.10"
 MacroTools = "0.5.13"
