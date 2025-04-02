@@ -20,7 +20,6 @@ using BlockArrays:
   findblock,
   findblockindex
 using Dictionaries: Dictionary, Indices
-using GradedUnitRanges: blockedunitrange_getindices, to_blockindices
 using SparseArraysBase:
   SparseArraysBase,
   eachstoredindex,

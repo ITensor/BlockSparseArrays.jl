@@ -12,6 +12,7 @@ export BlockSparseArray,
 include("factorizations/svd.jl")
 
 # possible upstream contributions
+include("BlockArraysExtensions/blockedunitrange.jl")
 include("BlockArraysExtensions/BlockArraysExtensions.jl")
 
 # interface functions that don't have to specialize

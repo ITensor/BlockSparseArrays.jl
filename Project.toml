@@ -1,7 +1,7 @@
 name = "BlockSparseArrays"
 uuid = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.3.9"
+version = "0.3.10"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -12,7 +12,6 @@ DiagonalArrays = "74fd4be6-21e2-4f6f-823a-4360d37c7a77"
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
-GradedUnitRanges = "e2de450a-8a67-46c7-b59c-01d5a3d041c5"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 MapBroadcast = "ebd9b9da-f48d-417c-9660-449667d60261"
@@ -21,6 +20,7 @@ SplitApplyCombine = "03a91e81-4c3e-53e1-a0a4-9c0c8f19dd66"
 TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 
 [weakdeps]
+GradedUnitRanges = "e2de450a-8a67-46c7-b59c-01d5a3d041c5"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 TensorProducts = "decf83d6-1968-43f4-96dc-fdb3fe15fc6d"
 
