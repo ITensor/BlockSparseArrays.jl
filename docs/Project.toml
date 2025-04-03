@@ -6,6 +6,6 @@ Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 
 [compat]
 BlockArrays = "1"
-BlockSparseArrays = "0.3"
+BlockSparseArrays = "0.4"
 Documenter = "1"
 Literate = "2"
