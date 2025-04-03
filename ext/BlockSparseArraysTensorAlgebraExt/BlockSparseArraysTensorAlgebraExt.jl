@@ -1,10 +1,8 @@
 module BlockSparseArraysTensorAlgebraExt
 
 using BlockArrays: AbstractBlockedUnitRange
-
-using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
-
 using BlockSparseArrays: AbstractBlockSparseArray, blockreshape
+using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
 
 TensorAlgebra.FusionStyle(::AbstractBlockedUnitRange) = BlockReshapeFusion()
 
