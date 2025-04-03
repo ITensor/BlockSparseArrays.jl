@@ -17,6 +17,7 @@ jobs:
     strategy:
        matrix:
          pkg:
+           - 'GradedArrays'
            - 'ITensorBase'
            - 'NamedDimsArrays'
            - 'QuantumOperatorDefinitions'
