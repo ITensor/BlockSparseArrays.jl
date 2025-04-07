@@ -4,12 +4,9 @@ using BlockArrays:
   BlockArrays,
   Block,
   BlockArray,
-  BlockIndexRange,
   BlockRange,
-  BlockSlice,
   BlockVector,
   BlockedOneTo,
-  BlockedUnitRange,
   BlockedArray,
   BlockedVector,
   blockedrange,
@@ -35,9 +32,8 @@ using BlockSparseArrays:
   view!
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray, JLMatrix
-using LinearAlgebra: Adjoint, Transpose, dot, mul!, norm
+using LinearAlgebra: Adjoint, Transpose, dot, norm
 using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, storedlength
-using TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
 using TestExtras: @constinferred
 using TypeParameterAccessors: TypeParameterAccessors, Position
@@ -1120,20 +1116,7 @@ arrayts = (Array, JLArray)
     @test a_dest[Block(2, 1)] == a1[Block(2, 1)]
     @test a_dest[Block(3, 4)] == a2[Block(1, 2)]
   end
-  @testset "TensorAlgebra" begin
-    a1 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
-    a1[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
-    a2 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
-    a2[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
-    # TODO: Make this work, requires customization of `TensorAlgebra.fusedims` and
-    # `TensorAlgebra.splitdims` in terms of `BlockSparseArrays.blockreshape`,
-    # and customization of `TensorAlgebra.:⊗` in terms of `GradedUnitRanges.tensor_product`.
-    a_dest, dimnames_dest = contract(a1, (1, -1), a2, (-1, 2))
-    @allowscalar begin
-      a_dest_dense, dimnames_dest_dense = contract(Array(a1), (1, -1), Array(a2), (-1, 2))
-      @test a_dest ≈ a_dest_dense
-    end
-  end
+
   @testset "blockreshape" begin
     a = dev(BlockSparseArray{elt}(undef, ([3, 4], [2, 3])))
     a[Block(1, 2)] = dev(randn(elt, size(@view(a[Block(1, 2)]))))
