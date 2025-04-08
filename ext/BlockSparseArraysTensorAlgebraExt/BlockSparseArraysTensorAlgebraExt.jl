@@ -3,7 +3,7 @@ module BlockSparseArraysTensorAlgebraExt
 using BlockSparseArrays: AbstractBlockSparseArray, blockreshape
 using TensorAlgebra:
   TensorAlgebra,
-  AbstractBlockPermutation,
+  BlockedTrivialPermutation,
   BlockedTuple,
   FusionStyle,
   ReshapeFusion,
@@ -16,11 +16,10 @@ function TensorAlgebra.FusionStyle(::AbstractBlockSparseArray, ::ReshapeFusion)
 end
 
 function TensorAlgebra.matricize(
-  ::BlockReshapeFusion, a::AbstractArray, biperm::AbstractBlockPermutation{2}
+  ::BlockReshapeFusion, a::AbstractArray, biperm::BlockedTrivialPermutation{2}
 )
-  a_perm = permutedims(a, Tuple(biperm))
-  new_axes = fuseaxes(axes(a_perm), biperm)
-  return blockreshape(a_perm, new_axes)
+  new_axes = fuseaxes(axes(a), biperm)
+  return blockreshape(a, new_axes)
 end
 
 function TensorAlgebra.unmatricize(
