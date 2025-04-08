@@ -14,6 +14,13 @@ function randn_blockdiagonal(elt::Type, axes::Tuple)
   return a
 end
 
+@testset "Regression test for BlockArrays" begin
+  # test https://github.com/ITensor/BlockSparseArrays.jl/issues/57
+  d = blockedrange([1, 1])
+  a = BlockArray(ones((d, d, d, d)))
+  @test contract(a, (1, -1, 2, -2), a, (2, -3, 1, -4)) isa Tuple
+end
+
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 @testset "`contract` `BlockSparseArray` (eltype=$elt)" for elt in elts
   @testset "BlockedOneTo" begin
