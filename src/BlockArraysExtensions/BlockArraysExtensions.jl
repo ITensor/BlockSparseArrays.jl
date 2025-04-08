@@ -263,17 +263,20 @@ function blocks_to_cartesianindices(d::Dictionary{<:Block})
   return Dictionary(blocks_to_cartesianindices(eachindex(d)), d)
 end
 
-function blockreshape(a::AbstractArray, dims::Tuple{Vararg{Vector{Int}}})
+function blockreshape(a::AbstractArray, dims::Tuple{Vector{Int},Vararg{Vector{Int}}})
   return blockreshape(a, blockedrange.(dims))
 end
-
-function blockreshape(a::AbstractArray, dims::Vararg{Vector{Int}})
-  return blockreshape(a, dims)
+function blockreshape(a::AbstractArray, dim1::Vector{Int}, dim_rest::Vararg{Vector{Int}})
+  return blockreshape(a, (dim1, dim_rest...))
+end
+# Fix ambiguity error.
+function blockreshape(a::AbstractArray)
+  return blockreshape(a, ())
 end
 
 tuple_oneto(n) = ntuple(identity, n)
 
-function blockreshape(a::AbstractArray, axes::Tuple{Vararg{AbstractUnitRange}})
+function _blockreshape(a::AbstractArray, axes::Tuple{Vararg{AbstractUnitRange}})
   reshaped_blocks_a = reshape(blocks(a), blocklength.(axes))
   reshaped_a = similar(a, axes)
   for I in eachstoredindex(reshaped_blocks_a)
@@ -284,8 +287,20 @@ function blockreshape(a::AbstractArray, axes::Tuple{Vararg{AbstractUnitRange}})
   return reshaped_a
 end
 
-function blockreshape(a::AbstractArray, axes::Vararg{AbstractUnitRange})
-  return blockreshape(a, axes)
+function blockreshape(
+  a::AbstractArray, axes::Tuple{AbstractUnitRange,Vararg{AbstractUnitRange}}
+)
+  return _blockreshape(a, axes)
+end
+# Fix ambiguity error.
+function blockreshape(a::AbstractArray, axes::Tuple{})
+  return _blockreshape(a, axes)
+end
+
+function blockreshape(
+  a::AbstractArray, axis1::AbstractUnitRange, axes_rest::Vararg{AbstractUnitRange}
+)
+  return blockreshape(a, (axis1, axes_rest...))
 end
 
 function cartesianindices(axes::Tuple, b::Block)

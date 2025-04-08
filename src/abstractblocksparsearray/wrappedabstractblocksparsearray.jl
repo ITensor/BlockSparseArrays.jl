@@ -232,6 +232,18 @@ end
 )
   return blocksparse_similar(a, elt, axes)
 end
+# Fix ambiguity error when non-blocked ranges are passed.
+@interface ::AbstractBlockSparseArrayInterface function Base.similar(
+  a::AbstractArray, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
+)
+  return blocksparse_similar(a, elt, axes)
+end
+# Fix ambiguity error when empty axes are passed.
+@interface ::AbstractBlockSparseArrayInterface function Base.similar(
+  a::AbstractArray, elt::Type, axes::Tuple{}
+)
+  return blocksparse_similar(a, elt, axes)
+end
 @interface ::AbstractBlockSparseArrayInterface function Base.similar(
   a::Type{<:AbstractArray}, elt::Type, axes::Tuple{Vararg{Int}}
 )
