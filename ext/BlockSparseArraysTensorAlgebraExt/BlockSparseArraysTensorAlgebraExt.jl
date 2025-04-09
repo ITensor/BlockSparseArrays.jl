@@ -11,7 +11,7 @@ using TensorAlgebra:
 
 struct BlockReshapeFusion <: FusionStyle end
 
-function TensorAlgebra.FusionStyle(::AbstractBlockSparseArray, ::ReshapeFusion)
+function TensorAlgebra.FusionStyle(::Type{<:AbstractBlockSparseArray})
   return BlockReshapeFusion()
 end
 

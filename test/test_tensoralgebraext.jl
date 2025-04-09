@@ -1,4 +1,4 @@
-using BlockArrays: Block, BlockArray, BlockedArray, blockedrange, blocksize
+using BlockArrays: Block, BlockArray, blockedrange, blocksize
 using BlockSparseArrays: BlockSparseArray
 using Random: randn!
 using TensorAlgebra: contract
@@ -18,7 +18,7 @@ end
   # test https://github.com/ITensor/BlockSparseArrays.jl/issues/57
   d = blockedrange([1, 1])
   a = BlockArray(ones((d, d, d, d)))
-  @test contract(a, (1, -1, 2, -2), a, (2, -3, 1, -4)) isa Tuple
+  @test contract((-1, -2, -3, -4), a, (1, -1, 2, -2), a, (2, -3, 1, -4)) isa BlockArray
 end
 
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
