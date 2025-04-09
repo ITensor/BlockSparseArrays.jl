@@ -1,21 +1,33 @@
 module BlockSparseArraysTensorAlgebraExt
 
-using BlockArrays: AbstractBlockedUnitRange
 using BlockSparseArrays: AbstractBlockSparseArray, blockreshape
-using TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
+using TensorAlgebra:
+  TensorAlgebra,
+  BlockedTrivialPermutation,
+  BlockedTuple,
+  FusionStyle,
+  ReshapeFusion,
+  fuseaxes
 
-TensorAlgebra.FusionStyle(::AbstractBlockedUnitRange) = BlockReshapeFusion()
+struct BlockReshapeFusion <: FusionStyle end
 
-function TensorAlgebra.fusedims(
-  ::BlockReshapeFusion, a::AbstractArray, axes::AbstractUnitRange...
-)
-  return blockreshape(a, axes)
+function TensorAlgebra.FusionStyle(::Type{<:AbstractBlockSparseArray})
+  return BlockReshapeFusion()
 end
 
-function TensorAlgebra.splitdims(
-  ::BlockReshapeFusion, a::AbstractArray, axes::AbstractUnitRange...
+function TensorAlgebra.matricize(
+  ::BlockReshapeFusion, a::AbstractArray, biperm::BlockedTrivialPermutation{2}
 )
-  return blockreshape(a, axes)
+  new_axes = fuseaxes(axes(a), biperm)
+  return blockreshape(a, new_axes)
+end
+
+function TensorAlgebra.unmatricize(
+  ::BlockReshapeFusion,
+  m::AbstractMatrix,
+  blocked_axes::BlockedTuple{2,<:Any,<:Tuple{Vararg{AbstractUnitRange}}},
+)
+  return blockreshape(m, Tuple(blocked_axes)...)
 end
 
 end
