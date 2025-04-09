@@ -405,6 +405,13 @@ arrayts = (Array, JLArray)
     @test size(b) == size(a)
     @test blocksize(b) == blocksize(a)
 
+    # Regression test for https://github.com/ITensor/BlockSparseArrays.jl/issues/98
+    a = dev(BlockSparseArray{elt}(undef))
+    b = similar(a, Float64, (Base.OneTo(1),))
+    @test b isa BlockSparseVector{Float64}
+    @test size(b) == (1,)
+    @test blocksize(b) == (1,)
+
     a = dev(BlockSparseArray{elt}(undef, [2, 3], [3, 4]))
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
     c = @view b[Block(1, 1)]
@@ -1126,6 +1133,15 @@ arrayts = (Array, JLArray)
     @test reshape(a[Block(2, 1)], 8) == b[Block(2)]
     @test blockstoredlength(b) == 2
     @test storedlength(b) == 17
+
+    # Zero-dimensional limit (check for ambiguity errors).
+    # Regression test for https://github.com/ITensor/BlockSparseArrays.jl/issues/98.
+    a = dev(BlockSparseArray{elt}(undef, ()))
+    a[Block()] = dev(randn(elt, ()))
+    b = blockreshape(a)
+    @test a[Block()] == b[Block()]
+    @test blockstoredlength(b) == 1
+    @test storedlength(b) == 1
   end
   @testset "show" begin
     vectort_elt = arrayt{elt,1}
