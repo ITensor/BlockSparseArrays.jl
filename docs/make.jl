@@ -2,13 +2,10 @@ using BlockSparseArrays: BlockSparseArrays
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
 
 DocMeta.setdocmeta!(
-  BlockSparseArrays,
-  :DocTestSetup,
-  quote
+  BlockSparseArrays, :DocTestSetup, quote
     using BlockSparseArrays
     using LinearAlgebra: Diagonal
-  end;
-  recursive=true,
+  end; recursive=true
 )
 
 include("make_index.jl")
