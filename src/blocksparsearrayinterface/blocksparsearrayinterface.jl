@@ -97,8 +97,9 @@ end
 
 struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
 
-@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::AbstractArray) =
-  error("Not implemented")
+@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::AbstractArray) = error(
+  "Not implemented"
+)
 
 @interface ::AbstractBlockSparseArrayInterface function SparseArraysBase.isstored(
   a::AbstractArray{<:Any,N}, I::Vararg{Int,N}
@@ -336,10 +337,12 @@ end
 reverse_index(index) = reverse(index)
 reverse_index(index::CartesianIndex) = CartesianIndex(reverse(Tuple(index)))
 
-@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::Transpose) =
-  transpose(blocks(parent(a)))
-@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::Adjoint) =
-  adjoint(blocks(parent(a)))
+@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::Transpose) = transpose(
+  blocks(parent(a))
+)
+@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::Adjoint) = adjoint(
+  blocks(parent(a))
+)
 
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.

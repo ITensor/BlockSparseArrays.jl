@@ -197,8 +197,9 @@ julia> Uonly == U
 true
 ```
 """
-svd(A; kwargs...) =
+function svd(A; kwargs...)
   SVD(svd!(eigencopy_oftype(A, LinearAlgebra.eigtype(eltype(A))); kwargs...))
+end
 
 LinearAlgebra.svdvals(usv::SVD{<:Any,T}) where {T} = (usv.S)::AbstractVector{T}
 
