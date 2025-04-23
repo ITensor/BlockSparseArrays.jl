@@ -192,65 +192,6 @@ function Base.getindex(
   return blocks(a)[Int(Block(I))]
 end
 
-# Outputs a `BlockUnitRange`.
-function sub_axis(a::AbstractUnitRange, indices)
-  return error("Not implemented")
-end
-
-# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
-# Outputs a `BlockUnitRange`.
-function sub_axis(a::AbstractUnitRange, indices::AbstractUnitRange)
-  return only(axes(blockedunitrange_getindices(a, indices)))
-end
-
-# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
-# Outputs a `BlockUnitRange`.
-function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:BlockRange{1}})
-  return sub_axis(a, indices.block)
-end
-
-# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
-# Outputs a `BlockUnitRange`.
-function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:Block{1}})
-  return sub_axis(a, Block(indices))
-end
-
-# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
-# Outputs a `BlockUnitRange`.
-function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:BlockIndexRange{1}})
-  return sub_axis(a, indices.block)
-end
-
-function sub_axis(a::AbstractUnitRange, indices::BlockIndices)
-  return sub_axis(a, indices.blocks)
-end
-
-# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
-# Outputs a `BlockUnitRange`.
-function sub_axis(a::AbstractUnitRange, indices::Block)
-  return only(axes(blockedunitrange_getindices(a, indices)))
-end
-
-# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
-# Outputs a `BlockUnitRange`.
-function sub_axis(a::AbstractUnitRange, indices::BlockIndexRange)
-  return only(axes(blockedunitrange_getindices(a, indices)))
-end
-
-# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
-# Outputs a `BlockUnitRange`.
-function sub_axis(a::AbstractUnitRange, indices::AbstractVector{<:Block})
-  return blockedrange([length(a[index]) for index in indices])
-end
-
-# TODO: Use `GradedUnitRanges.blockedunitrange_getindices`.
-# TODO: Merge blocks.
-function sub_axis(a::AbstractUnitRange, indices::BlockVector{<:Block})
-  # `collect` is needed here, otherwise a `PseudoBlockVector` is
-  # constructed.
-  return blockedrange([length(a[index]) for index in collect(indices)])
-end
-
 # TODO: Use `Tuple` conversion once
 # BlockArrays.jl PR is merged.
 block_to_cartesianindex(b::Block) = CartesianIndex(b.n)
