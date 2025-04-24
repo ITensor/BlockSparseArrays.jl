@@ -258,6 +258,11 @@ function blockrange(axis::AbstractUnitRange, r::NonBlockedVector)
   return Block(1):Block(1)
 end
 
+function blockrange(axis::AbstractUnitRange, r::AbstractBlockVector)
+  # XXX: This may be the inverse permutation.
+  return Block.(indexin(blocks(r), blocks(axis)))
+end
+
 function blockrange(axis::AbstractUnitRange, r)
   return error("Slicing not implemented for range of type `$(typeof(r))`.")
 end
