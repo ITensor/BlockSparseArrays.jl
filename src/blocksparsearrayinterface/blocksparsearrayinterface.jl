@@ -145,30 +145,6 @@ end
   return (inds[1][I[1]], to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
-# a[[Block(2), Block(1)], [Block(2), Block(1)]]
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
-  a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
-)
-  return error("Not implemented.")
-end
-
-# a[mortar([Block(1)[1:2], Block(2)[1:3]]), mortar([Block(1)[1:2], Block(2)[1:3]])]
-# a[[Block(1)[1:2], Block(2)[1:3]], [Block(1)[1:2], Block(2)[1:3]]]
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
-  a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
-)
-  return error("Not implemented.")
-end
-
-# a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
-# Permute and merge blocks.
-# TODO: This isn't merging blocks yet, that needs to be implemented that.
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
-  a, inds, I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}}
-)
-  return error("Not implemented.")
-end
-
 # TODO: Need to implement this!
 function block_merge end
 
