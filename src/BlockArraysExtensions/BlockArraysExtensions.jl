@@ -56,104 +56,6 @@ BlockArrays.blocks(a::NonBlockedArray) = SingleBlockView(parent(a))
 const NonBlockedVector{T,Array} = NonBlockedArray{T,1,Array}
 NonBlockedVector(array::AbstractVector) = NonBlockedArray(array)
 
-# BlockIndices works around an issue that the indices of BlockSlice
-# are restricted to AbstractUnitRange{Int}.
-struct BlockIndices{B,T<:Integer,I<:AbstractVector{T}} <: AbstractVector{T}
-  blocks::B
-  indices::I
-end
-for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length, :unsafe_length)
-  @eval Base.$f(S::BlockIndices) = Base.$f(S.indices)
-end
-Base.getindex(S::BlockIndices, i::Integer) = getindex(S.indices, i)
-function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
-  # TODO: Check that `i.indices` is consistent with `S.indices`.
-  # It seems like this isn't handling the case where `i` is a
-  # subslice of a block correctly (i.e. it ignores `i.indices`).
-  @assert length(S.indices[Block(i)]) == length(i.indices)
-  return BlockSlice(S.blocks[Int(Block(i))], S.indices[Block(i)])
-end
-
-# This is used in slicing like:
-# a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
-# I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
-# a[I, I]
-function Base.getindex(
-  S::BlockIndices{<:AbstractBlockVector{<:Block{1}}}, i::BlockSlice{<:Block{1}}
-)
-  # TODO: Check for conistency of indices.
-  # Wrapping the indices in `NonBlockedVector` reinterprets the blocked indices
-  # as a single block, since the result shouldn't be blocked.
-  return NonBlockedVector(BlockIndices(S.blocks[Block(i)], S.indices[Block(i)]))
-end
-function Base.getindex(
-  S::BlockIndices{<:BlockedVector{<:Block{1},<:BlockRange{1}}}, i::BlockSlice{<:Block{1}}
-)
-  return i
-end
-# Views of `BlockIndices` are eager.
-# This fixes an issue in Julia 1.11 where reindexing defaults to using views.
-Base.view(S::BlockIndices, i) = S[i]
-
-# Used in indexing such as:
-# ```julia
-# a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
-# I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
-# b = @view a[I, I]
-# @view b[Block(1, 1)[1:2, 2:2]]
-# ```
-# This is similar to the definition:
-# @interface BlockSparseArrayInterface() to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
-function Base.getindex(
-  a::NonBlockedVector{<:Integer,<:BlockIndices}, I::UnitRange{<:Integer}
-)
-  ax = only(axes(parent(a).indices))
-  brs = to_blockindices(ax, I)
-  inds = blockedunitrange_getindices(ax, I)
-  return NonBlockedVector(parent(a)[BlockSlice(brs, inds)])
-end
-
-function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
-  # TODO: Check that `i.indices` is consistent with `S.indices`.
-  # TODO: Turn this into a `blockedunitrange_getindices` definition.
-  subblocks = S.blocks[Int.(i.block)]
-  subindices = mortar(
-    map(1:length(i.block)) do I
-      r = blocks(i.indices)[I]
-      return S.indices[first(r)]:S.indices[last(r)]
-    end,
-  )
-  return BlockIndices(subblocks, subindices)
-end
-
-# Used when performing slices like:
-# @views a[[Block(2), Block(1)]][2:4, 2:4]
-function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockVector{<:BlockIndex{1}}})
-  subblocks = mortar(
-    map(blocks(i.block)) do br
-      return S.blocks[Int(Block(br))][only(br.indices)]
-    end,
-  )
-  subindices = mortar(
-    map(blocks(i.block)) do br
-      S.indices[br]
-    end,
-  )
-  return BlockIndices(subblocks, subindices)
-end
-
-# Similar to the definition of `BlockArrays.BlockSlices`:
-# ```julia
-# const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}}}
-# ```
-# but includes `BlockIndices`, where the blocks aren't contiguous.
-const BlockSliceCollection = Union{
-  Base.Slice,BlockSlice{<:BlockRange{1}},BlockIndices{<:Vector{<:Block{1}}}
-}
-const SubBlockSliceCollection = BlockIndices{
-  <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}
-}
-
 # TODO: This is type piracy. This is used in `reindex` when making
 # views of blocks of sliced block arrays, for example:
 # ```julia
@@ -326,10 +228,6 @@ function blockrange(axis::AbstractUnitRange, r::BlockSlice)
   return blockrange(axis, r.block)
 end
 
-function blockrange(a::AbstractUnitRange, r::BlockIndices)
-  return blockrange(a, r.blocks)
-end
-
 function blockrange(axis::AbstractUnitRange, r::Block{1})
   return r:r
 end
@@ -395,10 +293,6 @@ function blockindices(
     return 1:0
   end
   return Base.OneTo(length(axis[block]))
-end
-
-function blockindices(a::AbstractUnitRange, b::Block, r::BlockIndices)
-  return blockindices(a, b, r.blocks)
 end
 
 function blockindices(

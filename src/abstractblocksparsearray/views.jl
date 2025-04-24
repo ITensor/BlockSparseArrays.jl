@@ -119,18 +119,6 @@ function BlockArrays.viewblock(
   return Base.invoke(view, Tuple{AbstractArray,Vararg{Any}}, a, I...)
 end
 
-function Base.view(
-  a::SubArray{
-    T,
-    N,
-    <:AbstractBlockSparseArray{T,N},
-    <:Tuple{Vararg{Union{BlockSliceCollection,SubBlockSliceCollection},N}},
-  },
-  block::Union{Block{N},BlockIndexRange{N}},
-) where {T,N}
-  return viewblock(a, block)
-end
-
 # Fix ambiguity error with BlockArrays.jl for slices like
 # `a = BlockSparseArray{Float64}(undef, [2, 2], [2, 2]); @view a[:, :]`.
 function Base.view(
@@ -145,29 +133,6 @@ function Base.view(
   return viewblock(a, block)
 end
 
-function Base.view(
-  a::SubArray{
-    T,
-    N,
-    <:AbstractBlockSparseArray{T,N},
-    <:Tuple{Vararg{Union{BlockSliceCollection,SubBlockSliceCollection},N}},
-  },
-  block::Vararg{Union{Block{1},BlockIndexRange{1}},N},
-) where {T,N}
-  return viewblock(a, block...)
-end
-function BlockArrays.viewblock(
-  a::SubArray{
-    T,
-    N,
-    <:AbstractBlockSparseArray{T,N},
-    <:Tuple{Vararg{Union{BlockSliceCollection,SubBlockSliceCollection},N}},
-  },
-  block::Union{Block{N},BlockIndexRange{N}},
-) where {T,N}
-  return viewblock(a, to_tuple(block)...)
-end
-
 # Fixes ambiguity error with `AnyAbstractBlockSparseArray` definition.
 function Base.view(
   a::SubArray{
@@ -187,62 +152,11 @@ function Base.view(
   return viewblock(a, block...)
 end
 
-# XXX: TODO: Distinguish if a sub-view of the block needs to be taken!
-# Define a new `SubBlockSlice` which is used in:
-# `@interface BlockSparseArrayInterface() to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})`
-# in `blocksparsearrayinterface/blocksparsearrayinterface.jl`.
-# TODO: Define `@interface BlockSparseArrayInterface() viewblock`.
-function BlockArrays.viewblock(
-  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSliceCollection,N}}},
-  block::Vararg{Block{1},N},
-) where {T,N}
-  I = CartesianIndex(Int.(block))
-  # TODO: Use `eachblockstoredindex`.
-  if I ∈ eachstoredindex(blocks(a))
-    return blocks(a)[I]
-  end
-  return BlockView(parent(a), Block.(Base.reindex(parentindices(blocks(a)), Tuple(I))))
-end
-
-function to_blockindexrange(
-  a::BlockIndices{<:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}},
-  I::Block{1},
-)
-  # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
-  # work right now.
-  return blocks(a.blocks)[Int(I)]
-end
 function to_blockindexrange(
   a::Base.Slice{<:AbstractBlockedUnitRange{<:Integer}}, I::Block{1}
 )
   @assert I in only(blockaxes(a.indices))
   return I
-end
-
-function BlockArrays.viewblock(
-  a::SubArray{
-    T,
-    N,
-    <:AbstractBlockSparseArray{T,N},
-    <:Tuple{Vararg{Union{BlockSliceCollection,SubBlockSliceCollection},N}},
-  },
-  block::Vararg{Block{1},N},
-) where {T,N}
-  brs = ntuple(dim -> to_blockindexrange(parentindices(a)[dim], block[dim]), ndims(a))
-  return @view parent(a)[brs...]
-end
-
-# TODO: Define `@interface BlockSparseArrayInterface() viewblock`.
-function BlockArrays.viewblock(
-  a::SubArray{
-    T,
-    N,
-    <:AbstractBlockSparseArray{T,N},
-    <:Tuple{Vararg{Union{BlockSliceCollection,SubBlockSliceCollection},N}},
-  },
-  block::Vararg{BlockIndexRange{1},N},
-) where {T,N}
-  return view(viewblock(a, Block.(block)...), map(b -> only(b.indices), block)...)
 end
 
 # Block slice of the result of slicing `@view a[2:5, 2:5]`.

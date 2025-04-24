@@ -22,19 +22,6 @@ function reblock(
   return @view parent(a)[map(I -> I.array, parentindices(a))...]
 end
 
-# TODO: Make this more general, independent of `AbstractBlockSparseArray`.
-function reblock(
-  a::SubArray{
-    <:Any,
-    <:Any,
-    <:AbstractBlockSparseArray,
-    <:Tuple{Vararg{BlockIndices{<:AbstractBlockVector{<:Block{1}}}}},
-  },
-)
-  # Remove the blocking.
-  return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]
-end
-
 function Base.map!(f, a_dest::AbstractArray, a_srcs::AnyAbstractBlockSparseArray...)
   @interface interface(a_dest, a_srcs...) map!(f, a_dest, a_srcs...)
   return a_dest
