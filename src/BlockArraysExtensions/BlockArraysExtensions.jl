@@ -258,9 +258,20 @@ function blockrange(axis::AbstractUnitRange, r::NonBlockedVector)
   return Block(1):Block(1)
 end
 
+# Find the blocks associated with the block slice.
+# This results from slices like `[Block(1), Block(2)]`
+# or `[Block(1)[1:2], Block(2)[2:3]]`.
+# This would be easier once something like:
+# https://github.com/JuliaArrays/BlockArrays.jl/pull/459
+# is implemented.
 function blockrange(axis::AbstractUnitRange, r::AbstractBlockVector)
-  # XXX: This may be the inverse permutation.
-  return Block.(indexin(blocks(r), blocks(axis)))
+  inds = map(blocks(r)) do b_r
+    findfirst(blocks(axis)) do b_axis
+      return b_r ⊆ b_axis
+    end
+  end
+  any(isnothing, inds) && error("Block not found.")
+  return Block.(inds)
 end
 
 function blockrange(axis::AbstractUnitRange, r)
