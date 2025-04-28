@@ -23,3 +23,18 @@ end
 ) where {N}
   return f(a, Tuple(I)...)
 end
+
+# TODO: this is a hack and is also type-unstable
+function (f::GetUnstoredBlock)(
+  a::AbstractMatrix{LinearAlgebra.Diagonal{T,V}}, I::Vararg{Int,2}
+) where {T,V}
+  b_size = ntuple(ndims(a)) do d
+    return length(f.axes[d][Block(I[d])])
+  end
+  if I[1] == I[2]
+    diag = similar(V, b_size[1])
+    return LinearAlgebra.Diagonal{T,V}(diag)
+  else
+    return zeros(T, b_size...)
+  end
+end

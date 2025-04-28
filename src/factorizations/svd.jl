@@ -1,207 +1,239 @@
-using LinearAlgebra:
-  LinearAlgebra, Factorization, Algorithm, default_svd_alg, Adjoint, Transpose
-using BlockArrays: AbstractBlockMatrix, BlockedArray, BlockedMatrix, BlockedVector
-using BlockArrays: BlockLayout
+using MatrixAlgebraKit
 
-# Singular Value Decomposition:
-# need new type to deal with U and V having possible different types
-# this is basically a carbon copy of the LinearAlgebra implementation.
-# additionally, by default we implement a fallback to the LinearAlgebra implementation
-# in hope to support as many foreign types as possible that chose to extend those methods.
-
-# TODO: add this to MatrixFactorizations
-# TODO: decide where this goes
-# TODO: decide whether or not to restrict types to be blocked.
 """
-    SVD <: Factorization
-
-Matrix factorization type of the singular value decomposition (SVD) of a matrix `A`.
-This is the return type of [`svd(_)`](@ref), the corresponding matrix factorization function.
-
-If `F::SVD` is the factorization object, `U`, `S`, `V` and `Vt` can be obtained
-via `F.U`, `F.S`, `F.V` and `F.Vt`, such that `A = U * Diagonal(S) * Vt`.
-The singular values in `S` are sorted in descending order.
-
-Iterating the decomposition produces the components `U`, `S`, and `V`.
-
-# Examples
-```jldoctest
-julia> A = [1. 0. 0. 0. 2.; 0. 0. 3. 0. 0.; 0. 0. 0. 0. 0.; 0. 2. 0. 0. 0.]
-4×5 Matrix{Float64}:
- 1.0  0.0  0.0  0.0  2.0
- 0.0  0.0  3.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
- 0.0  2.0  0.0  0.0  0.0
-
-julia> F = BlockSparseArrays.svd(A)
-BlockSparseArrays.SVD{Float64, Float64, Matrix{Float64}, Vector{Float64}, Matrix{Float64}}
-U factor:
-4×4 Matrix{Float64}:
- 0.0  1.0   0.0  0.0
- 1.0  0.0   0.0  0.0
- 0.0  0.0   0.0  1.0
- 0.0  0.0  -1.0  0.0
-singular values:
-4-element Vector{Float64}:
- 3.0
- 2.23606797749979
- 2.0
- 0.0
-Vt factor:
-4×5 Matrix{Float64}:
- -0.0        0.0  1.0  -0.0  0.0
-  0.447214   0.0  0.0   0.0  0.894427
-  0.0       -1.0  0.0   0.0  0.0
-  0.0        0.0  0.0   1.0  0.0
-
-julia> F.U * Diagonal(F.S) * F.Vt
-4×5 Matrix{Float64}:
- 1.0  0.0  0.0  0.0  2.0
- 0.0  0.0  3.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
- 0.0  2.0  0.0  0.0  0.0
-
-julia> u, s, v = F; # destructuring via iteration
-
-julia> u == F.U && s == F.S && v == F.V
-true
-```
+    BlockDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
+  
+A wrapper for `MatrixAlgebraKit.AbstractAlgorithm` that implements the wrapped algorithm on
+a block-by-block basis, which is possible if the input matrix is a block-diagonal matrix.
 """
-struct SVD{T,Tr,M<:AbstractArray{T},C<:AbstractVector{Tr},N<:AbstractArray{T}} <:
-       Factorization{T}
-  U::M
-  S::C
-  Vt::N
-  function SVD{T,Tr,M,C,N}(
-    U, S, Vt
-  ) where {T,Tr,M<:AbstractArray{T},C<:AbstractVector{Tr},N<:AbstractArray{T}}
-    Base.require_one_based_indexing(U, S, Vt)
-    return new{T,Tr,M,C,N}(U, S, Vt)
+struct BlockDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
+       MatrixAlgebraKit.AbstractAlgorithm
+  alg::A
+end
+
+function MatrixAlgebraKit.default_svd_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
+  @assert blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} "unsupported type:
+    $(blocktype(A))"
+  alg = MatrixAlgebraKit.LAPACK_DivideAndConquer(; kwargs...)
+  return BlockDiagonalAlgorithm(alg)
+end
+
+#=
+Note: here I'm being generic about the matrix type, which effectively means that I'm making
+some assumptions about the output type of the algorithm, ie that this will return 
+Matrix{T},Diagonal{real(T)},Matrix{T}. In principle this is not guaranteed, although it
+should cover most cases. The alternative is to be more specific about the matrix type and
+replace the `similar` calls with explicit `BlockSparseArray` constructor calls. In that case
+I can simply call `initialize_output` on the input blocks, and take whatever is returned.
+We should probably discuss which way to go.
+=#
+
+function MatrixAlgebraKit.initialize_output(
+  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
+)
+  bm, bn = blocksize(A)
+  bmn = min(bm, bn)
+
+  brows = blocklengths(axes(A, 1))
+  bcols = blocklengths(axes(A, 2))
+  slengths = Vector{Int}(undef, bmn)
+
+  # fill in values for blocks that are present
+  bIs = collect(eachblockstoredindex(A))
+  browIs = Int.(first.(Tuple.(bIs)))
+  bcolIs = Int.(last.(Tuple.(bIs)))
+  for bI in eachblockstoredindex(A)
+    row, col = Int.(Tuple(bI))
+    nrows = brows[row]
+    ncols = bcols[col]
+    slengths[col] = min(nrows, ncols)
   end
-end
-function SVD(U::AbstractArray{T}, S::AbstractVector{Tr}, Vt::AbstractArray{T}) where {T,Tr}
-  return SVD{T,Tr,typeof(U),typeof(S),typeof(Vt)}(U, S, Vt)
-end
-function SVD{T}(U::AbstractArray, S::AbstractVector{Tr}, Vt::AbstractArray) where {T,Tr}
-  return SVD(
-    convert(AbstractArray{T}, U),
-    convert(AbstractVector{Tr}, S),
-    convert(AbstractArray{T}, Vt),
-  )
-end
 
-function SVD{T}(F::SVD) where {T}
-  return SVD(
-    convert(AbstractMatrix{T}, F.U),
-    convert(AbstractVector{real(T)}, F.S),
-    convert(AbstractMatrix{T}, F.Vt),
-  )
-end
-LinearAlgebra.Factorization{T}(F::SVD) where {T} = SVD{T}(F)
-
-# iteration for destructuring into components
-Base.iterate(S::SVD) = (S.U, Val(:S))
-Base.iterate(S::SVD, ::Val{:S}) = (S.S, Val(:V))
-Base.iterate(S::SVD, ::Val{:V}) = (S.V, Val(:done))
-Base.iterate(::SVD, ::Val{:done}) = nothing
-
-function Base.getproperty(F::SVD, d::Symbol)
-  if d === :V
-    return getfield(F, :Vt)'
-  else
-    return getfield(F, d)
+  # fill in values for blocks that aren't present, pairing them in order of occurence
+  # this is a convention, which at least gives the expected results for blockdiagonal
+  emptyrows = setdiff(1:bm, browIs)
+  emptycols = setdiff(1:bn, bcolIs)
+  for (row, col) in zip(emptyrows, emptycols)
+    slengths[col] = min(brows[row], bcols[col])
   end
+
+  s_axis = blockedrange(slengths)
+  U = similar(A, axes(A, 1), s_axis)
+  Tr = real(eltype(A))
+  S = BlockSparseArray{Tr,2,Diagonal{Tr,Vector{Tr}}}(undef, (s_axis, s_axis))
+  Vt = similar(A, s_axis, axes(A, 2))
+
+  # allocate output
+  for bI in eachblockstoredindex(A)
+    brow, bcol = Tuple(bI)
+    U[brow, bcol], S[bcol, bcol], Vt[bcol, bcol] = MatrixAlgebraKit.initialize_output(
+      svd_compact!, @view!(A[bI]), alg.alg
+    )
+  end
+
+  # allocate output for blocks that aren't present -- do we also fill identities here?
+  for (row, col) in zip(emptyrows, emptycols)
+    @view!(U[Block(row, col)])
+    @view!(Vt[Block(col, col)])
+  end
+
+  return U, S, Vt
 end
 
-function Base.propertynames(F::SVD, private::Bool=false)
-  return private ? (:V, fieldnames(typeof(F))...) : (:U, :S, :V, :Vt)
+function MatrixAlgebraKit.initialize_output(
+  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
+)
+  bm, bn = blocksize(A)
+
+  brows = blocklengths(axes(A, 1))
+  slengths = copy(brows)
+
+  # fill in values for blocks that are present
+  bIs = collect(eachblockstoredindex(A))
+  browIs = Int.(first.(Tuple.(bIs)))
+  bcolIs = Int.(last.(Tuple.(bIs)))
+  for bI in eachblockstoredindex(A)
+    row, col = Int.(Tuple(bI))
+    nrows = brows[row]
+    slengths[col] = nrows
+  end
+
+  # fill in values for blocks that aren't present, pairing them in order of occurence
+  # this is a convention, which at least gives the expected results for blockdiagonal
+  emptyrows = setdiff(1:bm, browIs)
+  emptycols = setdiff(1:bn, bcolIs)
+  for (row, col) in zip(emptyrows, emptycols)
+    slengths[col] = brows[row]
+  end
+  for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
+    slengths[bn + i] = brows[emptyrows[k]]
+  end
+
+  s_axis = blockedrange(slengths)
+  U = similar(A, axes(A, 1), s_axis)
+  Tr = real(eltype(A))
+  S = similar(A, Tr, (s_axis, axes(A, 2)))
+  Vt = similar(A, axes(A, 2), axes(A, 2))
+
+  # allocate output
+  for bI in eachblockstoredindex(A)
+    brow, bcol = Tuple(bI)
+    U[brow, bcol], S[bcol, bcol], Vt[bcol, bcol] = MatrixAlgebraKit.initialize_output(
+      svd_full!, @view!(A[bI]), alg.alg
+    )
+  end
+
+  # allocate output for blocks that aren't present -- do we also fill identities here?
+  for (row, col) in zip(emptyrows, emptycols)
+    @view!(U[Block(row, col)])
+    @view!(Vt[Block(col, col)])
+  end
+  # also handle extra rows/cols
+  for i in (length(emptyrows) + 1):length(emptycols)
+    @view!(Vt[Block(emptycols[i], emptycols[i])])
+  end
+  for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
+    @view!(U[Block(emptyrows[k], bn + i)])
+  end
+
+  return U, S, Vt
 end
 
-Base.size(A::SVD, dim::Integer) = dim == 1 ? size(A.U, dim) : size(A.Vt, dim)
-Base.size(A::SVD) = (size(A, 1), size(A, 2))
+function MatrixAlgebraKit.check_input(
+  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, USVᴴ
+)
+  U, S, Vt = USVᴴ
+  @assert isa(U, AbstractBlockSparseMatrix) &&
+    isa(S, AbstractBlockSparseMatrix) &&
+    isa(Vt, AbstractBlockSparseMatrix)
+  @assert eltype(A) == eltype(U) == eltype(Vt)
+  @assert real(eltype(A)) == eltype(S)
+  @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vt, 2)
+  @assert axes(S, 1) == axes(S, 2)
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, F::SVD)
-  summary(io, F)
-  println(io)
-  println(io, "U factor:")
-  show(io, mime, F.U)
-  println(io, "\nsingular values:")
-  show(io, mime, F.S)
-  println(io, "\nVt factor:")
-  return show(io, mime, F.Vt)
+  # TODO: implement checks on axes of S, or find better way to do this without recomputing
+  # pairing
+  return nothing
 end
 
-Base.adjoint(usv::SVD) = SVD(adjoint(usv.Vt), usv.S, adjoint(usv.U))
-Base.transpose(usv::SVD) = SVD(transpose(usv.Vt), usv.S, transpose(usv.U))
+function MatrixAlgebraKit.check_input(
+  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, USVᴴ
+)
+  U, S, Vt = USVᴴ
+  @assert isa(U, AbstractBlockSparseMatrix) &&
+    isa(S, AbstractBlockSparseMatrix) &&
+    isa(Vt, AbstractBlockSparseMatrix)
+  @assert eltype(A) == eltype(U) == eltype(Vt)
+  @assert real(eltype(A)) == eltype(S)
+  @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vt, 1) == axes(Vt, 2)
+  @assert axes(S, 2) == axes(A, 2)
 
-# Conversion
-Base.AbstractMatrix(F::SVD) = (F.U * Diagonal(F.S)) * F.Vt
-Base.AbstractArray(F::SVD) = AbstractMatrix(F)
-Base.Matrix(F::SVD) = Array(AbstractArray(F))
-Base.Array(F::SVD) = Matrix(F)
-SVD(usv::SVD) = usv
-SVD(usv::LinearAlgebra.SVD) = SVD(usv.U, usv.S, usv.Vt)
-
-# functions default to LinearAlgebra
-# ----------------------------------
-"""
-    svd!(A; full::Bool = false, alg::Algorithm = default_svd_alg(A)) -> SVD
-
-`svd!` is the same as [`svd`](@ref), but saves space by
-overwriting the input `A`, instead of creating a copy. See documentation of [`svd`](@ref) for details.
-"""
-svd!(A; kwargs...) = SVD(LinearAlgebra.svd!(A; kwargs...))
-
-"""
-    svd(A; full::Bool = false, alg::Algorithm = default_svd_alg(A)) -> SVD
-
-Compute the singular value decomposition (SVD) of `A` and return an `SVD` object.
-
-`U`, `S`, `V` and `Vt` can be obtained from the factorization `F` with `F.U`,
-`F.S`, `F.V` and `F.Vt`, such that `A = U * Diagonal(S) * Vt`.
-The algorithm produces `Vt` and hence `Vt` is more efficient to extract than `V`.
-The singular values in `S` are sorted in descending order.
-
-Iterating the decomposition produces the components `U`, `S`, and `V`.
-
-If `full = false` (default), a "thin" SVD is returned. For an ``M
-\\times N`` matrix `A`, in the full factorization `U` is ``M \\times M``
-and `V` is ``N \\times N``, while in the thin factorization `U` is ``M
-\\times K`` and `V` is ``N \\times K``, where ``K = \\min(M,N)`` is the
-number of singular values.
-
-`alg` specifies which algorithm and LAPACK method to use for SVD:
-- `alg = DivideAndConquer()` (default): Calls `LAPACK.gesdd!`.
-- `alg = QRIteration()`: Calls `LAPACK.gesvd!` (typically slower but more accurate) .
-
-!!! compat "Julia 1.3"
-    The `alg` keyword argument requires Julia 1.3 or later.
-
-# Examples
-```jldoctest
-julia> A = rand(4,3);
-
-julia> F = BlockSparseArrays.svd(A); # Store the Factorization Object
-
-julia> A ≈ F.U * Diagonal(F.S) * F.Vt
-true
-
-julia> U, S, V = F; # destructuring via iteration
-
-julia> A ≈ U * Diagonal(S) * V'
-true
-
-julia> Uonly, = BlockSparseArrays.svd(A); # Store U only
-
-julia> Uonly == U
-true
-```
-"""
-function svd(A; kwargs...)
-  return SVD(svd!(eigencopy_oftype(A, LinearAlgebra.eigtype(eltype(A))); kwargs...))
+  # TODO: implement checks on axes of S, or find better way to do this without recomputing
+  # pairing
+  return nothing
 end
 
-LinearAlgebra.svdvals(usv::SVD{<:Any,T}) where {T} = (usv.S)::AbstractVector{T}
+function MatrixAlgebraKit.svd_compact!(
+  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockDiagonalAlgorithm
+)
+  MatrixAlgebraKit.check_input(svd_compact!, A, USVᴴ)
+  U, S, Vt = USVᴴ
 
-# Added here to avoid type-piracy
-eigencopy_oftype(A, S) = LinearAlgebra.eigencopy_oftype(A, S)
+  # do decomposition on each block
+  for bI in eachblockstoredindex(A)
+    brow, bcol = Tuple(bI)
+    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vt[bcol, bcol]))
+    usvᴴ′ = svd_compact!(@view!(A[bI]), usvᴴ, alg.alg)
+    @assert usvᴴ === usvᴴ′ "svd_compact! might not be in-place"
+  end
+
+  # fill in identities for blocks that aren't present
+  bIs = collect(eachblockstoredindex(A))
+  browIs = Int.(first.(Tuple.(bIs)))
+  bcolIs = Int.(last.(Tuple.(bIs)))
+  emptyrows = setdiff(1:blocksize(A, 1), browIs)
+  emptycols = setdiff(1:blocksize(A, 2), bcolIs)
+  for (row, col) in zip(emptyrows, emptycols)
+    copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
+    copyto!(@view!(Vt[Block(col, col)]), LinearAlgebra.I)
+  end
+
+  return USVᴴ
+end
+
+function MatrixAlgebraKit.svd_full!(
+  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockDiagonalAlgorithm
+)
+  MatrixAlgebraKit.check_input(svd_full!, A, USVᴴ)
+  U, S, Vt = USVᴴ
+
+  # do decomposition on each block
+  for bI in eachblockstoredindex(A)
+    brow, bcol = Tuple(bI)
+    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vt[bcol, bcol]))
+    usvᴴ′ = svd_full!(@view!(A[bI]), usvᴴ, alg.alg)
+    @assert usvᴴ === usvᴴ′ "svd_full! might not be in-place"
+  end
+
+  # fill in identities for blocks that aren't present
+  bIs = collect(eachblockstoredindex(A))
+  browIs = Int.(first.(Tuple.(bIs)))
+  bcolIs = Int.(last.(Tuple.(bIs)))
+  emptyrows = setdiff(1:blocksize(A, 1), browIs)
+  emptycols = setdiff(1:blocksize(A, 2), bcolIs)
+  for (row, col) in zip(emptyrows, emptycols)
+    copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
+    copyto!(@view!(Vt[Block(col, col)]), LinearAlgebra.I)
+  end
+
+  # also handle extra rows/cols
+  for i in (length(emptyrows) + 1):length(emptycols)
+    copyto!(@view!(Vt[Block(emptycols[i], emptycols[i])]), LinearAlgebra.I)
+  end
+  bn = blocksize(A, 2)
+  for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
+    copyto!(@view!(U[Block(emptyrows[k], bn + i)]), LinearAlgebra.I)
+  end
+
+  return USVᴴ
+end
