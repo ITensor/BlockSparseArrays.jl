@@ -97,6 +97,7 @@ arrayts = (Array, JLArray)
         @test iszero(blockstoredlength(a))
         @test iszero(storedlength(a))
       end
+      T != BlockSparseArray{elt} && @test_throws ArgumentError T(undef, bs[1:1])
     end
 
     # BlockSparseVector
