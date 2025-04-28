@@ -8,7 +8,6 @@ export BlockSparseArray,
   eachstoredblock,
   sparsemortar
 
-
 # possible upstream contributions
 include("BlockArraysExtensions/blockedunitrange.jl")
 include("BlockArraysExtensions/BlockArraysExtensions.jl")
