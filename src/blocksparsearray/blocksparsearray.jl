@@ -157,6 +157,8 @@ function BlockSparseArray{T,N,A}(
   ::UndefInitializer,
   dims::Tuple{AbstractVector{<:Integer},Vararg{AbstractVector{<:Integer}}},
 ) where {T,N,A<:AbstractArray{T,N}}
+  length(dims) == N ||
+    throw(ArgumentError("Length of dims doesn't match number of dimensions."))
   return BlockSparseArray{T,N,A}(undef, blockedrange.(dims))
 end
 
