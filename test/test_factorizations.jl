@@ -1,6 +1,6 @@
 using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
 using BlockSparseArrays: BlockSparseArray, BlockDiagonal, eachblockstoredindex
-using MatrixAlgebraKit: svd_compact, svd_full
+using MatrixAlgebraKit: svd_compact, svd_full, svd_trunc, truncrank
 using LinearAlgebra: LinearAlgebra
 using Random: Random
 using Test: @inferred, @testset, @test
@@ -82,4 +82,58 @@ end
   delete!(blocks(c).storage, CartesianIndex(Int.(Tuple(I_removed))))
   usv = svd_full(c)
   @test test_svd(c, usv; full=true)
+end
+
+# svd_trunc!
+# ----------
+
+@testset "svd_trunc ($m, $n) BlockSparseMatri{$T}" for ((m, n), T) in test_params
+  (m, n), T = first(test_params)
+  a = BlockSparseArray{T}(undef, m, n)
+
+  # test blockdiagonal
+  for i in LinearAlgebra.diagind(blocks(a))
+    I = CartesianIndices(blocks(a))[i]
+    a[Block(I.I...)] = rand(T, size(blocks(a)[i]))
+  end
+
+  minmn = min(size(a)...)
+  r = max(1, minmn - 2)
+
+  U1, S1, V1ᴴ = svd_trunc(a; trunc=truncrank(r))
+  U2, S2, V2ᴴ = svd_trunc(Matrix(a); trunc=truncrank(r))
+  @test size(U1) == size(U2)
+  @test size(S1) == size(S2)
+  @test size(V1ᴴ) == size(V2ᴴ)
+  @test Matrix(U1 * S1 * V1ᴴ) ≈ U2 * S2 * V2ᴴ
+
+  @test (U1' * U1 ≈ LinearAlgebra.I)
+  @test (V1ᴴ * V1ᴴ' ≈ LinearAlgebra.I)
+
+  # test permuted blockdiagonal
+  perm = Random.randperm(length(m))
+  b = a[Block.(perm), Block.(1:length(n))]
+  U1, S1, V1ᴴ = svd_trunc(b; trunc=truncrank(r))
+  U2, S2, V2ᴴ = svd_trunc(Matrix(b); trunc=truncrank(r))
+  @test size(U1) == size(U2)
+  @test size(S1) == size(S2)
+  @test size(V1ᴴ) == size(V2ᴴ)
+  @test Matrix(U1 * S1 * V1ᴴ) ≈ U2 * S2 * V2ᴴ
+
+  @test (U1' * U1 ≈ LinearAlgebra.I)
+  @test (V1ᴴ * V1ᴴ' ≈ LinearAlgebra.I)
+
+  # test permuted blockdiagonal with missing row/col
+  I_removed = rand(eachblockstoredindex(b))
+  c = copy(b)
+  delete!(blocks(c).storage, CartesianIndex(Int.(Tuple(I_removed))))
+  U1, S1, V1ᴴ = svd_trunc(c; trunc=truncrank(r))
+  U2, S2, V2ᴴ = svd_trunc(Matrix(c); trunc=truncrank(r))
+  @test size(U1) == size(U2)
+  @test size(S1) == size(S2)
+  @test size(V1ᴴ) == size(V2ᴴ)
+  @test Matrix(U1 * S1 * V1ᴴ) ≈ U2 * S2 * V2ᴴ
+
+  @test (U1' * U1 ≈ LinearAlgebra.I)
+  @test (V1ᴴ * V1ᴴ' ≈ LinearAlgebra.I)
 end
