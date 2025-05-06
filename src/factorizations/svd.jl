@@ -151,8 +151,6 @@ function MatrixAlgebraKit.check_input(
   @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vt, 2)
   @assert axes(S, 1) == axes(S, 2)
 
-  # TODO: implement checks on axes of S, or find better way to do this without recomputing
-  # pairing
   return nothing
 end
 
@@ -168,8 +166,6 @@ function MatrixAlgebraKit.check_input(
   @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vt, 1) == axes(Vt, 2)
   @assert axes(S, 2) == axes(A, 2)
 
-  # TODO: implement checks on axes of S, or find better way to do this without recomputing
-  # pairing
   return nothing
 end
 
