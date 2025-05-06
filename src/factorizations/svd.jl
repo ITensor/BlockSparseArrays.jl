@@ -28,9 +28,7 @@ function _similar_S(A::AbstractBlockSparseMatrix, s_axis)
 end
 
 function MatrixAlgebraKit.initialize_output(
-  ::typeof(svd_compact!),
-  A::AbstractBlockSparseMatrix,
-  alg::BlockPermutedDiagonalAlgorithm,
+  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
 )
   bm, bn = blocksize(A)
   bmn = min(bm, bn)
@@ -81,9 +79,7 @@ function MatrixAlgebraKit.initialize_output(
 end
 
 function MatrixAlgebraKit.initialize_output(
-  ::typeof(svd_full!),
-  A::AbstractBlockSparseMatrix,
-  alg::BlockPermutedDiagonalAlgorithm,
+  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
 )
   bm, bn = blocksize(A)
 
@@ -172,9 +168,7 @@ function MatrixAlgebraKit.check_input(
 end
 
 function MatrixAlgebraKit.svd_compact!(
-  A::AbstractBlockSparseMatrix,
-  USVᴴ,
-  alg::BlockPermutedDiagonalAlgorithm,
+  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockPermutedDiagonalAlgorithm
 )
   MatrixAlgebraKit.check_input(svd_compact!, A, USVᴴ)
   U, S, Vt = USVᴴ
@@ -205,9 +199,7 @@ function MatrixAlgebraKit.svd_compact!(
 end
 
 function MatrixAlgebraKit.svd_full!(
-  A::AbstractBlockSparseMatrix,
-  USVᴴ,
-  alg::BlockPermutedDiagonalAlgorithm,
+  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockPermutedDiagonalAlgorithm
 )
   MatrixAlgebraKit.check_input(svd_full!, A, USVᴴ)
   U, S, Vt = USVᴴ
