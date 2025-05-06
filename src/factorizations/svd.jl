@@ -18,15 +18,12 @@ function MatrixAlgebraKit.default_svd_algorithm(A::AbstractBlockSparseMatrix; kw
   return BlockPermutedDiagonalAlgorithm(alg)
 end
 
-#=
-Note: here I'm being generic about the matrix type, which effectively means that I'm making
-some assumptions about the output type of the algorithm, ie that this will return 
-Matrix{T},Diagonal{real(T)},Matrix{T}. In principle this is not guaranteed, although it
-should cover most cases. The alternative is to be more specific about the matrix type and
-replace the `similar` calls with explicit `BlockSparseArray` constructor calls. In that case
-I can simply call `initialize_output` on the input blocks, and take whatever is returned.
-We should probably discuss which way to go.
-=#
+# TODO: this should be replaced with a more general similar function that can handle setting
+# the blocktype and element type - something like S = similar(A, BlockType(...))
+function _similar_S(A::AbstractBlockSparseMatrix, s_axis)
+  T = real(eltype(A))
+  return BlockSparseArray{T,2,Diagonal{T,Vector{T}}}(undef, (s_axis, s_axis))
+end
 
 function MatrixAlgebraKit.initialize_output(
   ::typeof(svd_compact!),
@@ -61,8 +58,7 @@ function MatrixAlgebraKit.initialize_output(
 
   s_axis = blockedrange(slengths)
   U = similar(A, axes(A, 1), s_axis)
-  Tr = real(eltype(A))
-  S = BlockSparseArray{Tr,2,Diagonal{Tr,Vector{Tr}}}(undef, (s_axis, s_axis))
+  S = _similar_S(A, s_axis)
   Vt = similar(A, s_axis, axes(A, 2))
 
   # allocate output
