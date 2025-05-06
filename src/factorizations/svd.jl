@@ -191,6 +191,9 @@ function MatrixAlgebraKit.svd_compact!(
   bcolIs = Int.(last.(Tuple.(bIs)))
   emptyrows = setdiff(1:blocksize(A, 1), browIs)
   emptycols = setdiff(1:blocksize(A, 2), bcolIs)
+  # needs copyto! instead because size(::LinearAlgebra.I) doesn't work
+  # U[Block(row, col)] = LinearAlgebra.I
+  # Vt[Block(col, col)] = LinearAlgebra.I
   for (row, col) in zip(emptyrows, emptycols)
     copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
     copyto!(@view!(Vt[Block(col, col)]), LinearAlgebra.I)
@@ -221,6 +224,9 @@ function MatrixAlgebraKit.svd_full!(
   bcolIs = Int.(last.(Tuple.(bIs)))
   emptyrows = setdiff(1:blocksize(A, 1), browIs)
   emptycols = setdiff(1:blocksize(A, 2), bcolIs)
+  # needs copyto! instead because size(::LinearAlgebra.I) doesn't work
+  # U[Block(row, col)] = LinearAlgebra.I
+  # Vt[Block(col, col)] = LinearAlgebra.I
   for (row, col) in zip(emptyrows, emptycols)
     copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
     copyto!(@view!(Vt[Block(col, col)]), LinearAlgebra.I)
