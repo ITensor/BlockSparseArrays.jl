@@ -1,4 +1,4 @@
-using MatrixAlgebraKit
+using MatrixAlgebraKit: MatrixAlgebraKit, svd_compact!, svd_full!
 
 """
     BlockPermutedDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
