@@ -1,12 +1,12 @@
 using MatrixAlgebraKit
 
 """
-    BlockDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
+    BlockPermutedDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
   
 A wrapper for `MatrixAlgebraKit.AbstractAlgorithm` that implements the wrapped algorithm on
 a block-by-block basis, which is possible if the input matrix is a block-diagonal matrix.
 """
-struct BlockDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
+struct BlockPermutedDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
        MatrixAlgebraKit.AbstractAlgorithm
   alg::A
 end
@@ -15,7 +15,7 @@ function MatrixAlgebraKit.default_svd_algorithm(A::AbstractBlockSparseMatrix; kw
   @assert blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} "unsupported type:
     $(blocktype(A))"
   alg = MatrixAlgebraKit.LAPACK_DivideAndConquer(; kwargs...)
-  return BlockDiagonalAlgorithm(alg)
+  return BlockPermutedDiagonalAlgorithm(alg)
 end
 
 #=
@@ -29,7 +29,9 @@ We should probably discuss which way to go.
 =#
 
 function MatrixAlgebraKit.initialize_output(
-  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
+  ::typeof(svd_compact!),
+  A::AbstractBlockSparseMatrix,
+  alg::BlockPermutedDiagonalAlgorithm,
 )
   bm, bn = blocksize(A)
   bmn = min(bm, bn)
@@ -81,7 +83,9 @@ function MatrixAlgebraKit.initialize_output(
 end
 
 function MatrixAlgebraKit.initialize_output(
-  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
+  ::typeof(svd_full!),
+  A::AbstractBlockSparseMatrix,
+  alg::BlockPermutedDiagonalAlgorithm,
 )
   bm, bn = blocksize(A)
 
@@ -174,7 +178,9 @@ function MatrixAlgebraKit.check_input(
 end
 
 function MatrixAlgebraKit.svd_compact!(
-  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockDiagonalAlgorithm
+  A::AbstractBlockSparseMatrix,
+  USVᴴ,
+  alg::BlockPermutedDiagonalAlgorithm,
 )
   MatrixAlgebraKit.check_input(svd_compact!, A, USVᴴ)
   U, S, Vt = USVᴴ
@@ -202,7 +208,9 @@ function MatrixAlgebraKit.svd_compact!(
 end
 
 function MatrixAlgebraKit.svd_full!(
-  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockDiagonalAlgorithm
+  A::AbstractBlockSparseMatrix,
+  USVᴴ,
+  alg::BlockPermutedDiagonalAlgorithm,
 )
   MatrixAlgebraKit.check_input(svd_full!, A, USVᴴ)
   U, S, Vt = USVᴴ
