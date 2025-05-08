@@ -16,6 +16,15 @@ const TBlockUSVᴴ = Tuple{
 }
 
 function MatrixAlgebraKit.truncate!(
+  ::typeof(svd_trunc!), (U, S, Vᴴ)::TBlockUSVᴴ, strategy::TruncationStrategy
+)
+  # TODO assert blockdiagonal
+  return MatrixAlgebraKit.truncate!(
+    svd_trunc!, (U, S, Vᴴ), BlockPermutedDiagonalTruncationStrategy(strategy)
+  )
+end
+
+function MatrixAlgebraKit.truncate!(
   ::typeof(svd_trunc!),
   (U, S, Vᴴ)::TBlockUSVᴴ,
   strategy::BlockPermutedDiagonalTruncationStrategy,
