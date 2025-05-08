@@ -91,11 +91,11 @@ function MatrixAlgebraKit.truncate!(
     bVᴴ = Tuple(bI_Vᴴs[bVᴴ_id])
     Ṽᴴ[bVᴴ[1] - Block(I′), bVᴴ[2]] = view(Vᴴ, bVᴴ...)[mask, :]
 
-    bS_id = @something findfirst(x -> last(Tuple(x)) == Block(I), bI_Ss) error(
-      "No S-block found for $I"
-    )
-    bS = Tuple(bI_Ss[bS_id])
-    S̃[(bS .- Block(I′))...] = Diagonal(diagview(view(S, bS...))[mask])
+    bS_id = findfirst(x -> last(Tuple(x)) == Block(I), bI_Ss)
+    if !isnothing(bS_id)
+      bS = Tuple(bI_Ss[bS_id])
+      S̃[(bS .- Block(I′))...] = Diagonal(diagview(view(S, bS...))[mask])
+    end
   end
 
   return Ũ, S̃, Ṽᴴ
