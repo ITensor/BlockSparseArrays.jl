@@ -1,13 +1,27 @@
 using MatrixAlgebraKit: TruncationStrategy, diagview
 
+"""
+    BlockPermutedDiagonalTruncationStrategy(strategy::MatrixAlgebraKit.TruncationStrategy)
+
+A wrapper for `MatrixAlgebraKit.TruncationStrategy` that implements the wrapped strategy on
+a block-by-block basis, which is possible if the input matrix is a block-diagonal matrix or
+a block permuted block-diagonal matrix.
+"""
+struct BlockPermutedDiagonalTruncationStrategy{T<:MatrixAlgebraKit.TruncationStrategy} <:
+       MatrixAlgebraKit.TruncationStrategy
+  strategy::T
+end
+
 const TBlockUSVᴴ = Tuple{
   <:AbstractBlockSparseMatrix,<:AbstractBlockSparseMatrix,<:AbstractBlockSparseMatrix
 }
 
 function MatrixAlgebraKit.truncate!(
-  ::typeof(svd_trunc!), (U, S, Vᴴ)::TBlockUSVᴴ, strategy::TruncationStrategy
+  ::typeof(svd_trunc!),
+  (U, S, Vᴴ)::TBlockUSVᴴ,
+  strategy::BlockPermutedDiagonalTruncationStrategy,
 )
-  ind = MatrixAlgebraKit.findtruncated(diagview(S), strategy)
+  ind = MatrixAlgebraKit.findtruncated(diagview(S), strategy.strategy)
   # cannot use regular slicing here: I want to slice without altering blockstructure
   # solution: use boolean indexing and slice the mask, effectively cheaply inverting the map
   indexmask = falses(size(S, 1))
@@ -60,3 +74,4 @@ function MatrixAlgebraKit.truncate!(
 
   return Ũ, S̃, Ṽᴴ
 end
+
