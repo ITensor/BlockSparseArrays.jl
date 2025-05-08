@@ -4,7 +4,8 @@ using MatrixAlgebraKit: MatrixAlgebraKit, svd_compact!, svd_full!
     BlockPermutedDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
   
 A wrapper for `MatrixAlgebraKit.AbstractAlgorithm` that implements the wrapped algorithm on
-a block-by-block basis, which is possible if the input matrix is a block-diagonal matrix or a block permuted block-diagonal matrix.
+a block-by-block basis, which is possible if the input matrix is a block-diagonal matrix or
+a block permuted block-diagonal matrix.
 """
 struct BlockPermutedDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
        MatrixAlgebraKit.AbstractAlgorithm
