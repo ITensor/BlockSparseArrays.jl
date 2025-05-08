@@ -1,14 +1,13 @@
-using MatrixAlgebraKit: TruncationStrategy, diagview
+using MatrixAlgebraKit: TruncationStrategy, diagview, svd_trunc!
 
 """
-    BlockPermutedDiagonalTruncationStrategy(strategy::MatrixAlgebraKit.TruncationStrategy)
+    BlockPermutedDiagonalTruncationStrategy(strategy::TruncationStrategy)
 
-A wrapper for `MatrixAlgebraKit.TruncationStrategy` that implements the wrapped strategy on
-a block-by-block basis, which is possible if the input matrix is a block-diagonal matrix or
-a block permuted block-diagonal matrix.
+A wrapper for `TruncationStrategy` that implements the wrapped strategy on a block-by-block
+basis, which is possible if the input matrix is a block-diagonal matrix or a block permuted
+block-diagonal matrix.
 """
-struct BlockPermutedDiagonalTruncationStrategy{T<:MatrixAlgebraKit.TruncationStrategy} <:
-       MatrixAlgebraKit.TruncationStrategy
+struct BlockPermutedDiagonalTruncationStrategy{T<:TruncationStrategy} <: TruncationStrategy
   strategy::T
 end
 
