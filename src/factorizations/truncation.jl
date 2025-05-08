@@ -24,16 +24,23 @@ function MatrixAlgebraKit.truncate!(
   )
 end
 
+# cannot use regular slicing here: I want to slice without altering blockstructure
+# solution: use boolean indexing and slice the mask, effectively cheaply inverting the map
+function MatrixAlgebraKit.findtruncated(
+  values::AbstractVector, strategy::BlockPermutedDiagonalTruncationStrategy
+)
+  ind = MatrixAlgebraKit.findtruncated(values, strategy.strategy)
+  indexmask = falses(length(values))
+  indexmask[ind] .= true
+  return indexmask
+end
+
 function MatrixAlgebraKit.truncate!(
   ::typeof(svd_trunc!),
   (U, S, Vᴴ)::TBlockUSVᴴ,
   strategy::BlockPermutedDiagonalTruncationStrategy,
 )
-  ind = MatrixAlgebraKit.findtruncated(diagview(S), strategy.strategy)
-  # cannot use regular slicing here: I want to slice without altering blockstructure
-  # solution: use boolean indexing and slice the mask, effectively cheaply inverting the map
-  indexmask = falses(size(S, 1))
-  indexmask[ind] .= true
+  indexmask = MatrixAlgebraKit.findtruncated(diagview(S), strategy)
 
   # first determine the block structure of the output to avoid having assumptions on the
   # data structures
