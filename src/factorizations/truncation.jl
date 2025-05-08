@@ -53,7 +53,8 @@ function MatrixAlgebraKit.truncate!(
   bI_Vᴴs = collect(eachblockstoredindex(Vᴴ))
 
   I′ = 0 # number of skipped blocks that got fully truncated
-  for (I, b) in enumerate(blocks(ax))
+  for I in 1:blocksize(ax, 1)
+    b = ax[Block(I)]
     mask = indexmask[b]
 
     if !any(mask)
@@ -82,4 +83,3 @@ function MatrixAlgebraKit.truncate!(
 
   return Ũ, S̃, Ṽᴴ
 end
-
