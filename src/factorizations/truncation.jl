@@ -1,5 +1,15 @@
 using MatrixAlgebraKit: TruncationStrategy, diagview, svd_trunc!
 
+function MatrixAlgebraKit.diagview(A::BlockSparseMatrix{T,Diagonal{T,Vector{T}}}) where {T}
+  D = BlockSparseVector{T}(undef, axes(A, 1))
+  for I in eachblockstoredindex(A)
+    if ==(Int.(Tuple(I))...)
+      D[Tuple(I)[1]] = diagview(A[I])
+    end
+  end
+  return D
+end
+
 """
     BlockPermutedDiagonalTruncationStrategy(strategy::TruncationStrategy)
 
