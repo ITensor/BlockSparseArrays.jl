@@ -82,4 +82,3 @@ function MatrixAlgebraKit.truncate!(
 
   return Ũ, S̃, Ṽᴴ
 end
-
