@@ -145,6 +145,28 @@ end
   return (inds[1][I[1]], to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
+# a[mortar([Block(1)[1:2], Block(2)[1:3]]), mortar([Block(1)[1:2], Block(2)[1:3]])]
+# a[[Block(1)[1:2], Block(2)[1:3]], [Block(1)[1:2], Block(2)[1:3]]]
+@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+  a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
+)
+  # TODO: Use a type like `BlockSlice` to keep track of the blocks.
+  # See https://github.com/JuliaArrays/BlockArrays.jl/pull/459.
+  I1 = blockedunitrange_getindices(inds[1], I[1])
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
+# a[mortar([Block(1)[1:2], Block(2)[1:3]]), mortar([Block(1)[1:2], Block(2)[1:3]])]
+# a[[Block(1)[1:2], Block(2)[1:3]], [Block(1)[1:2], Block(2)[1:3]]]
+@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+  a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
+)
+  # TODO: Use a type like `BlockSlice` to keep track of the blocks.
+  # See https://github.com/JuliaArrays/BlockArrays.jl/pull/459.
+  I1 = blockedunitrange_getindices(inds[1], I[1])
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
 # TODO: Need to implement this!
 function block_merge end
 
