@@ -145,11 +145,14 @@ end
   return (inds[1][I[1]], to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
-# a[[Block(2), Block(1)], [Block(2), Block(1)]]
+# a[mortar([Block(1)[1:2], Block(2)[1:3]]), mortar([Block(1)[1:2], Block(2)[1:3]])]
+# a[[Block(1)[1:2], Block(2)[1:3]], [Block(1)[1:2], Block(2)[1:3]]]
 @interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
-  a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
+  a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
 )
-  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  # TODO: Use a type like `BlockSlice` to keep track of the blocks.
+  # See https://github.com/JuliaArrays/BlockArrays.jl/pull/459.
+  I1 = blockedunitrange_getindices(inds[1], I[1])
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
@@ -158,17 +161,9 @@ end
 @interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
   a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
 )
-  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
-  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
-end
-
-# a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
-# Permute and merge blocks.
-# TODO: This isn't merging blocks yet, that needs to be implemented that.
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
-  a, inds, I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}}
-)
-  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  # TODO: Use a type like `BlockSlice` to keep track of the blocks.
+  # See https://github.com/JuliaArrays/BlockArrays.jl/pull/459.
+  I1 = blockedunitrange_getindices(inds[1], I[1])
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
@@ -424,14 +419,7 @@ function SparseArraysBase.getunstoredindex(
 end
 
 to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)
-to_blocks_indices(I::BlockIndices{<:Vector{<:Block{1}}}) = Int.(I.blocks)
 to_blocks_indices(I::Base.Slice{<:BlockedOneTo}) = Base.OneTo(blocklength(I.indices))
-
-@interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(
-  a::SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{BlockSliceCollection}}}
-)
-  return @view blocks(parent(a))[map(to_blocks_indices, parentindices(a))...]
-end
 
 using BlockArrays: BlocksView
 SparseArraysBase.storedlength(a::BlocksView) = length(a)
