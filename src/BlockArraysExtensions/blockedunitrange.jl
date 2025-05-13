@@ -16,13 +16,16 @@ using BlockArrays:
   findblockindex,
   mortar
 
+# Get the axis of each block of a blocked unit
+# range.
 function eachblockaxis(a::AbstractUnitRange)
-  Base.require_one_based_indexing(a)
-  return map(Base.OneTo, blocklengths(a))
+  return map(only ∘ axes, blocks(a))
 end
 
-function mortar_axis(axeses)
-  return blockedrange(length.(axeses))
+# Take a collection of axes and mortar them
+# into a single blocked axis.
+function mortar_axis(axs)
+  return blockedrange(length.(axs))
 end
 
 # Custom `BlockedUnitRange` constructor that takes a unit range
