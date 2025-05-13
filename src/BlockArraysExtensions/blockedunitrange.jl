@@ -9,10 +9,21 @@ using BlockArrays:
   BlockSlice,
   BlockVector,
   block,
+  blockedrange,
   blockindex,
+  blocklengths,
   findblock,
   findblockindex,
   mortar
+
+function blockaxeses(a::AbstractUnitRange)
+  Base.require_one_based_indexing(a)
+  return map(Base.OneTo, blocklengths(a))
+end
+
+function mortar_axis(axeses)
+  return blockedrange(length.(axeses))
+end
 
 # Custom `BlockedUnitRange` constructor that takes a unit range
 # and a set of block lengths, similar to `BlockArray(::AbstractArray, blocklengths...)`.

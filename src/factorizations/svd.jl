@@ -25,7 +25,16 @@ end
 # the blocktype and element type - something like S = similar(A, BlockType(...))
 function _similar_S(A::AbstractBlockSparseMatrix, s_axis)
   T = real(eltype(A))
-  return BlockSparseArray{T,2,Diagonal{T,Vector{T}}}(undef, (s_axis, s_axis))
+  return BlockSparseMatrix{T,Diagonal{T,Vector{T}}}(undef, (s_axis, s_axis))
+end
+
+function similar_output(
+  ::typeof(svd_compact!), A, s_axis::AbstractUnitRange, alg::MatrixAlgebraKit.Algorithm
+)
+  U = similar(A, axes(A, 1), s_axis)
+  S = _similar_S(A, s_axis)
+  Vt = similar(A, s_axis, axes(A, 2))
+  return U, S, Vt
 end
 
 function MatrixAlgebraKit.initialize_output(
@@ -34,9 +43,9 @@ function MatrixAlgebraKit.initialize_output(
   bm, bn = blocksize(A)
   bmn = min(bm, bn)
 
-  brows = blocklengths(axes(A, 1))
-  bcols = blocklengths(axes(A, 2))
-  slengths = Vector{Int}(undef, bmn)
+  brows = blockaxeses(axes(A, 1))
+  bcols = blockaxeses(axes(A, 2))
+  s_axeses = Vector{eltype(brows)}(undef, bmn)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -46,7 +55,7 @@ function MatrixAlgebraKit.initialize_output(
     row, col = Int.(Tuple(bI))
     nrows = brows[row]
     ncols = bcols[col]
-    slengths[col] = min(nrows, ncols)
+    s_axeses[col] = min(nrows, ncols)
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -54,13 +63,11 @@ function MatrixAlgebraKit.initialize_output(
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
-    slengths[col] = min(brows[row], bcols[col])
+    s_axeses[col] = min(brows[row], bcols[col])
   end
 
-  s_axis = blockedrange(slengths)
-  U = similar(A, axes(A, 1), s_axis)
-  S = _similar_S(A, s_axis)
-  Vt = similar(A, s_axis, axes(A, 2))
+  s_axis = mortar_axis(s_axeses)
+  U, S, Vt = similar_output(svd_compact!, A, s_axis, alg)
 
   # allocate output
   for bI in eachblockstoredindex(A)
