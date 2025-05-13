@@ -16,7 +16,7 @@ using BlockArrays:
   findblockindex,
   mortar
 
-function blockaxeses(a::AbstractUnitRange)
+function eachblockaxis(a::AbstractUnitRange)
   Base.require_one_based_indexing(a)
   return map(Base.OneTo, blocklengths(a))
 end

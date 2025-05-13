@@ -43,8 +43,8 @@ function MatrixAlgebraKit.initialize_output(
   bm, bn = blocksize(A)
   bmn = min(bm, bn)
 
-  brows = blockaxeses(axes(A, 1))
-  bcols = blockaxeses(axes(A, 2))
+  brows = eachblockaxis(axes(A, 1))
+  bcols = eachblockaxis(axes(A, 2))
   s_axeses = Vector{eltype(brows)}(undef, bmn)
 
   # fill in values for blocks that are present
