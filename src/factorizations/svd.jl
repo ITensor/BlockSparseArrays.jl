@@ -29,7 +29,10 @@ function _similar_S(A::AbstractBlockSparseMatrix, s_axis)
 end
 
 function similar_output(
-  ::typeof(svd_compact!), A, s_axis::AbstractUnitRange, alg::MatrixAlgebraKit.Algorithm
+  ::typeof(svd_compact!),
+  A,
+  s_axis::AbstractUnitRange,
+  alg::MatrixAlgebraKit.AbstractAlgorithm,
 )
   U = similar(A, axes(A, 1), s_axis)
   S = _similar_S(A, s_axis)

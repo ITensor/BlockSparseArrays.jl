@@ -16,10 +16,17 @@ using BlockArrays:
   findblockindex,
   mortar
 
+# Get the axes of each block of a block array.
+function eachblockaxes(a::AbstractArray)
+  return map(axes, blocks(a))
+end
+
+axis(a::AbstractVector) = axes(a, 1)
+
 # Get the axis of each block of a blocked unit
 # range.
-function eachblockaxis(a::AbstractUnitRange)
-  return map(only ∘ axes, blocks(a))
+function eachblockaxis(a::AbstractVector)
+  return map(axis, blocks(a))
 end
 
 # Take a collection of axes and mortar them
