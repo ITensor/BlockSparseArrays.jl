@@ -21,13 +21,6 @@ function MatrixAlgebraKit.default_svd_algorithm(A::AbstractBlockSparseMatrix; kw
   return BlockPermutedDiagonalAlgorithm(alg)
 end
 
-# TODO: this should be replaced with a more general similar function that can handle setting
-# the blocktype and element type - something like S = similar(A, BlockType(...))
-function _similar_S(A::AbstractBlockSparseMatrix, s_axis)
-  T = real(eltype(A))
-  return BlockSparseMatrix{T,Diagonal{T,Vector{T}}}(undef, (s_axis, s_axis))
-end
-
 function similar_output(
   ::typeof(svd_compact!),
   A,
@@ -35,7 +28,10 @@ function similar_output(
   alg::MatrixAlgebraKit.AbstractAlgorithm,
 )
   U = similar(A, axes(A, 1), s_axis)
-  S = _similar_S(A, s_axis)
+  T = real(eltype(A))
+  # TODO: this should be replaced with a more general similar function that can handle setting
+  # the blocktype and element type - something like S = similar(A, BlockType(...))
+  S = BlockSparseMatrix{T,Diagonal{T,Vector{T}}}(undef, (s_axis, s_axis))
   Vt = similar(A, s_axis, axes(A, 2))
   return U, S, Vt
 end
