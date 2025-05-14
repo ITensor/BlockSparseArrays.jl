@@ -89,13 +89,23 @@ function MatrixAlgebraKit.initialize_output(
   return U, S, Vt
 end
 
+function similar_output(
+  ::typeof(svd_full!), A, s_axis::AbstractUnitRange, alg::MatrixAlgebraKit.AbstractAlgorithm
+)
+  U = similar(A, axes(A, 1), s_axis)
+  T = real(eltype(A))
+  S = similar(A, T, (s_axis, axes(A, 2)))
+  Vt = similar(A, axes(A, 2), axes(A, 2))
+  return U, S, Vt
+end
+
 function MatrixAlgebraKit.initialize_output(
   ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
 )
   bm, bn = blocksize(A)
 
-  brows = blocklengths(axes(A, 1))
-  slengths = copy(brows)
+  brows = eachblockaxis(axes(A, 1))
+  s_axes = copy(brows)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -104,7 +114,7 @@ function MatrixAlgebraKit.initialize_output(
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
     nrows = brows[row]
-    slengths[col] = nrows
+    s_axes[col] = nrows
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -112,17 +122,14 @@ function MatrixAlgebraKit.initialize_output(
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
-    slengths[col] = brows[row]
+    s_axes[col] = brows[row]
   end
   for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
-    slengths[bn + i] = brows[emptyrows[k]]
+    s_axes[bn + i] = brows[emptyrows[k]]
   end
 
-  s_axis = blockedrange(slengths)
-  U = similar(A, axes(A, 1), s_axis)
-  Tr = real(eltype(A))
-  S = similar(A, Tr, (s_axis, axes(A, 2)))
-  Vt = similar(A, axes(A, 2), axes(A, 2))
+  s_axis = mortar_axis(s_axes)
+  U, S, Vt = similar_output(svd_full!, A, s_axis, alg)
 
   # allocate output
   for bI in eachblockstoredindex(A)
