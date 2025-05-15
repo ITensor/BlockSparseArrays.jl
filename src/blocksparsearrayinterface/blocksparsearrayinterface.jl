@@ -364,7 +364,19 @@ end
 function Base.size(a::SparseSubArrayBlocks)
   return length.(axes(a))
 end
-# TODO: Define `isstored`.
+
+# TODO: Make a faster version for when the slice is blockwise.
+function SparseArraysBase.isstored(
+  a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}
+) where {N}
+  J = Base.reindex(parentindices(a.array), to_indices(a.array, Block.(I)))
+  # TODO: Try doing this blockwise when possible rather
+  # than elementwise.
+  return any(Iterators.product(J...)) do K
+    return isstored(parent(a.array), K...)
+  end
+end
+
 # TODO: Define `getstoredindex`, `getunstoredindex` instead.
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
   # TODO: Should this be defined as `@view a.array[Block(I)]` instead?
@@ -400,9 +412,17 @@ function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) whe
   # TODO: Implement this properly.
   return true
 end
+
 function SparseArraysBase.eachstoredindex(::IndexCartesian, a::SparseSubArrayBlocks)
-  return eachstoredindex(view(blocks(parent(a.array)), blockrange(a)...))
+  return filter(eachindex(a)) do I
+    return isstored(a, I)
+  end
+
+  ## # TODO: This only works for blockwise slices, i.e. slices using
+  ## # `BlockSliceCollection`.
+  ## return eachstoredindex(view(blocks(parent(a.array)), blockrange(a)...))
 end
+
 # TODO: Either make this the generic interface or define
 # `SparseArraysBase.sparse_storage`, which is used
 # to defined this.
