@@ -400,7 +400,7 @@ function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) whe
   # TODO: Implement this properly.
   return true
 end
-function SparseArraysBase.eachstoredindex(a::SparseSubArrayBlocks)
+function SparseArraysBase.eachstoredindex(::IndexCartesian, a::SparseSubArrayBlocks)
   return eachstoredindex(view(blocks(parent(a.array)), blockrange(a)...))
 end
 # TODO: Either make this the generic interface or define

@@ -43,11 +43,20 @@ function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, ax
   return a_dest
 end
 
+function _similar(arraytype::Type{<:AbstractArray}, size::Tuple)
+  return similar(arraytype, size)
+end
+function _similar(
+  ::Type{<:SubArray{<:Any,<:Any,<:ArrayType}}, size::Tuple
+) where {ArrayType}
+  return similar(ArrayType, size)
+end
+
 # Materialize a SubArray view.
 function ArrayLayouts.sub_materialize(
   layout::BlockLayout{<:SparseLayout}, a, axes::Tuple{Vararg{Base.OneTo}}
 )
-  a_dest = blocktype(a)(undef, length.(axes))
+  a_dest = _similar(blocktype(a), length.(axes))
   a_dest .= a
   return a_dest
 end

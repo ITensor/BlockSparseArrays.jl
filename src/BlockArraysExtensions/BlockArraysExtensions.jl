@@ -30,13 +30,14 @@ using SparseArraysBase:
 
 # A return type for `blocks(array)` when `array` isn't blocked.
 # Represents a vector with just that single block.
-struct SingleBlockView{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
+struct SingleBlockView{N,Array<:AbstractArray{<:Any,N}} <: AbstractArray{Array,N}
   array::Array
 end
 Base.parent(a::SingleBlockView) = a.array
+Base.size(a::SingleBlockView) = ntuple(Returns(1), ndims(a))
 blocks_maybe_single(a) = blocks(a)
 blocks_maybe_single(a::Array) = SingleBlockView(a)
-function Base.getindex(a::SingleBlockView{<:Any,N}, index::Vararg{Int,N}) where {N}
+function Base.getindex(a::SingleBlockView{N}, index::Vararg{Int,N}) where {N}
   @assert all(isone, index)
   return parent(a)
 end
@@ -357,7 +358,11 @@ function blockrange(axis::AbstractUnitRange, r::Base.Slice)
 end
 
 function blockrange(axis::AbstractUnitRange, r::NonBlockedVector)
-  return Block(1):Block(1)
+  return Block.(Base.OneTo(1))
+end
+
+function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Integer})
+  return Block.(Base.OneTo(1))
 end
 
 function blockrange(axis::AbstractUnitRange, r)
