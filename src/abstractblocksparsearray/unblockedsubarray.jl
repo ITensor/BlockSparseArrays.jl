@@ -1,10 +1,14 @@
 using ArrayLayouts: ArrayLayouts, MemoryLayout
 using Base.Broadcast: Broadcast, BroadcastStyle
-using BlockArrays: BlockArrays
+using BlockArrays: BlockArrays, Block, BlockIndexRange, BlockSlice
 using TypeParameterAccessors: TypeParameterAccessors, parenttype, similartype
 
+const UnblockedIndices = Union{
+  Vector{<:Integer},BlockSlice{<:Block{1}},BlockSlice{<:BlockIndexRange{1}}
+}
+
 const UnblockedSubArray{T,N} = SubArray{
-  T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{Vector{<:Integer}}}
+  T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{UnblockedIndices}}
 }
 
 function BlockArrays.blocks(a::UnblockedSubArray)
