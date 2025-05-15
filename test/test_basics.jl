@@ -717,7 +717,7 @@ arrayts = (Array, JLArray)
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
     I = ([3, 5], [2, 4])
-    @test a[I...] == Array(a)[I...]
+    @test Array(a[I...]) == Array(a)[I...]
 
     a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
