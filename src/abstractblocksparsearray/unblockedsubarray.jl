@@ -27,6 +27,27 @@ function TypeParameterAccessors.similartype(arraytype::Type{<:UnblockedSubArray}
   return similartype(blocktype(parenttype(arraytype)), elt)
 end
 
+function Base.similar(
+  a::UnblockedSubArray, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
+)
+  return similar(similartype(blocktype(parenttype(a)), elt), axes)
+end
+function Base.similar(a::UnblockedSubArray, elt::Type, size::Tuple{Int,Vararg{Int}})
+  return similar(a, elt, Base.OneTo.(size))
+end
+
+function ArrayLayouts.sub_materialize(a::UnblockedSubArray)
+  a_cpu = adapt(Array, a)
+  a_cpu′ = similar(a_cpu)
+  a_cpu′ .= a_cpu
+  if typeof(a) === typeof(a_cpu)
+    return a_cpu′
+  end
+  a′ = similar(a)
+  a′ .= a_cpu′
+  return a′
+end
+
 function Base.map!(
   f, a_dest::AbstractArray, a_src1::UnblockedSubArray, a_src_rest::UnblockedSubArray...
 )
