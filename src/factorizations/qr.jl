@@ -115,8 +115,7 @@ function MatrixAlgebraKit.check_input(
   ::typeof(qr_compact!), A::AbstractBlockSparseMatrix, QR
 )
   Q, R = QR
-  @assert isa(Q, AbstractBlockSparseMatrix) &&
-    isa(R, AbstractBlockSparseMatrix)
+  @assert isa(Q, AbstractBlockSparseMatrix) && isa(R, AbstractBlockSparseMatrix)
   @assert eltype(A) == eltype(Q) == eltype(R)
   @assert axes(A, 1) == axes(Q, 1) && axes(A, 2) == axes(R, 2)
   @assert axes(Q, 2) == axes(R, 1)
@@ -124,12 +123,9 @@ function MatrixAlgebraKit.check_input(
   return nothing
 end
 
-function MatrixAlgebraKit.check_input(
-  ::typeof(qr_full!), A::AbstractBlockSparseMatrix, QR
-)
+function MatrixAlgebraKit.check_input(::typeof(qr_full!), A::AbstractBlockSparseMatrix, QR)
   Q, R = QR
-  @assert isa(Q, AbstractBlockSparseMatrix) &&
-    isa(R, AbstractBlockSparseMatrix)
+  @assert isa(Q, AbstractBlockSparseMatrix) && isa(R, AbstractBlockSparseMatrix)
   @assert eltype(A) == eltype(Q) == eltype(R)
   @assert axes(A, 1) == axes(Q, 1) && axes(A, 2) == axes(R, 2)
   @assert axes(Q, 2) == axes(R, 1)
