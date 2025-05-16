@@ -44,7 +44,7 @@ function MatrixAlgebraKit.initialize_output(
 
   brows = eachblockaxis(axes(A, 1))
   bcols = eachblockaxis(axes(A, 2))
-  s_axeses = Vector{eltype(brows)}(undef, bmn)
+  s_axes = Vector{eltype(brows)}(undef, bmn)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -52,9 +52,7 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    nrows = brows[row]
-    ncols = bcols[col]
-    s_axeses[col] = min(nrows, ncols)
+    s_axes[col] = argmin(length, (brows[row], bcols[col]))
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -62,10 +60,10 @@ function MatrixAlgebraKit.initialize_output(
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
-    s_axeses[col] = min(brows[row], bcols[col])
+    s_axes[col] = argmin(length, (brows[row], bcols[col]))
   end
 
-  s_axis = mortar_axis(s_axeses)
+  s_axis = mortar_axis(s_axes)
   U, S, Vt = similar_output(svd_compact!, A, s_axis, alg)
 
   # allocate output
