@@ -706,14 +706,14 @@ arrayts = (Array, JLArray)
     @test a[Block(2, 2)[1:2, 2:3]] == b
     @test blockstoredlength(a) == 1
 
-    # Non-contiguous slicing.
+    # Noncontiguous slicing.
     a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
     I = ([3, 5], [2, 4])
     @test Array(a[I...]) == Array(a)[I...]
 
-    # TODO: Fix this and turn it into a proper test.
+    # Noncontiguous slicing.
     a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
