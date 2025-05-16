@@ -64,6 +64,23 @@ function Base.map!(
     a_src_rest...,
   )
 end
+
+# Fix ambiguity and scalar indexing errors with GPUArrays.
+using Adapt: adapt
+using GPUArraysCore: GPUArraysCore
+function Base.map!(
+  f,
+  a_dest::GPUArraysCore.AnyGPUArray,
+  a_src1::UnblockedSubArray,
+  a_src_rest::UnblockedSubArray...,
+)
+  a_dest_cpu = adapt(Array, a_dest)
+  a_srcs_cpu = map(adapt(Array), (a_src1, a_src_rest...))
+  map!(f, a_dest_cpu, a_srcs_cpu...)
+  a_dest .= a_dest_cpu
+  return a_dest
+end
+
 function Base.iszero(a::UnblockedSubArray)
-  return invoke(iszero, Tuple{AbstractArray}, a)
+  return invoke(iszero, Tuple{AbstractArray}, adapt(Array, a))
 end
