@@ -45,6 +45,22 @@ function MatrixAlgebraKit.findtruncated(
   return indexmask
 end
 
+function similar_truncate(
+  ::typeof(svd_trunc!),
+  (U, S, Vᴴ)::TBlockUSVᴴ,
+  strategy::BlockPermutedDiagonalTruncationStrategy,
+  indexmask=MatrixAlgebraKit.findtruncated(diagview(S), strategy),
+)
+  ax = axes(S, 1)
+  counter = Base.Fix1(count, Base.Fix1(getindex, indexmask))
+  s_lengths = filter!(>(0), map(counter, blocks(ax)))
+  s_axis = blockedrange(s_lengths)
+  Ũ = similar(U, axes(U, 1), s_axis)
+  S̃ = similar(S, s_axis, s_axis)
+  Ṽᴴ = similar(Vᴴ, s_axis, axes(Vᴴ, 2))
+  return Ũ, S̃, Ṽᴴ
+end
+
 function MatrixAlgebraKit.truncate!(
   ::typeof(svd_trunc!),
   (U, S, Vᴴ)::TBlockUSVᴴ,
@@ -54,13 +70,7 @@ function MatrixAlgebraKit.truncate!(
 
   # first determine the block structure of the output to avoid having assumptions on the
   # data structures
-  ax = axes(S, 1)
-  counter = Base.Fix1(count, Base.Fix1(getindex, indexmask))
-  Slengths = filter!(>(0), map(counter, blocks(ax)))
-  Sax = blockedrange(Slengths)
-  Ũ = similar(U, axes(U, 1), Sax)
-  S̃ = similar(S, Sax, Sax)
-  Ṽᴴ = similar(Vᴴ, Sax, axes(Vᴴ, 2))
+  Ũ, S̃, Ṽᴴ = similar_truncate(svd_trunc!, (U, S, Vᴴ), strategy, indexmask)
 
   # then loop over the blocks and assign the data
   # TODO: figure out if we can presort and loop over the blocks -
@@ -70,6 +80,7 @@ function MatrixAlgebraKit.truncate!(
   bI_Vᴴs = collect(eachblockstoredindex(Vᴴ))
 
   I′ = 0 # number of skipped blocks that got fully truncated
+  ax = axes(S, 1)
   for I in 1:blocksize(ax, 1)
     b = ax[Block(I)]
     mask = indexmask[b]
