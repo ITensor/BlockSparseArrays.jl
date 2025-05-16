@@ -107,8 +107,7 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    nrows = brows[row]
-    s_axes[col] = nrows
+    s_axes[col] = brows[row]
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
