@@ -1,5 +1,20 @@
+using BlockArrays: BlockRange, blockisequal
 using DerivableInterfaces: @interface, AbstractArrayInterface, interface
 using GPUArraysCore: @allowscalar
+
+function map_blockwise!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
+  # TODO: This assumes element types are numbers, generalize this logic.
+  f_preserves_zeros = f(zero.(eltype.(a_srcs))...) == zero(eltype(a_dest))
+  Is = if f_preserves_zeros
+    ∪(map(eachblockstoredindex, (a_dest, a_srcs...))...)
+  else
+    BlockRange(a_dest)
+  end
+  for I in Is
+    map!(f, view(a_dest, I), map(Base.Fix2(view, I), a_srcs)...)
+  end
+  return a_dest
+end
 
 # TODO: Rewrite this so that it takes the blocking structure
 # made by combining the blocking of the axes (i.e. the blocking that
@@ -14,6 +29,16 @@ using GPUArraysCore: @allowscalar
   end
   if iszero(ndims(a_dest))
     @interface interface map_zero_dim!(f, a_dest, a_srcs...)
+    return a_dest
+  end
+  blockwise = all(
+    ntuple(ndims(a_dest)) do dim
+      ax = map(Base.Fix2(axes, dim), (a_dest, a_srcs...))
+      return blockisequal(ax...)
+    end,
+  )
+  if blockwise
+    map_blockwise!(f, a_dest, a_srcs...)
     return a_dest
   end
   # TODO: This assumes element types are numbers, generalize this logic.
