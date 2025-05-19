@@ -15,7 +15,7 @@ end
 
 # Find the common stored blocks, assuming the block structures are the same.
 function union_eachblockstoredindex(as::AbstractArray...)
-  return ∪(map(eachblockstoredindex, (a_dest, a_srcs...))...)
+  return ∪(map(eachblockstoredindex, as))
 end
 
 function map_blockwise!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
