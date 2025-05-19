@@ -2,11 +2,27 @@ using BlockArrays: BlockRange, blockisequal
 using DerivableInterfaces: @interface, AbstractArrayInterface, interface
 using GPUArraysCore: @allowscalar
 
+# Check if the block structures are the same.
+function same_block_structure(as::AbstractArray...)
+  isempty(as) && return true
+  return all(
+    ntuple(ndims(first(as))) do dim
+      ax = map(Base.Fix2(axes, dim), as)
+      return blockisequal(ax...)
+    end,
+  )
+end
+
+# Find the common stored blocks, assuming the block structures are the same.
+function union_eachblockstoredindex(as::AbstractArray...)
+  return ∪(map(eachblockstoredindex, (a_dest, a_srcs...))...)
+end
+
 function map_blockwise!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
   # TODO: This assumes element types are numbers, generalize this logic.
   f_preserves_zeros = f(zero.(eltype.(a_srcs))...) == zero(eltype(a_dest))
   Is = if f_preserves_zeros
-    ∪(map(eachblockstoredindex, (a_dest, a_srcs...))...)
+    union_eachblockstoredindex(a_dest, a_srcs...)
   else
     BlockRange(a_dest)
   end
@@ -46,13 +62,7 @@ end
     @interface interface map_zero_dim!(f, a_dest, a_srcs...)
     return a_dest
   end
-  blockwise = all(
-    ntuple(ndims(a_dest)) do dim
-      ax = map(Base.Fix2(axes, dim), (a_dest, a_srcs...))
-      return blockisequal(ax...)
-    end,
-  )
-  if blockwise
+  if same_block_structure(a_dest, a_srcs...)
     map_blockwise!(f, a_dest, a_srcs...)
     return a_dest
   end
