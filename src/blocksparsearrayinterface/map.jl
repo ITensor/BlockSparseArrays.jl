@@ -22,20 +22,37 @@ using GPUArraysCore: @allowscalar
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
     BI_dest = blockindexrange(a_dest, I)
     BI_srcs = map(a_src -> blockindexrange(a_src, I), a_srcs)
+
+    @show BI_dest
+    @show BI_srcs
+
     # TODO: Investigate why this doesn't work:
     # block_dest = @view a_dest[_block(BI_dest)]
     block_dest = blocks_maybe_single(a_dest)[Int.(Tuple(_block(BI_dest)))...]
     # TODO: Investigate why this doesn't work:
     # block_srcs = ntuple(i -> @view(a_srcs[i][_block(BI_srcs[i])]), length(a_srcs))
+
+    @show blocks_maybe_single(a_srcs[1])
+    @show Int.(Tuple(_block(BI_srcs[1])))
+
     block_srcs = ntuple(length(a_srcs)) do i
       return blocks_maybe_single(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
     end
+
+    display(block_srcs[1])
+    display(block_srcs[1].indices)
+
     subblock_dest = @view block_dest[BI_dest.indices...]
     subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
     I_dest = CartesianIndex(Int.(Tuple(_block(BI_dest))))
     # If the function preserves zero values and all of the source blocks are zero,
     # the output block will be zero. In that case, if the block isn't stored yet,
     # don't do anything.
+
+    @show typeof(subblock_srcs[1])
+    display(subblock_srcs[1])
+    error()
+
     if f_preserves_zeros && all(iszero, subblock_srcs) && !isstored(blocks(a_dest), I_dest)
       continue
     end
