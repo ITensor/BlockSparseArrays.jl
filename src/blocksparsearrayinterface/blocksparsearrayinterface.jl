@@ -445,7 +445,7 @@ end
 
 to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)
 to_blocks_indices(I::BlockIndices{<:Vector{<:Block{1}}}) = Int.(I.blocks)
-to_blocks_indices(I::Base.Slice{<:BlockedOneTo}) = Base.OneTo(blocklength(I.indices))
+to_blocks_indices(I::Base.Slice) = Base.OneTo(blocklength(I.indices))
 
 @interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(
   a::SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{BlockSliceCollection}}}
