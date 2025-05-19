@@ -11,7 +11,22 @@ function map_blockwise!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
     BlockRange(a_dest)
   end
   for I in Is
-    map!(f, view(a_dest, I), map(Base.Fix2(view, I), a_srcs)...)
+    # TODO: Use:
+    # block_dest = @view a_dest[I]
+    # or:
+    # block_dest = @view! a_dest[I]
+    block_dest = blocks_maybe_single(a_dest)[Int.(Tuple(I))...]
+    # TODO: Use:
+    # block_srcs = map(a_src -> @view(a_src[I]), a_srcs)
+    block_srcs = map(a_srcs) do a_src
+      return blocks_maybe_single(a_src)[Int.(Tuple(I))...]
+    end
+    # TODO: Use `map!!` to handle immutable blocks.
+    map!(f, block_dest, block_srcs...)
+    # Replace the entire block, handles initializing new blocks
+    # or if blocks are immutable.
+    # TODO: Use `a_dest[I] = block_dest`.
+    blocks(a_dest)[Int.(Tuple(I))...] = block_dest
   end
   return a_dest
 end
