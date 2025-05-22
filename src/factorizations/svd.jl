@@ -12,13 +12,25 @@ struct BlockPermutedDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
   alg::A
 end
 
-# TODO: this is a hardcoded for now to get around this function not being defined in the
-# type domain
-function MatrixAlgebraKit.default_svd_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
+function default_blocksparse_svd_algorithm(f, A; kwargs...)
   blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} ||
     error("unsupported type: $(blocktype(A))")
+  # TODO: this is a hardcoded for now to get around this function not being defined in the
+  # type domain
+  # alg = MatrixAlgebraKit.default_algorithm(f, blocktype(A); kwargs...)
   alg = MatrixAlgebraKit.LAPACK_DivideAndConquer(; kwargs...)
   return BlockPermutedDiagonalAlgorithm(alg)
+end
+
+function MatrixAlgebraKit.default_algorithm(
+  f::typeof(svd_compact!), A::AbstractBlockSparseMatrix; kwargs...
+)
+  return default_blocksparse_svd_algorithm(f, A; kwargs...)
+end
+function MatrixAlgebraKit.default_algorithm(
+  f::typeof(svd_full!), A::AbstractBlockSparseMatrix; kwargs...
+)
+  return default_blocksparse_svd_algorithm(f, A; kwargs...)
 end
 
 function similar_output(
