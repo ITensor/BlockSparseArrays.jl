@@ -30,13 +30,14 @@ using SparseArraysBase:
 
 # A return type for `blocks(array)` when `array` isn't blocked.
 # Represents a vector with just that single block.
-struct SingleBlockView{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
+struct SingleBlockView{N,Array<:AbstractArray{<:Any,N}} <: AbstractArray{Array,N}
   array::Array
 end
 Base.parent(a::SingleBlockView) = a.array
+Base.size(a::SingleBlockView) = ntuple(Returns(1), ndims(a))
 blocks_maybe_single(a) = blocks(a)
 blocks_maybe_single(a::Array) = SingleBlockView(a)
-function Base.getindex(a::SingleBlockView{<:Any,N}, index::Vararg{Int,N}) where {N}
+function Base.getindex(a::SingleBlockView{N}, index::Vararg{Int,N}) where {N}
   @assert all(isone, index)
   return parent(a)
 end
@@ -289,13 +290,6 @@ function blockrange(axis::AbstractUnitRange, r::Int)
   return error("Slicing with integer values isn't supported.")
 end
 
-function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Block{1}})
-  for b in r
-    @assert b ∈ blockaxes(axis, 1)
-  end
-  return r
-end
-
 # This handles changing the blocking, for example:
 # a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
 # I = blockedrange([4, 4])
@@ -314,11 +308,18 @@ end
 # I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
 # I = BlockVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
 # a[I, I]
-function blockrange(axis::BlockedOneTo{<:Integer}, r::AbstractBlockVector{<:Block{1}})
+function blockrange(axis::AbstractUnitRange, r::AbstractBlockVector{<:Block{1}})
   for b in r
     @assert b ∈ blockaxes(axis, 1)
   end
   return only(blockaxes(r))
+end
+
+function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Block{1}})
+  for b in r
+    @assert b ∈ blockaxes(axis, 1)
+  end
+  return r
 end
 
 using BlockArrays: BlockSlice
@@ -357,7 +358,11 @@ function blockrange(axis::AbstractUnitRange, r::Base.Slice)
 end
 
 function blockrange(axis::AbstractUnitRange, r::NonBlockedVector)
-  return Block(1):Block(1)
+  return Block.(Base.OneTo(1))
+end
+
+function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Integer})
+  return Block.(Base.OneTo(1))
 end
 
 function blockrange(axis::AbstractUnitRange, r)

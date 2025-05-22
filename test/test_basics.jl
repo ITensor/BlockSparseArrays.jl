@@ -55,13 +55,6 @@ arrayts = (Array, JLArray)
     a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
-    @test_broken a[:, [2, 4]]
-    @test_broken a[[3, 5], [2, 4]]
-
-    # TODO: Fix this and turn it into a proper test.
-    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
-    a[Block(1, 1)] = dev(randn(elt, 2, 2))
-    a[Block(2, 2)] = dev(randn(elt, 3, 3))
     @allowscalar @test a[2:4, 4] == Array(a)[2:4, 4]
     @test_broken a[4, 2:4]
 
@@ -712,6 +705,20 @@ arrayts = (Array, JLArray)
     @test a[Block(2, 2)[1:2, 2:3]] == x
     @test a[Block(2, 2)[1:2, 2:3]] == b
     @test blockstoredlength(a) == 1
+
+    # Noncontiguous slicing.
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
+    a[Block(1, 1)] = dev(randn(elt, 2, 2))
+    a[Block(2, 2)] = dev(randn(elt, 3, 3))
+    I = ([3, 5], [2, 4])
+    @test Array(a[I...]) == Array(a)[I...]
+
+    # Noncontiguous slicing.
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
+    a[Block(1, 1)] = dev(randn(elt, 2, 2))
+    a[Block(2, 2)] = dev(randn(elt, 3, 3))
+    I = (:, [2, 4])
+    @test Array(a[I...]) == Array(a)[I...]
 
     a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
