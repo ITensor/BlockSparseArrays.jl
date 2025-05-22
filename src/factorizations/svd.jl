@@ -44,7 +44,7 @@ function MatrixAlgebraKit.initialize_output(
 
   brows = eachblockaxis(axes(A, 1))
   bcols = eachblockaxis(axes(A, 2))
-  s_axes = Vector{eltype(brows)}(undef, bmn)
+  s_axes = similar(brows, bmn)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -99,7 +99,7 @@ function MatrixAlgebraKit.initialize_output(
   bm, bn = blocksize(A)
 
   brows = eachblockaxis(axes(A, 1))
-  s_axes = copy(brows)
+  s_axes = similar(brows)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
