@@ -12,20 +12,37 @@ struct BlockPermutedDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
   alg::A
 end
 
-# TODO: this is a hardcoded for now to get around this function not being defined in the
-# type domain
-function MatrixAlgebraKit.default_svd_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
+function default_blocksparse_svd_algorithm(f, A; kwargs...)
   blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} ||
     error("unsupported type: $(blocktype(A))")
+  # TODO: this is a hardcoded for now to get around this function not being defined in the
+  # type domain
+  # alg = MatrixAlgebraKit.default_algorithm(f, blocktype(A); kwargs...)
   alg = MatrixAlgebraKit.LAPACK_DivideAndConquer(; kwargs...)
   return BlockPermutedDiagonalAlgorithm(alg)
 end
 
-# TODO: this should be replaced with a more general similar function that can handle setting
-# the blocktype and element type - something like S = similar(A, BlockType(...))
-function _similar_S(A::AbstractBlockSparseMatrix, s_axis)
+function MatrixAlgebraKit.default_algorithm(
+  f::typeof(svd_compact!), A::AbstractBlockSparseMatrix; kwargs...
+)
+  return default_blocksparse_svd_algorithm(f, A; kwargs...)
+end
+function MatrixAlgebraKit.default_algorithm(
+  f::typeof(svd_full!), A::AbstractBlockSparseMatrix; kwargs...
+)
+  return default_blocksparse_svd_algorithm(f, A; kwargs...)
+end
+
+function similar_output(
+  ::typeof(svd_compact!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
+)
+  U = similar(A, axes(A, 1), S_axes[1])
   T = real(eltype(A))
-  return BlockSparseArray{T,2,Diagonal{T,Vector{T}}}(undef, (s_axis, s_axis))
+  # TODO: this should be replaced with a more general similar function that can handle setting
+  # the blocktype and element type - something like S = similar(A, BlockType(...))
+  S = BlockSparseMatrix{T,Diagonal{T,Vector{T}}}(undef, S_axes)
+  Vt = similar(A, S_axes[2], axes(A, 2))
+  return U, S, Vt
 end
 
 function MatrixAlgebraKit.initialize_output(
@@ -34,9 +51,10 @@ function MatrixAlgebraKit.initialize_output(
   bm, bn = blocksize(A)
   bmn = min(bm, bn)
 
-  brows = blocklengths(axes(A, 1))
-  bcols = blocklengths(axes(A, 2))
-  slengths = Vector{Int}(undef, bmn)
+  brows = eachblockaxis(axes(A, 1))
+  bcols = eachblockaxis(axes(A, 2))
+  u_axes = similar(brows, bmn)
+  v_axes = similar(brows, bmn)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -44,9 +62,9 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    nrows = brows[row]
-    ncols = bcols[col]
-    slengths[col] = min(nrows, ncols)
+    len = minimum(length, (brows[row], bcols[col]))
+    u_axes[col] = brows[row][Base.OneTo(len)]
+    v_axes[col] = bcols[col][Base.OneTo(len)]
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -54,13 +72,15 @@ function MatrixAlgebraKit.initialize_output(
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
-    slengths[col] = min(brows[row], bcols[col])
+    len = minimum(length, (brows[row], bcols[col]))
+    u_axes[col] = brows[row][Base.OneTo(len)]
+    v_axes[col] = bcols[col][Base.OneTo(len)]
   end
 
-  s_axis = blockedrange(slengths)
-  U = similar(A, axes(A, 1), s_axis)
-  S = _similar_S(A, s_axis)
-  Vt = similar(A, s_axis, axes(A, 2))
+  u_axis = mortar_axis(u_axes)
+  v_axis = mortar_axis(v_axes)
+  S_axes = (u_axis, v_axis)
+  U, S, Vt = similar_output(svd_compact!, A, S_axes, alg)
 
   # allocate output
   for bI in eachblockstoredindex(A)
@@ -79,13 +99,23 @@ function MatrixAlgebraKit.initialize_output(
   return U, S, Vt
 end
 
+function similar_output(
+  ::typeof(svd_full!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
+)
+  U = similar(A, axes(A, 1), S_axes[1])
+  T = real(eltype(A))
+  S = similar(A, T, S_axes)
+  Vt = similar(A, S_axes[2], axes(A, 2))
+  return U, S, Vt
+end
+
 function MatrixAlgebraKit.initialize_output(
   ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
 )
   bm, bn = blocksize(A)
 
-  brows = blocklengths(axes(A, 1))
-  slengths = copy(brows)
+  brows = eachblockaxis(axes(A, 1))
+  u_axes = similar(brows)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -93,8 +123,7 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    nrows = brows[row]
-    slengths[col] = nrows
+    u_axes[col] = brows[row]
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -102,17 +131,15 @@ function MatrixAlgebraKit.initialize_output(
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
-    slengths[col] = brows[row]
+    u_axes[col] = brows[row]
   end
   for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
-    slengths[bn + i] = brows[emptyrows[k]]
+    u_axes[bn + i] = brows[emptyrows[k]]
   end
 
-  s_axis = blockedrange(slengths)
-  U = similar(A, axes(A, 1), s_axis)
-  Tr = real(eltype(A))
-  S = similar(A, Tr, (s_axis, axes(A, 2)))
-  Vt = similar(A, axes(A, 2), axes(A, 2))
+  u_axis = mortar_axis(u_axes)
+  S_axes = (u_axis, axes(A, 2))
+  U, S, Vt = similar_output(svd_full!, A, S_axes, alg)
 
   # allocate output
   for bI in eachblockstoredindex(A)

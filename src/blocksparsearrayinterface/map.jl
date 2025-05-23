@@ -1,5 +1,51 @@
+using BlockArrays: BlockRange, blockisequal
 using DerivableInterfaces: @interface, AbstractArrayInterface, interface
 using GPUArraysCore: @allowscalar
+
+# Check if the block structures are the same.
+function same_block_structure(as::AbstractArray...)
+  isempty(as) && return true
+  return all(
+    ntuple(ndims(first(as))) do dim
+      ax = map(Base.Fix2(axes, dim), as)
+      return blockisequal(ax...)
+    end,
+  )
+end
+
+# Find the common stored blocks, assuming the block structures are the same.
+function union_eachblockstoredindex(as::AbstractArray...)
+  return ∪(map(eachblockstoredindex, as)...)
+end
+
+function map_blockwise!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
+  # TODO: This assumes element types are numbers, generalize this logic.
+  f_preserves_zeros = f(zero.(eltype.(a_srcs))...) == zero(eltype(a_dest))
+  Is = if f_preserves_zeros
+    union_eachblockstoredindex(a_dest, a_srcs...)
+  else
+    BlockRange(a_dest)
+  end
+  for I in Is
+    # TODO: Use:
+    # block_dest = @view a_dest[I]
+    # or:
+    # block_dest = @view! a_dest[I]
+    block_dest = blocks_maybe_single(a_dest)[Int.(Tuple(I))...]
+    # TODO: Use:
+    # block_srcs = map(a_src -> @view(a_src[I]), a_srcs)
+    block_srcs = map(a_srcs) do a_src
+      return blocks_maybe_single(a_src)[Int.(Tuple(I))...]
+    end
+    # TODO: Use `map!!` to handle immutable blocks.
+    map!(f, block_dest, block_srcs...)
+    # Replace the entire block, handles initializing new blocks
+    # or if blocks are immutable.
+    # TODO: Use `a_dest[I] = block_dest`.
+    blocks(a_dest)[Int.(Tuple(I))...] = block_dest
+  end
+  return a_dest
+end
 
 # TODO: Rewrite this so that it takes the blocking structure
 # made by combining the blocking of the axes (i.e. the blocking that
@@ -14,6 +60,10 @@ using GPUArraysCore: @allowscalar
   end
   if iszero(ndims(a_dest))
     @interface interface map_zero_dim!(f, a_dest, a_srcs...)
+    return a_dest
+  end
+  if same_block_structure(a_dest, a_srcs...)
+    map_blockwise!(f, a_dest, a_srcs...)
     return a_dest
   end
   # TODO: This assumes element types are numbers, generalize this logic.

@@ -9,10 +9,31 @@ using BlockArrays:
   BlockSlice,
   BlockVector,
   block,
+  blockedrange,
   blockindex,
+  blocklengths,
   findblock,
   findblockindex,
   mortar
+
+# Get the axes of each block of a block array.
+function eachblockaxes(a::AbstractArray)
+  return map(axes, blocks(a))
+end
+
+axis(a::AbstractVector) = axes(a, 1)
+
+# Get the axis of each block of a blocked unit
+# range.
+function eachblockaxis(a::AbstractVector)
+  return map(axis, blocks(a))
+end
+
+# Take a collection of axes and mortar them
+# into a single blocked axis.
+function mortar_axis(axs)
+  return blockedrange(length.(axs))
+end
 
 # Custom `BlockedUnitRange` constructor that takes a unit range
 # and a set of block lengths, similar to `BlockArray(::AbstractArray, blocklengths...)`.
