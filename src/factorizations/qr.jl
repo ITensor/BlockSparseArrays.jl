@@ -19,6 +19,22 @@ function MatrixAlgebraKit.default_algorithm(
   return default_blocksparse_qr_algorithm(A; kwargs...)
 end
 
+function similar_output(
+  ::typeof(qr_compact!), A, R_axis, alg::MatrixAlgebraKit.AbstractAlgorithm
+)
+  Q = similar(A, axes(A, 1), R_axis)
+  R = similar(A, R_axis, axes(A, 2))
+  return Q, R
+end
+
+function similar_output(
+  ::typeof(qr_full!), A, R_axis, alg::MatrixAlgebraKit.AbstractAlgorithm
+)
+  Q = similar(A, axes(A, 1), R_axis)
+  R = similar(A, R_axis, axes(A, 2))
+  return Q, R
+end
+
 function MatrixAlgebraKit.initialize_output(
   ::typeof(qr_compact!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
 )
@@ -49,8 +65,7 @@ function MatrixAlgebraKit.initialize_output(
   end
 
   r_axis = mortar_axis(r_axes)
-  Q = similar(A, axes(A, 1), r_axis)
-  R = similar(A, r_axis, axes(A, 2))
+  Q, R = similar_output(qr_compact!, A, r_axis, alg)
 
   # allocate output
   for bI in eachblockstoredindex(A)
@@ -97,8 +112,7 @@ function MatrixAlgebraKit.initialize_output(
   end
 
   r_axis = mortar_axis(r_axes)
-  Q = similar(A, axes(A, 1), r_axis)
-  R = similar(A, r_axis, axes(A, 2))
+  Q, R = similar_output(qr_full!, A, r_axis, alg)
 
   # allocate output
   for bI in eachblockstoredindex(A)
