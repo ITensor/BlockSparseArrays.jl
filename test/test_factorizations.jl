@@ -1,6 +1,7 @@
 using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
 using BlockSparseArrays: BlockSparseArray, BlockDiagonal, eachblockstoredindex
-using MatrixAlgebraKit: svd_compact, svd_full, svd_trunc, truncrank, trunctol
+using MatrixAlgebraKit:
+  qr_compact, qr_full, svd_compact, svd_full, svd_trunc, truncrank, trunctol
 using LinearAlgebra: LinearAlgebra
 using Random: Random
 using Test: @inferred, @testset, @test
@@ -152,5 +153,31 @@ end
 
     @test (U1' * U1 ≈ LinearAlgebra.I)
     @test (V1ᴴ * V1ᴴ' ≈ LinearAlgebra.I)
+  end
+end
+
+@testset "qr_compact" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  for i in [1, 2], j in [1, 2], k in [1, 2], l in [1, 2]
+    A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
+    A[Block(1, 1)] = randn(T, i, k)
+    A[Block(2, 2)] = randn(T, j, l)
+    Q, R = qr_compact(A)
+    @test Matrix(Q'Q) ≈ LinearAlgebra.I
+    @test A ≈ Q * R
+  end
+end
+
+@testset "qr_full" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
+    A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
+    A[Block(1, 1)] = randn(T, i, k)
+    A[Block(2, 2)] = randn(T, j, l)
+    Q, R = qr_full(A)
+    Q′, R′ = qr_full(Matrix(A))
+    @test size(Q) == size(Q′)
+    @test size(R) == size(R′)
+    @test Matrix(Q'Q) ≈ LinearAlgebra.I
+    @test Matrix(Q * Q') ≈ LinearAlgebra.I
+    @test A ≈ Q * R
   end
 end
