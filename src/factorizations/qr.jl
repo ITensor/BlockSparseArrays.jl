@@ -52,7 +52,7 @@ function MatrixAlgebraKit.initialize_output(
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
     len = minimum(length, (brows[row], bcols[col]))
-    r_axes[col] = bcols[col][Base.OneTo(len)]
+    r_axes[col] = brows[row][Base.OneTo(len)]
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -61,7 +61,7 @@ function MatrixAlgebraKit.initialize_output(
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
     len = minimum(length, (brows[row], bcols[col]))
-    r_axes[col] = bcols[col][Base.OneTo(len)]
+    r_axes[col] = brows[row][Base.OneTo(len)]
   end
 
   r_axis = mortar_axis(r_axes)
