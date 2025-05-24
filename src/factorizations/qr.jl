@@ -25,9 +25,9 @@ function MatrixAlgebraKit.initialize_output(
   bm, bn = blocksize(A)
   bmn = min(bm, bn)
 
-  brows = blocklengths(axes(A, 1))
-  bcols = blocklengths(axes(A, 2))
-  rlengths = Vector{Int}(undef, bmn)
+  brows = eachblockaxis(axes(A, 1))
+  bcols = eachblockaxis(axes(A, 2))
+  r_axes = similar(brows, bmn)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -35,9 +35,8 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    nrows = brows[row]
-    ncols = bcols[col]
-    rlengths[col] = min(nrows, ncols)
+    len = minimum(length, (brows[row], bcols[col]))
+    r_axes[col] = bcols[col][Base.OneTo(len)]
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -45,10 +44,11 @@ function MatrixAlgebraKit.initialize_output(
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
-    rlengths[col] = min(brows[row], bcols[col])
+    len = minimum(length, (brows[row], bcols[col]))
+    r_axes[col] = bcols[col][Base.OneTo(len)]
   end
 
-  r_axis = blockedrange(rlengths)
+  r_axis = mortar_axis(r_axes)
   Q = similar(A, axes(A, 1), r_axis)
   R = similar(A, r_axis, axes(A, 2))
 
@@ -73,8 +73,8 @@ function MatrixAlgebraKit.initialize_output(
 )
   bm, bn = blocksize(A)
 
-  brows = blocklengths(axes(A, 1))
-  rlengths = copy(brows)
+  brows = eachblockaxis(axes(A, 1))
+  r_axes = copy(brows)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -82,8 +82,7 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    nrows = brows[row]
-    rlengths[col] = nrows
+    r_axes[col] = brows[row]
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -91,13 +90,13 @@ function MatrixAlgebraKit.initialize_output(
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
-    rlengths[col] = brows[row]
+    r_axes[col] = brows[row]
   end
   for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
-    rlengths[bn + i] = brows[emptyrows[k]]
+    r_axes[bn + i] = brows[emptyrows[k]]
   end
 
-  r_axis = blockedrange(rlengths)
+  r_axis = mortar_axis(r_axes)
   Q = similar(A, axes(A, 1), r_axis)
   R = similar(A, r_axis, axes(A, 2))
 
