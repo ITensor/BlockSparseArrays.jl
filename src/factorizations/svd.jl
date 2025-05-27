@@ -265,7 +265,3 @@ function MatrixAlgebraKit.svd_full!(
 
   return USVᴴ
 end
-
-function MatrixAlgebraKit.left_orth_svd!(A::AbstractBlockSparseMatrix, VC, alg, trunc)
-  return @invoke MatrixAlgebraKit.left_orth_svd!(A::Any, VC::Any, alg::Any, trunc::Any)
-end
