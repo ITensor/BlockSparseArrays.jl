@@ -1,10 +1,12 @@
 using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
 using BlockSparseArrays: BlockSparseArray, BlockDiagonal, eachblockstoredindex
 using MatrixAlgebraKit:
+  left_polar,
   lq_compact,
   lq_full,
   qr_compact,
   qr_full,
+  right_polar,
   svd_compact,
   svd_full,
   svd_trunc,
@@ -214,4 +216,24 @@ end
     @test Matrix(Q'Q) ≈ LinearAlgebra.I
     @test A ≈ L * Q
   end
+end
+
+@testset "left_polar (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([3, 4], [2, 3]))
+  A[Block(1, 1)] = randn(T, 3, 2)
+  A[Block(2, 2)] = randn(T, 4, 3)
+
+  U, C = left_polar(A)
+  @test U * C ≈ A
+  @test Matrix(U'U) ≈ LinearAlgebra.I
+end
+
+@testset "right_polar (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [3, 4]))
+  A[Block(1, 1)] = randn(T, 2, 3)
+  A[Block(2, 2)] = randn(T, 3, 4)
+
+  C, U = right_polar(A)
+  @test C * U ≈ A
+  @test Matrix(U * U') ≈ LinearAlgebra.I
 end
