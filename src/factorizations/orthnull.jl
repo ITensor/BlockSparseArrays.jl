@@ -1,5 +1,11 @@
 using MatrixAlgebraKit:
-  MatrixAlgebraKit, left_polar, qr_compact, select_algorithm, svd_compact
+  MatrixAlgebraKit,
+  left_polar,
+  lq_compact,
+  qr_compact,
+  right_polar,
+  select_algorithm,
+  svd_compact
 
 function MatrixAlgebraKit.left_orth(
   A::AbstractBlockSparseMatrix;
@@ -15,9 +21,7 @@ function MatrixAlgebraKit.left_orth(
   if kind == :qr
     return left_orth_qr(A, alg_qr)
   elseif kind == :polar
-    # TODO: Implement this.
-    # return left_orth_polar(A, alg_polar)
-    return left_orth_svd(A, alg_svd)
+    return left_orth_polar(A, alg_polar)
   elseif kind == :svd
     return left_orth_svd(A, alg_svd, trunc)
   else
@@ -39,7 +43,7 @@ function left_orth_svd(A, alg, trunc::Nothing=nothing)
 end
 
 function MatrixAlgebraKit.right_orth(
-  A;
+  A::AbstractBlockSparseMatrix;
   trunc=nothing,
   kind=isnothing(trunc) ? :lq : :svd,
   alg_lq=(; positive=true),
@@ -54,9 +58,7 @@ function MatrixAlgebraKit.right_orth(
     # return right_orth_lq(A, alg_lq)
     return right_orth_svd(A, alg_svd)
   elseif kind == :polar
-    # TODO: Implement this.
-    # return right_orth_polar(A, alg_polar)
-    return right_orth_svd(A, alg_svd)
+    return right_orth_polar(A, alg_polar)
   elseif kind == :svd
     return right_orth_svd(A, alg_svd, trunc)
   else

@@ -1,7 +1,17 @@
 using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
 using BlockSparseArrays: BlockSparseArray, BlockDiagonal, eachblockstoredindex
 using MatrixAlgebraKit:
-  qr_compact, qr_full, svd_compact, svd_full, svd_trunc, truncrank, trunctol
+  left_orth,
+  left_polar,
+  qr_compact,
+  qr_full,
+  right_orth,
+  right_polar,
+  svd_compact,
+  svd_full,
+  svd_trunc,
+  truncrank,
+  trunctol
 using LinearAlgebra: LinearAlgebra
 using Random: Random
 using Test: @inferred, @testset, @test
@@ -156,7 +166,7 @@ end
   end
 end
 
-@testset "qr_compact" for T in (Float32, Float64, ComplexF32, ComplexF64)
+@testset "qr_compact (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
   for i in [1, 2], j in [1, 2], k in [1, 2], l in [1, 2]
     A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
     A[Block(1, 1)] = randn(T, i, k)
@@ -167,7 +177,7 @@ end
   end
 end
 
-@testset "qr_full" for T in (Float32, Float64, ComplexF32, ComplexF64)
+@testset "qr_full (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
   for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
     A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
     A[Block(1, 1)] = randn(T, i, k)
@@ -179,5 +189,49 @@ end
     @test Matrix(Q'Q) ≈ LinearAlgebra.I
     @test Matrix(Q * Q') ≈ LinearAlgebra.I
     @test A ≈ Q * R
+  end
+end
+
+@testset "left_polar (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([3, 4], [2, 3]))
+  A[Block(1, 1)] = randn(T, 3, 2)
+  A[Block(2, 2)] = randn(T, 4, 3)
+
+  U, C = left_polar(A)
+  @test U * C ≈ A
+  @test Matrix(U'U) ≈ LinearAlgebra.I
+end
+
+@testset "right_polar (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [3, 4]))
+  A[Block(1, 1)] = randn(T, 2, 3)
+  A[Block(2, 2)] = randn(T, 3, 4)
+
+  C, U = right_polar(A)
+  @test C * U ≈ A
+  @test Matrix(U * U') ≈ LinearAlgebra.I
+end
+
+@testset "left_orth (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([3, 4], [2, 3]))
+  A[Block(1, 1)] = randn(T, 3, 2)
+  A[Block(2, 2)] = randn(T, 4, 3)
+
+  for kind in (:qr, :polar, :svd)
+    U, C = left_orth(A; kind)
+    @test U * C ≈ A
+    @test Matrix(U'U) ≈ LinearAlgebra.I
+  end
+end
+
+@testset "right_orth (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [3, 4]))
+  A[Block(1, 1)] = randn(T, 2, 3)
+  A[Block(2, 2)] = randn(T, 3, 4)
+
+  for kind in (:qr, :polar, :svd)
+    C, U = right_orth(A; kind)
+    @test C * U ≈ A
+    @test Matrix(U * U') ≈ LinearAlgebra.I
   end
 end
