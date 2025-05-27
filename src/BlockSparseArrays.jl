@@ -47,5 +47,6 @@ include("BlockArraysSparseArraysBaseExt/BlockArraysSparseArraysBaseExt.jl")
 include("factorizations/svd.jl")
 include("factorizations/truncation.jl")
 include("factorizations/qr.jl")
+include("factorizations/lq.jl")
 
 end
