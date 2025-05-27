@@ -1,13 +1,19 @@
 using MatrixAlgebraKit:
   MatrixAlgebraKit,
-  left_polar,
-  lq_compact,
-  qr_compact,
-  right_polar,
+  left_orth_polar!,
+  left_orth_qr!,
+  left_orth_svd!,
+  left_polar!,
+  lq_compact!,
+  qr_compact!,
+  right_orth_lq!,
+  right_orth_polar!,
+  right_orth_svd!,
+  right_polar!,
   select_algorithm,
-  svd_compact
+  svd_compact!
 
-function MatrixAlgebraKit.left_orth(
+function MatrixAlgebraKit.left_orth!(
   A::AbstractBlockSparseMatrix;
   trunc=nothing,
   kind=isnothing(trunc) ? :qr : :svd,
@@ -19,30 +25,32 @@ function MatrixAlgebraKit.left_orth(
     throw(ArgumentError("truncation not supported for `left_orth` with `kind=$kind`"))
   end
   if kind == :qr
-    return left_orth_qr(A, alg_qr)
+    return left_orth_qr!(A, alg_qr)
   elseif kind == :polar
-    return left_orth_polar(A, alg_polar)
+    return left_orth_polar!(A, alg_polar)
   elseif kind == :svd
-    return left_orth_svd(A, alg_svd, trunc)
+    return left_orth_svd!(A, alg_svd, trunc)
   else
     throw(ArgumentError("`left_orth` received unknown value `kind = $kind`"))
   end
 end
-function left_orth_qr(A, alg)
-  alg′ = select_algorithm(qr_compact, A, alg)
-  return qr_compact(A, alg′)
+function MatrixAlgebraKit.left_orth_qr!(A::AbstractBlockSparseMatrix, alg)
+  alg′ = select_algorithm(qr_compact!, A, alg)
+  return qr_compact!(A, alg′)
 end
-function left_orth_polar(A, alg)
-  alg′ = select_algorithm(left_polar, A, alg)
-  return left_polar(A, alg′)
+function MatrixAlgebraKit.left_orth_polar!(A::AbstractBlockSparseMatrix, alg)
+  alg′ = select_algorithm(left_polar!, A, alg)
+  return left_polar!(A, alg′)
 end
-function left_orth_svd(A, alg, trunc::Nothing=nothing)
-  alg′ = select_algorithm(svd_compact, A, alg)
-  U, S, Vᴴ = svd_compact(A, alg′)
+function MatrixAlgebraKit.left_orth_svd!(
+  A::AbstractBlockSparseMatrix, alg, trunc::Nothing=nothing
+)
+  alg′ = select_algorithm(svd_compact!, A, alg)
+  U, S, Vᴴ = svd_compact!(A, alg′)
   return U, S * Vᴴ
 end
 
-function MatrixAlgebraKit.right_orth(
+function MatrixAlgebraKit.right_orth!(
   A::AbstractBlockSparseMatrix;
   trunc=nothing,
   kind=isnothing(trunc) ? :lq : :svd,
@@ -55,32 +63,34 @@ function MatrixAlgebraKit.right_orth(
   end
   if kind == :qr
     # TODO: Implement this.
-    # return right_orth_lq(A, alg_lq)
-    return right_orth_svd(A, alg_svd)
+    # return right_orth_lq!(A, alg_lq)
+    return right_orth_svd!(A, alg_svd)
   elseif kind == :polar
-    return right_orth_polar(A, alg_polar)
+    return right_orth_polar!(A, alg_polar)
   elseif kind == :svd
-    return right_orth_svd(A, alg_svd, trunc)
+    return right_orth_svd!(A, alg_svd, trunc)
   else
     throw(ArgumentError("`right_orth` received unknown value `kind = $kind`"))
   end
 end
-function right_orth_lq(A, alg)
+function MatrixAlgebraKit.right_orth_lq!(A::AbstractBlockSparseMatrix, alg)
   alg′ = select_algorithm(lq_compact, A, alg)
-  return lq_compact(A, alg′)
+  return lq_compact!(A, alg′)
 end
-function right_orth_polar(A, alg)
-  alg′ = select_algorithm(right_polar, A, alg)
-  return right_polar(A, alg′)
+function MatrixAlgebraKit.right_orth_polar!(A::AbstractBlockSparseMatrix, alg)
+  alg′ = select_algorithm(right_polar!, A, alg)
+  return right_polar!(A, alg′)
 end
-function right_orth_svd(A, alg, trunc::Nothing=nothing)
-  alg′ = select_algorithm(svd_compact, A, alg)
-  U, S, Vᴴ = svd_compact(A, alg′)
+function MatrixAlgebraKit.right_orth_svd!(
+  A::AbstractBlockSparseMatrix, alg, trunc::Nothing=nothing
+)
+  alg′ = select_algorithm(svd_compact!, A, alg)
+  U, S, Vᴴ = svd_compact!(A, alg′)
   return U * S, Vᴴ
 end
-function right_orth_svd(A, alg, trunc)
-  alg′ = select_algorithm(svd_compact, A, alg)
-  alg_trunc = select_algorithm(svd_trunc, A, alg′; trunc)
-  U, S, Vᴴ = svd_trunc(A, alg_trunc)
+function MatrixAlgebraKit.right_orth_svd!(A::AbstractBlockSparseMatrix, alg, trunc)
+  alg′ = select_algorithm(svd_compact!, A, alg)
+  alg_trunc = select_algorithm(svd_trunc!, A, alg′; trunc)
+  U, S, Vᴴ = svd_trunc!(A, alg_trunc)
   return U * S, Vᴴ
 end
