@@ -250,6 +250,11 @@ end
     @test U * C ≈ A
     @test Matrix(U'U) ≈ LinearAlgebra.I
   end
+
+  U, C = left_orth(A; trunc=(; maxrank=2))
+  @test size(U, 2) ≤ 2
+  @test size(C, 1) ≤ 2
+  @test Matrix(U'U) ≈ LinearAlgebra.I
 end
 
 @testset "right_orth (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
@@ -262,4 +267,9 @@ end
     @test C * U ≈ A
     @test Matrix(U * U') ≈ LinearAlgebra.I
   end
+
+  C, U = right_orth(A; trunc=(; maxrank=2))
+  @test size(C, 2) ≤ 2
+  @test size(U, 1) ≤ 2
+  @test Matrix(U * U') ≈ LinearAlgebra.I
 end
