@@ -10,6 +10,7 @@ export BlockSparseArray,
 
 # possible upstream contributions
 include("BlockArraysExtensions/blockedunitrange.jl")
+include("BlockArraysExtensions/blockrange.jl")
 include("BlockArraysExtensions/BlockArraysExtensions.jl")
 
 # interface functions that don't have to specialize

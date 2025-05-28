@@ -10,10 +10,10 @@ end
 ) where {N}
   # TODO: Make sure this works for sparse or block sparse blocks, immutable
   # blocks, diagonal blocks, etc.!
-  b_size = ntuple(ndims(a)) do d
-    return length(f.axes[d][Block(I[d])])
+  b_ax = ntuple(ndims(a)) do d
+    return only(axes(f.axes[d][Block(I[d])]))
   end
-  b = similar(eltype(a), b_size)
+  b = similar(eltype(a), b_ax)
   zero!(b)
   return b
 end
