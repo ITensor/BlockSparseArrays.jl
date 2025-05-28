@@ -6,6 +6,13 @@ using MatrixAlgebraKit:
   qr_compact,
   qr_full,
   right_orth,
+  left_orth,
+  left_polar,
+  lq_compact,
+  lq_full,
+  qr_compact,
+  qr_full,
+  right_orth,
   right_polar,
   svd_compact,
   svd_full,
@@ -167,7 +174,7 @@ end
 end
 
 @testset "qr_compact (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
-  for i in [1, 2], j in [1, 2], k in [1, 2], l in [1, 2]
+  for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
     A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
     A[Block(1, 1)] = randn(T, i, k)
     A[Block(2, 2)] = randn(T, j, l)
@@ -189,6 +196,32 @@ end
     @test Matrix(Q'Q) ≈ LinearAlgebra.I
     @test Matrix(Q * Q') ≈ LinearAlgebra.I
     @test A ≈ Q * R
+  end
+end
+
+@testset "lq_compact" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
+    A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
+    A[Block(1, 1)] = randn(T, i, k)
+    A[Block(2, 2)] = randn(T, j, l)
+    L, Q = lq_compact(A)
+    @test Matrix(Q * Q') ≈ LinearAlgebra.I
+    @test A ≈ L * Q
+  end
+end
+
+@testset "lq_full" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
+    A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
+    A[Block(1, 1)] = randn(T, i, k)
+    A[Block(2, 2)] = randn(T, j, l)
+    L, Q = lq_full(A)
+    L′, Q′ = lq_full(Matrix(A))
+    @test size(L) == size(L′)
+    @test size(Q) == size(Q′)
+    @test Matrix(Q * Q') ≈ LinearAlgebra.I
+    @test Matrix(Q'Q) ≈ LinearAlgebra.I
+    @test A ≈ L * Q
   end
 end
 
