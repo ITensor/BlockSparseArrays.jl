@@ -3,11 +3,6 @@ using BlockSparseArrays: BlockSparseArray, BlockDiagonal, eachblockstoredindex
 using MatrixAlgebraKit:
   left_orth,
   left_polar,
-  qr_compact,
-  qr_full,
-  right_orth,
-  left_orth,
-  left_polar,
   lq_compact,
   lq_full,
   qr_compact,
