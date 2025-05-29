@@ -22,17 +22,19 @@ using BlockSparseArrays:
   BlockSparseMatrix,
   BlockSparseVector,
   BlockView,
+  blockdiagindices,
   blockreshape,
   blockstoredlength,
   blockstype,
   blocktype,
   eachblockstoredindex,
   eachstoredblock,
+  eachstoredblockdiagindex,
   sparsemortar,
   view!
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray, JLMatrix
-using LinearAlgebra: Adjoint, Transpose, dot, norm
+using LinearAlgebra: Adjoint, Transpose, dot, norm, tr
 using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, storedlength
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
 using TestExtras: @constinferred
@@ -217,9 +219,25 @@ arrayts = (Array, JLArray)
     a[Block(1, 2)] = randn(elt, 2, 3)
     @test issetequal(eachstoredblock(a), [a[Block(2, 1)], a[Block(1, 2)]])
     @test issetequal(eachblockstoredindex(a), [Block(2, 1), Block(1, 2)])
+    @test issetequal(blockdiagindices(a), [Block(1, 1), Block(2, 2)])
+    @test isempty(eachstoredblockdiagindex(a))
+    @test norm(a) ≈ norm(Array(a))
+    for p in 1:3
+      @test norm(a, p) ≈ norm(Array(a), p)
+    end
+    @test tr(a) ≈ tr(Array(a))
 
     a[3, 3] = NaN
     @test isnan(norm(a))
+
+    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
+    a[Block(1, 1)] = dev(randn(elt, 2, 2))
+    @test issetequal(eachstoredblockdiagindex(a), [Block(1, 1)])
+    @test norm(a) ≈ norm(Array(a))
+    for p in 1:3
+      @test norm(a, p) ≈ norm(Array(a), p)
+    end
+    @test tr(a) ≈ tr(Array(a))
 
     # Empty constructor
     for a in (dev(BlockSparseArray{elt}(undef)),)

@@ -338,14 +338,17 @@ end
 # TODO: Implement this in a more generic way using a smarter `copyto!`,
 # which is ultimately what `Array{T,N}(::AbstractArray{<:Any,N})` calls.
 # These are defined for now to avoid scalar indexing issues when there
-# are blocks on GPU.
+# are blocks on GPU, and also work with exotic block types like
+# KroneckerArrays.
 function Base.Array{T,N}(a::AnyAbstractBlockSparseArray{<:Any,N}) where {T,N}
-  # First make it dense, then move to CPU.
-  # Directly copying to CPU causes some issues with
-  # scalar indexing on GPU which we have to investigate.
-  a_dest = similartype(blocktype(a), T)(undef, size(a))
-  a_dest .= a
-  return Array{T,N}(a_dest)
+  a_dest = zeros(T, size(a))
+  for I in eachblockstoredindex(a)
+    # TODO: Use: `I′ = CartesianIndices(axes(a))[I]`, unfortunately this
+    # outputs `Matrix{CartesianIndex}` instead of `CartesianIndices`.
+    I′ = CartesianIndices(ntuple(dim -> axes(a, dim)[Tuple(I)[dim]], ndims(a)))
+    a_dest[I′] = Array{T,N}(@view(a[I]))
+  end
+  return a_dest
 end
 function Base.Array{T}(a::AnyAbstractBlockSparseArray) where {T}
   return Array{T,ndims(a)}(a)

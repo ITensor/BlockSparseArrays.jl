@@ -36,6 +36,16 @@ function eachblockstoredindex(a::AbstractArray)
   return Block.(Tuple.(eachstoredindex(blocks(a))))
 end
 
+using DiagonalArrays: diagindices
+# Block version of `DiagonalArrays.diagindices`.
+function blockdiagindices(a::AbstractArray)
+  return Block.(Tuple.(diagindices(blocks(a))))
+end
+
+function eachstoredblockdiagindex(a::AbstractArray)
+  return eachblockstoredindex(a) ∩ blockdiagindices(a)
+end
+
 # Like `BlockArrays.eachblock` but only iterating
 # over stored blocks.
 function eachstoredblock(a::AbstractArray)
