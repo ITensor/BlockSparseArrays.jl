@@ -1,8 +1,9 @@
-using MatrixAlgebraKit: MatrixAlgebraKit, lq_compact!, lq_full!, qr_compact!, qr_full!
+using MatrixAlgebraKit:
+  MatrixAlgebraKit, default_qr_algorithm, lq_compact!, lq_full!, qr_compact!, qr_full!
 
 # TODO: this is a hardcoded for now to get around this function not being defined in the
 # type domain
-function default_blocksparse_qr_algorithm(A::AbstractMatrix; kwargs...)
+function MatrixAlgebraKit.default_qr_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
   blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} ||
     error("unsupported type: $(blocktype(A))")
   alg = MatrixAlgebraKit.LAPACK_HouseholderQR(; kwargs...)
@@ -11,12 +12,12 @@ end
 function MatrixAlgebraKit.default_algorithm(
   ::typeof(qr_compact!), A::AbstractBlockSparseMatrix; kwargs...
 )
-  return default_blocksparse_qr_algorithm(A; kwargs...)
+  return default_qr_algorithm(A; kwargs...)
 end
 function MatrixAlgebraKit.default_algorithm(
   ::typeof(qr_full!), A::AbstractBlockSparseMatrix; kwargs...
 )
-  return default_blocksparse_qr_algorithm(A; kwargs...)
+  return default_qr_algorithm(A; kwargs...)
 end
 
 function similar_output(

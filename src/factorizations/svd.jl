@@ -1,4 +1,4 @@
-using MatrixAlgebraKit: MatrixAlgebraKit, svd_compact!, svd_full!
+using MatrixAlgebraKit: MatrixAlgebraKit, default_svd_algorithm, svd_compact!, svd_full!
 
 """
     BlockPermutedDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
@@ -12,7 +12,7 @@ struct BlockPermutedDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
   alg::A
 end
 
-function default_blocksparse_svd_algorithm(f, A; kwargs...)
+function MatrixAlgebraKit.default_svd_algorithm(A; kwargs...)
   blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} ||
     error("unsupported type: $(blocktype(A))")
   # TODO: this is a hardcoded for now to get around this function not being defined in the
@@ -25,12 +25,12 @@ end
 function MatrixAlgebraKit.default_algorithm(
   f::typeof(svd_compact!), A::AbstractBlockSparseMatrix; kwargs...
 )
-  return default_blocksparse_svd_algorithm(f, A; kwargs...)
+  return default_svd_algorithm(A; kwargs...)
 end
 function MatrixAlgebraKit.default_algorithm(
   f::typeof(svd_full!), A::AbstractBlockSparseMatrix; kwargs...
 )
-  return default_blocksparse_svd_algorithm(f, A; kwargs...)
+  return default_svd_algorithm(A; kwargs...)
 end
 
 function similar_output(
