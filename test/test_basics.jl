@@ -22,12 +22,14 @@ using BlockSparseArrays:
   BlockSparseMatrix,
   BlockSparseVector,
   BlockView,
-  blockstoredlength,
+  blockrange,
   blockreshape,
-  eachblockstoredindex,
-  eachstoredblock,
+  blockstoredlength,
   blockstype,
   blocktype,
+  eachblockaxis,
+  eachblockstoredindex,
+  eachstoredblock,
   sparsemortar,
   view!
 using GPUArraysCore: @allowscalar
