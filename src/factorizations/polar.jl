@@ -46,14 +46,3 @@ function MatrixAlgebraKit.right_polar!(A::AbstractBlockSparseMatrix, alg::PolarV
   P = U * S * copy(U')
   return (P, Wᴴ)
 end
-
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(left_polar!), a::AbstractBlockSparseMatrix; kwargs...
-)
-  return PolarViaSVD(default_algorithm(svd_compact!, a; kwargs...))
-end
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(right_polar!), a::AbstractBlockSparseMatrix; kwargs...
-)
-  return PolarViaSVD(default_algorithm(svd_compact!, a; kwargs...))
-end
