@@ -3,21 +3,11 @@ using MatrixAlgebraKit:
 
 # TODO: this is a hardcoded for now to get around this function not being defined in the
 # type domain
-function MatrixAlgebraKit.default_qr_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
-  blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} ||
-    error("unsupported type: $(blocktype(A))")
-  alg = MatrixAlgebraKit.LAPACK_HouseholderQR(; kwargs...)
+function MatrixAlgebraKit.default_qr_algorithm(
+  arrayt::Type{<:AbstractBlockSparseMatrix}; kwargs...
+)
+  alg = default_qr_algorithm(blocktype(arrayt); kwargs...)
   return BlockPermutedDiagonalAlgorithm(alg)
-end
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(qr_compact!), A::AbstractBlockSparseMatrix; kwargs...
-)
-  return default_qr_algorithm(A; kwargs...)
-end
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(qr_full!), A::AbstractBlockSparseMatrix; kwargs...
-)
-  return default_qr_algorithm(A; kwargs...)
 end
 
 function similar_output(
