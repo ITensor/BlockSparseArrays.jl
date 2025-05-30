@@ -45,6 +45,9 @@ end
 function eachstoredblockdiagindex(a::AbstractArray)
   return eachblockstoredindex(a) ∩ blockdiagindices(a)
 end
+function eachunstoredblockdiagindex(a::AbstractArray)
+  return setdiff(blockdiagindices(a), eachblockstoredindex(a))
+end
 
 # Like `BlockArrays.eachblock` but only iterating
 # over stored blocks.
