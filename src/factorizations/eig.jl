@@ -1,54 +1,45 @@
 using MatrixAlgebraKit:
   MatrixAlgebraKit, default_eig_algorithm, default_eigh_algorithm, eig_full!, eigh_full!
 
-function MatrixAlgebraKit.default_eig_algorithm(
-  arrayt::Type{<:AbstractBlockSparseMatrix}; kwargs...
+function initialize_blocksparse_eig_output(
+  f, A::AbstractMatrix, alg::BlockPermutedDiagonalAlgorithm
 )
-  alg = default_eig_algorithm(blocktype(arrayt); kwargs...)
-  return BlockPermutedDiagonalAlgorithm(alg)
-end
-
-function MatrixAlgebraKit.initialize_output(
-  ::typeof(eig_full!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
-)
-  D = similar(A, complex(eltype(A)))
-  V = similar(A, complex(eltype(A)))
+  Td, Tv = fieldtypes(Base.promote_op(f, blocktype(A), typeof(alg.alg)))
+  D = similar(A, BlockType(Td))
+  V = similar(A, BlockType(Tv))
   return (D, V)
 end
 
-function MatrixAlgebraKit.eig_full!(
-  A::AbstractBlockSparseMatrix, (D, V), alg::BlockPermutedDiagonalAlgorithm
+function blocksparse_eig_full!(
+  f, A::AbstractMatrix, (D, V), alg::BlockPermutedDiagonalAlgorithm
 )
   for I in blockdiagindices(A)
-    d, v = eig_full!(A[I], alg.alg)
-    D[I] = d
-    V[I] = v
+    d, v = f(@view!(A[I]), alg.alg)
+    D[I], V[I] = d, v
   end
   return (D, V)
 end
 
-function MatrixAlgebraKit.default_eigh_algorithm(
-  arrayt::Type{<:AbstractBlockSparseMatrix}; kwargs...
-)
-  alg = default_eigh_algorithm(blocktype(arrayt); kwargs...)
-  return BlockPermutedDiagonalAlgorithm(alg)
-end
-
-function MatrixAlgebraKit.initialize_output(
-  ::typeof(eigh_full!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
-)
-  D = similar(A, complex(eltype(A)))
-  V = similar(A, complex(eltype(A)))
-  return (D, V)
-end
-
-function MatrixAlgebraKit.eigh_full!(
-  A::AbstractBlockSparseMatrix, (D, V), alg::BlockPermutedDiagonalAlgorithm
-)
-  for I in blockdiagindices(A)
-    d, v = eigh_full!(A[I], alg.alg)
-    D[I] = d
-    V[I] = v
+for f in [:default_eig_algorithm, :default_eigh_algorithm]
+  @eval begin
+    function MatrixAlgebraKit.$f(arrayt::Type{<:AbstractBlockSparseMatrix}; kwargs...)
+      alg = $f(blocktype(arrayt); kwargs...)
+      return BlockPermutedDiagonalAlgorithm(alg)
+    end
   end
-  return (D, V)
+end
+
+for f in [:eig_full!, :eigh_full!]
+  @eval begin
+    function MatrixAlgebraKit.initialize_output(
+      ::typeof($f), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
+    )
+      return initialize_blocksparse_eig_output($f, A, alg)
+    end
+    function MatrixAlgebraKit.$f(
+      A::AbstractBlockSparseMatrix, (D, V), alg::BlockPermutedDiagonalAlgorithm
+    )
+      return blocksparse_eig_full!($f, A, (D, V), alg)
+    end
+  end
 end
