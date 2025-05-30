@@ -27,8 +27,6 @@ function MatrixAlgebraKit.eig_full!(
   return (D, V)
 end
 
-# TODO: this is a hardcoded for now to get around this function not being defined in the
-# type domain
 function MatrixAlgebraKit.default_eigh_algorithm(
   arrayt::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
