@@ -1,13 +1,19 @@
 using BlockArrays: blocksizes
-using LinearAlgebra: LinearAlgebra
+using DiagonalArrays: diagonal
+using LinearAlgebra: LinearAlgebra, Diagonal
 using MatrixAlgebraKit:
   MatrixAlgebraKit,
+  TruncationStrategy,
   default_eig_algorithm,
   default_eigh_algorithm,
+  diagview,
   eig_full!,
+  eig_trunc!,
   eig_vals!,
   eigh_full!,
-  eigh_vals!
+  eigh_trunc!,
+  eigh_vals!,
+  findtruncated
 
 for f in [:default_eig_algorithm, :default_eigh_algorithm]
   @eval begin
@@ -37,7 +43,7 @@ for f in [:eig_full!, :eigh_full!]
       for I in eachunstoredblockdiagindex(A)
         # TODO: Support setting `LinearAlgebra.I` directly, and/or
         # using `FillArrays.Eye`.
-        V[I] = LinearAlgebra.I(first(blocksizes(A)[Int.(Tuple(I))...]))
+        V[I] = LinearAlgebra.I(size(@view(V[I]), 1))
       end
       return (D, V)
     end
@@ -58,6 +64,27 @@ for f in [:eig_vals!, :eigh_vals!]
         D[I] = $f(@view!(A[I]), alg.alg)
       end
       return D
+    end
+  end
+end
+
+const TBlockDV = Tuple{AbstractBlockSparseMatrix,AbstractBlockSparseMatrix}
+
+for f in [:eig_trunc!, :eigh_trunc!]
+  @eval begin
+    function MatrixAlgebraKit.truncate!(
+      ::typeof($f), (D, V)::TBlockDV, strategy::TruncationStrategy
+    )
+      return MatrixAlgebraKit.truncate!(
+        $f, (D, V), BlockPermutedDiagonalTruncationStrategy(strategy)
+      )
+    end
+    function MatrixAlgebraKit.truncate!(
+      ::typeof($f), (D, V)::TBlockDV, strategy::BlockPermutedDiagonalTruncationStrategy
+    )
+      d = diagview(D)
+      ind = findtruncated(d, strategy)
+      return diagonal(d[ind]), V[:, ind]
     end
   end
 end

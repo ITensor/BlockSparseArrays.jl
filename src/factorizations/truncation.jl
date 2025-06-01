@@ -22,7 +22,7 @@ struct BlockPermutedDiagonalTruncationStrategy{T<:TruncationStrategy} <: Truncat
 end
 
 const TBlockUSVᴴ = Tuple{
-  <:AbstractBlockSparseMatrix,<:AbstractBlockSparseMatrix,<:AbstractBlockSparseMatrix
+  AbstractBlockSparseMatrix,AbstractBlockSparseMatrix,AbstractBlockSparseMatrix
 }
 
 function MatrixAlgebraKit.truncate!(
