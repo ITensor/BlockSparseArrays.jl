@@ -376,8 +376,11 @@ function blockrange(axis::AbstractUnitRange, r::BlockIndexVector)
   return Block(r):Block(r)
 end
 
-function blockrange(axis::AbstractUnitRange, r::Vector{<:BlockIndexVector})
-  return map(Block, r)
+function blockrange(
+  axis::AbstractUnitRange,
+  r::BlockVector{<:BlockIndex{1},<:AbstractVector{<:BlockIndexVector}},
+)
+  return map(Block, blocks(r))
 end
 
 function blockrange(axis::AbstractUnitRange, r)
