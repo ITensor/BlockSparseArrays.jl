@@ -174,13 +174,12 @@ function blockedunitrange_getindices(
   a::AbstractBlockedUnitRange, indices::AbstractVector{Bool}
 )
   blocked_indices = BlockedVector(indices, axes(a))
-  return mortar(
-    map(Base.OneTo(blocklength(blocked_indices))) do b
-      binds = blocked_indices[Block(b)]
-      bstart = blockfirsts(only(axes(blocked_indices)))[b]
-      return findall(binds) .+ (bstart - 1)
-    end,
-  )
+  bs = map(Base.OneTo(blocklength(blocked_indices))) do b
+    binds = blocked_indices[Block(b)]
+    bstart = blockfirsts(only(axes(blocked_indices)))[b]
+    return findall(binds) .+ (bstart - 1)
+  end
+  return mortar(filter(!isempty, bs))
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
@@ -224,12 +223,11 @@ Base.copy(a::BlockIndexVector) = BlockIndexVector(a.block, copy(a.indices))
 
 function to_blockindices(a::AbstractBlockedUnitRange{<:Integer}, I::AbstractArray{Bool})
   I_blocks = blocks(BlockedVector(I, blocklengths(a)))
-  return mortar(
-    map(eachindex(I_blocks)) do b
-      I_b = findall(I_blocks[b])
-      BlockIndexVector(Block(b), I_b)
-    end,
-  )
+  I′_blocks = map(eachindex(I_blocks)) do b
+    I_b = findall(I_blocks[b])
+    BlockIndexVector(Block(b), I_b)
+  end
+  return mortar(filter(!isempty, I′_blocks))
 end
 
 # This handles non-blocked slices.
