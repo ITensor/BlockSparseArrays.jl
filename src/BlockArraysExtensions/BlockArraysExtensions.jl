@@ -67,12 +67,19 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length, :unsafe
   @eval Base.$f(S::BlockIndices) = Base.$f(S.indices)
 end
 Base.getindex(S::BlockIndices, i::Integer) = getindex(S.indices, i)
+
+function _blockslice(x, y::AbstractUnitRange{<:Integer})
+  return BlockSlice(x, y)
+end
+function _blockslice(x, y::AbstractVector{<:Integer})
+  return BlockIndices(x, y)
+end
 function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
   # TODO: Check that `i.indices` is consistent with `S.indices`.
   # It seems like this isn't handling the case where `i` is a
   # subslice of a block correctly (i.e. it ignores `i.indices`).
   @assert length(S.indices[Block(i)]) == length(i.indices)
-  return BlockSlice(S.blocks[Int(Block(i))], S.indices[Block(i)])
+  return _blockslice(S.blocks[Int(Block(i))], S.indices[Block(i)])
 end
 
 # This is used in slicing like:
@@ -347,7 +354,7 @@ function blockrange(
   axis::AbstractUnitRange,
   r::BlockVector{<:BlockIndex{1},<:AbstractVector{<:BlockIndexRange{1}}},
 )
-  return map(b -> Block(b), blocks(r))
+  return map(Block, blocks(r))
 end
 
 # This handles slicing with `:`/`Colon()`.
@@ -363,6 +370,14 @@ end
 
 function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Integer})
   return Block.(Base.OneTo(1))
+end
+
+function blockrange(axis::AbstractUnitRange, r::BlockIndexVector)
+  return Block(r):Block(r)
+end
+
+function blockrange(axis::AbstractUnitRange, r::Vector{<:BlockIndexVector})
+  return map(Block, r)
 end
 
 function blockrange(axis::AbstractUnitRange, r)

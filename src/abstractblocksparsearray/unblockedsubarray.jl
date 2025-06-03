@@ -4,7 +4,10 @@ using BlockArrays: BlockArrays, Block, BlockIndexRange, BlockSlice
 using TypeParameterAccessors: TypeParameterAccessors, parenttype, similartype
 
 const UnblockedIndices = Union{
-  Vector{<:Integer},BlockSlice{<:Block{1}},BlockSlice{<:BlockIndexRange{1}}
+  Vector{<:Integer},
+  BlockSlice{<:Block{1}},
+  BlockSlice{<:BlockIndexRange{1}},
+  BlockSlice{<:BlockIndexVector},
 }
 
 const UnblockedSubArray{T,N} = SubArray{

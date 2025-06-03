@@ -10,6 +10,7 @@ using BlockArrays:
   BlockVector,
   block,
   blockedrange,
+  blockfirsts,
   blockindex,
   blocklengths,
   findblock,
@@ -169,6 +170,19 @@ function blockedunitrange_getindices(
   return mortar(map(b -> a[b], blocks(indices)))
 end
 
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange, indices::AbstractArray{Bool}
+)
+  blocked_indices = BlockedVector(indices, axes(a))
+  return mortar(
+    map(Base.OneTo(blocklength(blocked_indices))) do b
+      binds = blocked_indices[Block(b)]
+      bstart = blockfirsts(only(axes(blocked_indices)))[b]
+      return findall(binds) .+ (bstart - 1)
+    end,
+  )
+end
+
 # TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::AbstractBlockedUnitRange, indices)
   return error("Not implemented.")
@@ -193,6 +207,27 @@ function to_blockindices(a::AbstractBlockedUnitRange{<:Integer}, I::UnitRange{<:
       bi_last = findblockindex(a, last(r))
       @assert block(bi_first) == block(bi_last)
       return block(bi_first)[blockindex(bi_first):blockindex(bi_last)]
+    end,
+  )
+end
+
+struct BlockIndexVector{T<:Integer,I<:AbstractVector{T},TB<:Integer} <:
+       AbstractVector{BlockIndex{1,Tuple{TB},Tuple{T}}}
+  block::Block{1,TB}
+  indices::I
+end
+Base.length(a::BlockIndexVector) = length(a.indices)
+Base.size(a::BlockIndexVector) = (length(a),)
+BlockArrays.Block(a::BlockIndexVector) = a.block
+Base.getindex(a::BlockIndexVector, I::Integer) = Block(a)[a.indices[I]]
+Base.copy(a::BlockIndexVector) = BlockIndexVector(a.block, copy(a.indices))
+
+function to_blockindices(a::AbstractBlockedUnitRange{<:Integer}, I::AbstractArray{Bool})
+  I_blocks = blocks(BlockedVector(I, blocklengths(a)))
+  return mortar(
+    map(eachindex(I_blocks)) do b
+      I_b = findall(I_blocks[b])
+      BlockIndexVector(Block(b), I_b)
     end,
   )
 end

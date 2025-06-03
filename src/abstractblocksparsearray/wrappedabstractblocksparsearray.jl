@@ -40,6 +40,12 @@ function Base.to_indices(
   return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
 end
 
+function Base.to_indices(
+  a::AnyAbstractBlockSparseArray, inds, I::Tuple{AbstractArray{Bool},Vararg{Any}}
+)
+  return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
+end
+
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function Base.to_indices(
   a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
