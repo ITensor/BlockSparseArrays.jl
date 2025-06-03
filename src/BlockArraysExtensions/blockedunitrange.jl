@@ -135,7 +135,7 @@ end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange, indices::Vector{<:Integer}
+  a::AbstractBlockedUnitRange, indices::AbstractVector{<:Integer}
 )
   return map(index -> a[index], indices)
 end
@@ -171,7 +171,7 @@ function blockedunitrange_getindices(
 end
 
 function blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange, indices::AbstractArray{Bool}
+  a::AbstractBlockedUnitRange, indices::AbstractVector{Bool}
 )
   blocked_indices = BlockedVector(indices, axes(a))
   return mortar(
