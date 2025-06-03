@@ -271,9 +271,8 @@ function BlockArrays.viewblock(
   return viewblock(a, to_tuple(block)...)
 end
 
-_block(x) = error("Not implemented.")
-_block(x::BlockSlice) = x.block
-_block(x::BlockIndices) = x.blocks
+blockedslice_blocks(x::BlockSlice) = x.block
+blockedslice_blocks(x::BlockIndices) = x.blocks
 
 # TODO: Define `@interface BlockSparseArrayInterface() viewblock`.
 function BlockArrays.viewblock(
@@ -285,7 +284,7 @@ function BlockArrays.viewblock(
     # TODO: Ideally we would use this but it outputs a Vector,
     # not a range:
     # return parentindices(a)[dim].block[I[dim]]
-    return blocks(_block(parentindices(a)[dim]))[Int(I[dim])]
+    return blocks(blockedslice_blocks(parentindices(a)[dim]))[Int(I[dim])]
   end
   return @view parent(a)[brs...]
 end
