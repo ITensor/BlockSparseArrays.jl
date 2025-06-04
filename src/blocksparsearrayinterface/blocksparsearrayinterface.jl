@@ -432,9 +432,11 @@ function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) whe
 end
 
 function SparseArraysBase.eachstoredindex(::IndexCartesian, a::SparseSubArrayBlocks)
-  return filter(eachindex(a)) do I
+  isempty(a) && return CartesianIndex{ndims(a)}[]
+  inds = filter(eachindex(a)) do I
     return isstored(a, I)
   end
+  return inds
 
   ## # TODO: This only works for blockwise slices, i.e. slices using
   ## # `BlockSliceCollection`.
