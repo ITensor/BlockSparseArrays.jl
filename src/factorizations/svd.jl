@@ -1,5 +1,14 @@
 using MatrixAlgebraKit: MatrixAlgebraKit, default_svd_algorithm, svd_compact!, svd_full!
 
+# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
+using MatrixAlgebraKit: TruncatedAlgorithm, select_truncation, svd_trunc!
+function MatrixAlgebraKit.select_algorithm(
+  ::typeof(svd_trunc!), A::Type{<:AbstractBlockSparseMatrix}, alg; trunc=nothing, kwargs...
+)
+  alg_svd = select_algorithm(svd_compact!, A, alg; kwargs...)
+  return TruncatedAlgorithm(alg_svd, select_truncation(trunc))
+end
+
 """
     BlockPermutedDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
   
@@ -12,30 +21,30 @@ struct BlockPermutedDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
   alg::A
 end
 
+# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
 function MatrixAlgebraKit.default_svd_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
   return default_svd_algorithm(typeof(A), kwargs...)
 end
-function MatrixAlgebraKit.default_svd_algorithm(
-  A::Type{<:AbstractBlockSparseMatrix}; kwargs...
-)
-  blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} ||
-    error("unsupported type: $(blocktype(A))")
-  # TODO: this is a hardcoded for now to get around this function not being defined in the
-  # type domain
-  # alg = MatrixAlgebraKit.default_algorithm(f, blocktype(A); kwargs...)
-  alg = MatrixAlgebraKit.LAPACK_DivideAndConquer(; kwargs...)
-  return BlockPermutedDiagonalAlgorithm(alg)
-end
 
+# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
 function MatrixAlgebraKit.default_algorithm(
   f::typeof(svd_compact!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
   return default_svd_algorithm(A; kwargs...)
 end
+
+# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
 function MatrixAlgebraKit.default_algorithm(
   f::typeof(svd_full!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
   return default_svd_algorithm(A; kwargs...)
+end
+
+function MatrixAlgebraKit.default_svd_algorithm(
+  A::Type{<:AbstractBlockSparseMatrix}; kwargs...
+)
+  alg = default_svd_algorithm(blocktype(A); kwargs...)
+  return BlockPermutedDiagonalAlgorithm(alg)
 end
 
 function similar_output(

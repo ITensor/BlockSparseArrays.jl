@@ -1,26 +1,30 @@
 using MatrixAlgebraKit:
   MatrixAlgebraKit, default_qr_algorithm, lq_compact!, lq_full!, qr_compact!, qr_full!
 
+# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
 function MatrixAlgebraKit.default_qr_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
   return default_qr_algorithm(typeof(A); kwargs...)
 end
-function MatrixAlgebraKit.default_qr_algorithm(
-  A::Type{<:AbstractBlockSparseMatrix}; kwargs...
-)
-  blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} ||
-    error("unsupported type: $(blocktype(A))")
-  alg = MatrixAlgebraKit.LAPACK_HouseholderQR(; kwargs...)
-  return BlockPermutedDiagonalAlgorithm(alg)
-end
+
+# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
 function MatrixAlgebraKit.default_algorithm(
   ::typeof(qr_compact!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
   return default_qr_algorithm(A; kwargs...)
 end
+
+# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
 function MatrixAlgebraKit.default_algorithm(
   ::typeof(qr_full!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
   return default_qr_algorithm(A; kwargs...)
+end
+
+function MatrixAlgebraKit.default_qr_algorithm(
+  A::Type{<:AbstractBlockSparseMatrix}; kwargs...
+)
+  alg = default_qr_algorithm(blocktype(A); kwargs...)
+  return BlockPermutedDiagonalAlgorithm(alg)
 end
 
 function similar_output(
