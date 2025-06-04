@@ -92,11 +92,14 @@ end
 # TODO: Move to `GradedUnitRanges` or `BlockArraysExtensions`.
 to_block(I::Block{1}) = I
 to_block(I::BlockIndexRange{1}) = Block(I)
+to_block(I::BlockIndexVector) = Block(I)
 to_block_indices(I::Block{1}) = Colon()
 to_block_indices(I::BlockIndexRange{1}) = only(I.indices)
+to_block_indices(I::BlockIndexVector) = I.indices
 
 function Base.view(
-  a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Union{Block{1},BlockIndexRange{1}},N}
+  a::AbstractBlockSparseArray{<:Any,N},
+  I::Vararg{Union{Block{1},BlockIndexRange{1},BlockIndexVector},N},
 ) where {N}
   return @views a[to_block.(I)...][to_block_indices.(I)...]
 end
@@ -108,7 +111,7 @@ function Base.view(
 end
 function Base.view(
   a::SubArray{T,N,<:AbstractBlockSparseArray{T,N}},
-  I::Vararg{Union{Block{1},BlockIndexRange{1}},N},
+  I::Vararg{Union{Block{1},BlockIndexRange{1},BlockIndexVector},N},
 ) where {T,N}
   return @views a[to_block.(I)...][to_block_indices.(I)...]
 end
@@ -205,8 +208,14 @@ function BlockArrays.viewblock(
 end
 
 function to_blockindexrange(
-  a::BlockIndices{<:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}},
-  I::Block{1},
+  a::BlockSlice{<:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}}, I::Block{1}
+)
+  # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
+  # work right now.
+  return blocks(a.block)[Int(I)]
+end
+function to_blockindexrange(
+  a::BlockIndices{<:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector}}}, I::Block{1}
 )
   # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
   # work right now.
@@ -247,10 +256,13 @@ end
 
 # Block slice of the result of slicing `@view a[2:5, 2:5]`.
 # TODO: Move this to `BlockArraysExtensions`.
-const BlockedSlice = Union{
-  BlockSlice{<:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}},
-  BlockIndices{<:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector}}},
+const BlockIndexRangeSlice = BlockSlice{
+  <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}
 }
+const BlockIndexVectorSlice = BlockSlice{
+  <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector}}
+}
+const BlockedSlice = Union{BlockIndexRangeSlice,BlockIndexVectorSlice}
 
 function Base.view(
   a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockedSlice,N}}},
@@ -259,8 +271,14 @@ function Base.view(
   return viewblock(a, block)
 end
 function Base.view(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockIndexRangeSlice,N}}},
+  block::Union{Block{N},BlockIndexRange{N}},
+) where {T,N}
+  return viewblock(a, block)
+end
+function Base.view(
   a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockedSlice,N}}},
-  block::Vararg{Union{Block{1},BlockIndexRange{1}},N},
+  block::Vararg{Union{Block{1},BlockIndexRange{1},BlockIndexVector},N},
 ) where {T,N}
   return viewblock(a, block...)
 end
