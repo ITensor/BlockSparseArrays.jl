@@ -1,21 +1,24 @@
 using MatrixAlgebraKit:
   MatrixAlgebraKit, default_qr_algorithm, lq_compact!, lq_full!, qr_compact!, qr_full!
 
-# TODO: this is a hardcoded for now to get around this function not being defined in the
-# type domain
 function MatrixAlgebraKit.default_qr_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
+  return default_qr_algorithm(typeof(A); kwargs...)
+end
+function MatrixAlgebraKit.default_qr_algorithm(
+  A::Type{<:AbstractBlockSparseMatrix}; kwargs...
+)
   blocktype(A) <: StridedMatrix{<:LinearAlgebra.BLAS.BlasFloat} ||
     error("unsupported type: $(blocktype(A))")
   alg = MatrixAlgebraKit.LAPACK_HouseholderQR(; kwargs...)
   return BlockPermutedDiagonalAlgorithm(alg)
 end
 function MatrixAlgebraKit.default_algorithm(
-  ::typeof(qr_compact!), A::AbstractBlockSparseMatrix; kwargs...
+  ::typeof(qr_compact!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
   return default_qr_algorithm(A; kwargs...)
 end
 function MatrixAlgebraKit.default_algorithm(
-  ::typeof(qr_full!), A::AbstractBlockSparseMatrix; kwargs...
+  ::typeof(qr_full!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
   return default_qr_algorithm(A; kwargs...)
 end

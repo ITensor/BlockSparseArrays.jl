@@ -12,6 +12,9 @@ struct BlockPermutedDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
   alg::A
 end
 
+function MatrixAlgebraKit.default_svd_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
+  return default_svd_algorithm(typeof(A), kwargs...)
+end
 function MatrixAlgebraKit.default_svd_algorithm(
   A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
@@ -25,12 +28,12 @@ function MatrixAlgebraKit.default_svd_algorithm(
 end
 
 function MatrixAlgebraKit.default_algorithm(
-  f::typeof(svd_compact!), A::AbstractBlockSparseMatrix; kwargs...
+  f::typeof(svd_compact!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
   return default_svd_algorithm(A; kwargs...)
 end
 function MatrixAlgebraKit.default_algorithm(
-  f::typeof(svd_full!), A::AbstractBlockSparseMatrix; kwargs...
+  f::typeof(svd_full!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
   return default_svd_algorithm(A; kwargs...)
 end

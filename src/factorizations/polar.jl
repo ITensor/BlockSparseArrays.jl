@@ -48,12 +48,22 @@ function MatrixAlgebraKit.right_polar!(A::AbstractBlockSparseMatrix, alg::PolarV
 end
 
 function MatrixAlgebraKit.default_algorithm(
-  ::typeof(left_polar!), a::AbstractBlockSparseMatrix; kwargs...
+  ::typeof(left_polar!), A::AbstractBlockSparseMatrix; kwargs...
 )
-  return PolarViaSVD(default_algorithm(svd_compact!, a; kwargs...))
+  return default_algorithm(left_polar!, typeof(A); kwargs...)
 end
 function MatrixAlgebraKit.default_algorithm(
-  ::typeof(right_polar!), a::AbstractBlockSparseMatrix; kwargs...
+  ::typeof(left_polar!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
-  return PolarViaSVD(default_algorithm(svd_compact!, a; kwargs...))
+  return PolarViaSVD(default_algorithm(svd_compact!, A; kwargs...))
+end
+function MatrixAlgebraKit.default_algorithm(
+  ::typeof(right_polar!), A::AbstractBlockSparseMatrix; kwargs...
+)
+  return default_algorithm(right_polar!, typeof(A); kwargs...)
+end
+function MatrixAlgebraKit.default_algorithm(
+  ::typeof(right_polar!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
+)
+  return PolarViaSVD(default_algorithm(svd_compact!, A; kwargs...))
 end
