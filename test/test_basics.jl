@@ -588,7 +588,11 @@ arrayts = (Array, JLArray)
     @views for b in [Block(1, 2), Block(2, 1)]
       a[b] = dev(randn(elt, size(a[b])))
     end
-    for b in (a[2:4, 2:4], @view(a[2:4, 2:4]))
+    I = 2:4
+    I′, J′ = falses.(size(a))
+    I′[I] .= true
+    J′[I] .= true
+    for b in (a[I, I], @view(a[I, I]), a[I′, J′], @view(a[I′, J′]))
       @allowscalar @test b == Array(a)[2:4, 2:4]
       @test size(b) == (3, 3)
       @test blocksize(b) == (2, 2)

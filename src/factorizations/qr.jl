@@ -1,12 +1,10 @@
 using MatrixAlgebraKit:
   MatrixAlgebraKit, default_qr_algorithm, lq_compact!, lq_full!, qr_compact!, qr_full!
 
-# TODO: this is a hardcoded for now to get around this function not being defined in the
-# type domain
 function MatrixAlgebraKit.default_qr_algorithm(
-  arrayt::Type{<:AbstractBlockSparseMatrix}; kwargs...
+  A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
-  alg = default_qr_algorithm(blocktype(arrayt); kwargs...)
+  alg = default_qr_algorithm(blocktype(A); kwargs...)
   return BlockPermutedDiagonalAlgorithm(alg)
 end
 

@@ -149,6 +149,14 @@ end
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
+@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+  a, inds, I::Tuple{AbstractArray{Bool},Vararg{Any}}
+)
+  bs1 = to_blockindices(inds[1], I[1])
+  I1 = BlockIndices(bs1, blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
 # Special case when there is no blocking.
 @interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
   a,
@@ -427,9 +435,11 @@ function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) whe
 end
 
 function SparseArraysBase.eachstoredindex(::IndexCartesian, a::SparseSubArrayBlocks)
-  return filter(eachindex(a)) do I
+  isempty(a) && return CartesianIndex{ndims(a)}[]
+  inds = filter(eachindex(a)) do I
     return isstored(a, I)
   end
+  return inds
 
   ## # TODO: This only works for blockwise slices, i.e. slices using
   ## # `BlockSliceCollection`.

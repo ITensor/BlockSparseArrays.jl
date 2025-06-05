@@ -40,6 +40,19 @@ function Base.to_indices(
   return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
 end
 
+function Base.to_indices(
+  a::AnyAbstractBlockSparseArray, inds, I::Tuple{AbstractArray{Bool},Vararg{Any}}
+)
+  return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
+end
+# Fix ambiguity error with Base for logical indexing in Julia 1.10.
+# TODO: Delete this once we drop support for Julia 1.10.
+function Base.to_indices(
+  a::AnyAbstractBlockSparseArray, inds, I::Union{Tuple{BitArray{N}},Tuple{Array{Bool,N}}}
+) where {N}
+  return @interface BlockSparseArrayInterface() to_indices(a, inds, I)
+end
+
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function Base.to_indices(
   a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
