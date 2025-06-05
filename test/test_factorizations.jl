@@ -1,6 +1,14 @@
 using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
-using BlockSparseArrays: BlockSparseArray, BlockDiagonal, eachblockstoredindex
+using BlockSparseArrays:
+  BlockSparseArray, BlockDiagonal, blockstoredlength, eachblockstoredindex
 using MatrixAlgebraKit:
+  diagview,
+  eig_full,
+  eig_trunc,
+  eig_vals,
+  eigh_full,
+  eigh_trunc,
+  eigh_vals,
   left_orth,
   left_polar,
   lq_compact,
@@ -14,8 +22,9 @@ using MatrixAlgebraKit:
   svd_trunc,
   truncrank,
   trunctol
-using LinearAlgebra: LinearAlgebra
+using LinearAlgebra: LinearAlgebra, Diagonal, hermitianpart
 using Random: Random
+using StableRNGs: StableRNG
 using Test: @inferred, @testset, @test
 
 function test_svd(a, (U, S, Vᴴ); full=false)
@@ -272,4 +281,112 @@ end
   @test size(C, 2) ≤ 2
   @test size(U, 1) ≤ 2
   @test Matrix(U * U') ≈ LinearAlgebra.I
+end
+
+@testset "eig_full (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [2, 3]))
+  rng = StableRNG(123)
+  A[Block(1, 1)] = randn(rng, T, 2, 2)
+  A[Block(2, 2)] = randn(rng, T, 3, 3)
+
+  D, V = eig_full(A)
+  @test size(D) == size(A)
+  @test size(D) == size(A)
+  @test blockstoredlength(D) == 2
+  @test blockstoredlength(V) == 2
+  @test issetequal(eachblockstoredindex(D), [Block(1, 1), Block(2, 2)])
+  @test issetequal(eachblockstoredindex(V), [Block(1, 1), Block(2, 2)])
+  @test A * V ≈ V * D
+end
+
+@testset "eig_vals (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [2, 3]))
+  rng = StableRNG(123)
+  A[Block(1, 1)] = randn(rng, T, 2, 2)
+  A[Block(2, 2)] = randn(rng, T, 3, 3)
+
+  D = eig_vals(A)
+  @test size(D) == (size(A, 1),)
+  @test blockstoredlength(D) == 2
+  D′ = eig_vals(Matrix(A))
+  @test sort(D; by=abs) ≈ sort(D′; by=abs)
+end
+
+@testset "eig_trunc (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [2, 3]))
+  rng = StableRNG(123)
+  D1 = [1.0, 0.1]
+  V1 = randn(rng, T, 2, 2)
+  A1 = V1 * Diagonal(D1) * inv(V1)
+  D2 = [1.0, 0.5, 0.1]
+  V2 = randn(rng, T, 3, 3)
+  A2 = V2 * Diagonal(D2) * inv(V2)
+  A[Block(1, 1)] = A1
+  A[Block(2, 2)] = A2
+
+  D, V = eig_trunc(A; trunc=(; maxrank=3))
+  @test size(D) == (3, 3)
+  @test size(D) == (3, 3)
+  @test blockstoredlength(D) == 2
+  @test blockstoredlength(V) == 2
+  @test issetequal(eachblockstoredindex(D), [Block(1, 1), Block(2, 2)])
+  @test issetequal(eachblockstoredindex(V), [Block(1, 1), Block(2, 2)])
+  @test A * V ≈ V * D
+  @test sort(diagview(D[Block(1, 1)]); by=abs, rev=true) ≈ D1[1:1]
+  @test sort(diagview(D[Block(2, 2)]); by=abs, rev=true) ≈ D2[1:2]
+end
+
+herm(x) = parent(hermitianpart(x))
+
+@testset "eigh_full (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [2, 3]))
+  rng = StableRNG(123)
+  A[Block(1, 1)] = herm(randn(rng, T, 2, 2))
+  A[Block(2, 2)] = herm(randn(rng, T, 3, 3))
+
+  D, V = eigh_full(A)
+  @test size(D) == size(A)
+  @test size(D) == size(A)
+  @test blockstoredlength(D) == 2
+  @test blockstoredlength(V) == 2
+  @test issetequal(eachblockstoredindex(D), [Block(1, 1), Block(2, 2)])
+  @test issetequal(eachblockstoredindex(V), [Block(1, 1), Block(2, 2)])
+  @test A * V ≈ V * D
+end
+
+@testset "eigh_vals (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [2, 3]))
+  rng = StableRNG(123)
+  A[Block(1, 1)] = herm(randn(rng, T, 2, 2))
+  A[Block(2, 2)] = herm(randn(rng, T, 3, 3))
+
+  D = eigh_vals(A)
+  @test size(D) == (size(A, 1),)
+  @test blockstoredlength(D) == 2
+  D′ = eigh_vals(Matrix(A))
+  @test sort(D; by=abs) ≈ sort(D′; by=abs)
+end
+
+@testset "eigh_trunc (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  A = BlockSparseArray{T}(undef, ([2, 3], [2, 3]))
+  rng = StableRNG(123)
+  D1 = [1.0, 0.1]
+  V1, _ = qr_compact(randn(rng, T, 2, 2))
+  A1 = V1 * Diagonal(D1) * V1'
+  D2 = [1.0, 0.5, 0.1]
+  V2, _ = qr_compact(randn(rng, T, 3, 3))
+  A2 = V2 * Diagonal(D2) * V2'
+  A[Block(1, 1)] = herm(A1)
+  A[Block(2, 2)] = herm(A2)
+
+  D, V = eigh_trunc(A; trunc=(; maxrank=3))
+  @test size(D) == (3, 3)
+  @test size(D) == (3, 3)
+  @test blockstoredlength(D) == 2
+  @test blockstoredlength(V) == 2
+  @test issetequal(eachblockstoredindex(D), [Block(1, 1), Block(2, 2)])
+  @test issetequal(eachblockstoredindex(V), [Block(1, 1), Block(2, 2)])
+  @test A * V ≈ V * D
+  @test sort(diagview(D[Block(1, 1)]); by=abs, rev=true) ≈ D1[1:1]
+  @test sort(diagview(D[Block(2, 2)]); by=abs, rev=true) ≈ D2[1:2]
 end

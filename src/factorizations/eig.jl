@@ -55,7 +55,8 @@ for f in [:eig_vals!, :eigh_vals!]
     function MatrixAlgebraKit.initialize_output(
       ::typeof($f), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
     )
-      return similar(A, axes(A, 1))
+      T = Base.promote_op($f, blocktype(A), typeof(alg.alg))
+      return similar(A, BlockType(T), axes(A, 1))
     end
     function MatrixAlgebraKit.$f(
       A::AbstractBlockSparseMatrix, D, alg::BlockPermutedDiagonalAlgorithm
@@ -64,27 +65,6 @@ for f in [:eig_vals!, :eigh_vals!]
         D[I] = $f(@view!(A[I]), alg.alg)
       end
       return D
-    end
-  end
-end
-
-const TBlockDV = Tuple{AbstractBlockSparseMatrix,AbstractBlockSparseMatrix}
-
-for f in [:eig_trunc!, :eigh_trunc!]
-  @eval begin
-    function MatrixAlgebraKit.truncate!(
-      ::typeof($f), (D, V)::TBlockDV, strategy::TruncationStrategy
-    )
-      return MatrixAlgebraKit.truncate!(
-        $f, (D, V), BlockPermutedDiagonalTruncationStrategy(strategy)
-      )
-    end
-    function MatrixAlgebraKit.truncate!(
-      ::typeof($f), (D, V)::TBlockDV, strategy::BlockPermutedDiagonalTruncationStrategy
-    )
-      d = diagview(D)
-      ind = findtruncated(d, strategy)
-      return diagonal(d[ind]), V[:, ind]
     end
   end
 end

@@ -1,4 +1,4 @@
-using MatrixAlgebraKit: TruncationStrategy, diagview, svd_trunc!
+using MatrixAlgebraKit: TruncationStrategy, diagview, eig_trunc!, eigh_trunc!, svd_trunc!
 
 function MatrixAlgebraKit.diagview(A::BlockSparseMatrix{T,Diagonal{T,Vector{T}}}) where {T}
   D = BlockSparseVector{T}(undef, axes(A, 1))
@@ -21,17 +21,28 @@ struct BlockPermutedDiagonalTruncationStrategy{T<:TruncationStrategy} <: Truncat
   strategy::T
 end
 
-const TBlockUSVᴴ = Tuple{
-  AbstractBlockSparseMatrix,AbstractBlockSparseMatrix,AbstractBlockSparseMatrix
-}
-
 function MatrixAlgebraKit.truncate!(
-  ::typeof(svd_trunc!), (U, S, Vᴴ)::TBlockUSVᴴ, strategy::TruncationStrategy
+  ::typeof(svd_trunc!),
+  (U, S, Vᴴ)::NTuple{3,AbstractBlockSparseMatrix},
+  strategy::TruncationStrategy,
 )
   # TODO assert blockdiagonal
   return MatrixAlgebraKit.truncate!(
     svd_trunc!, (U, S, Vᴴ), BlockPermutedDiagonalTruncationStrategy(strategy)
   )
+end
+for f in [:eig_trunc!, :eigh_trunc!]
+  @eval begin
+    function MatrixAlgebraKit.truncate!(
+      ::typeof($f),
+      (D, V)::NTuple{2,AbstractBlockSparseMatrix},
+      strategy::TruncationStrategy,
+    )
+      return MatrixAlgebraKit.truncate!(
+        $f, (D, V), BlockPermutedDiagonalTruncationStrategy(strategy)
+      )
+    end
+  end
 end
 
 # cannot use regular slicing here: I want to slice without altering blockstructure
@@ -47,9 +58,21 @@ end
 
 function MatrixAlgebraKit.truncate!(
   ::typeof(svd_trunc!),
-  (U, S, Vᴴ)::TBlockUSVᴴ,
+  (U, S, Vᴴ)::NTuple{3,AbstractBlockSparseMatrix},
   strategy::BlockPermutedDiagonalTruncationStrategy,
 )
   I = MatrixAlgebraKit.findtruncated(diagview(S), strategy)
   return (U[:, I], S[I, I], Vᴴ[I, :])
+end
+for f in [:eig_trunc!, :eigh_trunc!]
+  @eval begin
+    function MatrixAlgebraKit.truncate!(
+      ::typeof($f),
+      (D, V)::NTuple{2,AbstractBlockSparseMatrix},
+      strategy::BlockPermutedDiagonalTruncationStrategy,
+    )
+      I = MatrixAlgebraKit.findtruncated(diagview(D), strategy)
+      return (D[I, I], V[:, I])
+    end
+  end
 end

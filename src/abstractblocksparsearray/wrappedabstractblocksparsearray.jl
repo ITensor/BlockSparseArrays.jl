@@ -350,8 +350,11 @@ end
 
 struct BlockType{T} end
 BlockType(x) = BlockType{x}()
-function Base.similar(a::AbstractBlockSparseArray, ::BlockType{T}) where {T}
-  return BlockSparseArray{eltype(T),ndims(T),T}(undef, axes(a))
+function Base.similar(a::AbstractBlockSparseArray, ::BlockType{T}, ax) where {T}
+  return BlockSparseArray{eltype(T),ndims(T),T}(undef, ax)
+end
+function Base.similar(a::AbstractBlockSparseArray, T::BlockType)
+  return similar(a, T, axes(a))
 end
 
 # TODO: Implement this in a more generic way using a smarter `copyto!`,
