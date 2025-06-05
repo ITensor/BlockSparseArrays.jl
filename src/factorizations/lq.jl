@@ -1,24 +1,5 @@
 using MatrixAlgebraKit: MatrixAlgebraKit, default_lq_algorithm, lq_compact!, lq_full!
 
-# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
-function MatrixAlgebraKit.default_lq_algorithm(A::AbstractBlockSparseMatrix; kwargs...)
-  return default_lq_algorithm(typeof(A); kwargs...)
-end
-
-# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(lq_compact!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
-)
-  return default_lq_algorithm(A; kwargs...)
-end
-
-# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(lq_full!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
-)
-  return default_lq_algorithm(A; kwargs...)
-end
-
 function MatrixAlgebraKit.default_lq_algorithm(
   A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )

@@ -7,34 +7,6 @@ using MatrixAlgebraKit:
   right_polar!,
   svd_compact!
 
-# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(left_polar!), A::AbstractBlockSparseMatrix; kwargs...
-)
-  return default_algorithm(left_polar!, typeof(A); kwargs...)
-end
-
-# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(left_polar!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
-)
-  return PolarViaSVD(default_algorithm(svd_compact!, A; kwargs...))
-end
-
-# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(right_polar!), A::AbstractBlockSparseMatrix; kwargs...
-)
-  return default_algorithm(right_polar!, typeof(A); kwargs...)
-end
-
-# TODO: Delete once https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/32 is merged.
-function MatrixAlgebraKit.default_algorithm(
-  ::typeof(right_polar!), A::Type{<:AbstractBlockSparseMatrix}; kwargs...
-)
-  return PolarViaSVD(default_algorithm(svd_compact!, A; kwargs...))
-end
-
 function MatrixAlgebraKit.check_input(::typeof(left_polar!), A::AbstractBlockSparseMatrix)
   @views for I in eachblockstoredindex(A)
     m, n = size(A[I])

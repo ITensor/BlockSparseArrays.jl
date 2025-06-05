@@ -1,7 +1,7 @@
 name = "BlockSparseArrays"
 uuid = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.7.0"
+version = "0.7.1"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -39,7 +39,7 @@ GPUArraysCore = "0.1.0, 0.2"
 LinearAlgebra = "1.10"
 MacroTools = "0.5.13"
 MapBroadcast = "0.1.5"
-MatrixAlgebraKit = "0.2"
+MatrixAlgebraKit = "0.2.2"
 SparseArraysBase = "0.5"
 SplitApplyCombine = "1.2.3"
 TensorAlgebra = "0.3.2"
