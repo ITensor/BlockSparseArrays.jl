@@ -1,4 +1,5 @@
-using MatrixAlgebraKit: MatrixAlgebraKit, default_svd_algorithm, svd_compact!, svd_full!
+using MatrixAlgebraKit:
+  MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!, svd_full!
 
 """
     BlockPermutedDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
@@ -152,45 +153,40 @@ function MatrixAlgebraKit.initialize_output(
 end
 
 function MatrixAlgebraKit.check_input(
-  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, USVᴴ
+  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ)
 )
-  U, S, Vt = USVᴴ
   @assert isa(U, AbstractBlockSparseMatrix) &&
     isa(S, AbstractBlockSparseMatrix) &&
-    isa(Vt, AbstractBlockSparseMatrix)
-  @assert eltype(A) == eltype(U) == eltype(Vt)
+    isa(Vᴴ, AbstractBlockSparseMatrix)
+  @assert eltype(A) == eltype(U) == eltype(Vᴴ)
   @assert real(eltype(A)) == eltype(S)
-  @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vt, 2)
+  @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vᴴ, 2)
   @assert axes(S, 1) == axes(S, 2)
-
   return nothing
 end
 
 function MatrixAlgebraKit.check_input(
-  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, USVᴴ
+  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ)
 )
-  U, S, Vt = USVᴴ
   @assert isa(U, AbstractBlockSparseMatrix) &&
     isa(S, AbstractBlockSparseMatrix) &&
-    isa(Vt, AbstractBlockSparseMatrix)
-  @assert eltype(A) == eltype(U) == eltype(Vt)
+    isa(Vᴴ, AbstractBlockSparseMatrix)
+  @assert eltype(A) == eltype(U) == eltype(Vᴴ)
   @assert real(eltype(A)) == eltype(S)
-  @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vt, 1) == axes(Vt, 2)
+  @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vᴴ, 1) == axes(Vᴴ, 2)
   @assert axes(S, 2) == axes(A, 2)
-
   return nothing
 end
 
 function MatrixAlgebraKit.svd_compact!(
-  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockPermutedDiagonalAlgorithm
+  A::AbstractBlockSparseMatrix, (U, S, Vᴴ), alg::BlockPermutedDiagonalAlgorithm
 )
-  MatrixAlgebraKit.check_input(svd_compact!, A, USVᴴ)
-  U, S, Vt = USVᴴ
+  check_input(svd_compact!, A, (U, S, Vᴴ))
 
   # do decomposition on each block
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
-    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vt[bcol, bcol]))
+    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vᴴ[bcol, bcol]))
     usvᴴ′ = svd_compact!(@view!(A[bI]), usvᴴ, alg.alg)
     @assert usvᴴ === usvᴴ′ "svd_compact! might not be in-place"
   end
@@ -203,25 +199,24 @@ function MatrixAlgebraKit.svd_compact!(
   emptycols = setdiff(1:blocksize(A, 2), bcolIs)
   # needs copyto! instead because size(::LinearAlgebra.I) doesn't work
   # U[Block(row, col)] = LinearAlgebra.I
-  # Vt[Block(col, col)] = LinearAlgebra.I
+  # Vᴴ[Block(col, col)] = LinearAlgebra.I
   for (row, col) in zip(emptyrows, emptycols)
     copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
-    copyto!(@view!(Vt[Block(col, col)]), LinearAlgebra.I)
+    copyto!(@view!(Vᴴ[Block(col, col)]), LinearAlgebra.I)
   end
 
-  return USVᴴ
+  return (U, S, Vᴴ)
 end
 
 function MatrixAlgebraKit.svd_full!(
-  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockPermutedDiagonalAlgorithm
+  A::AbstractBlockSparseMatrix, (U, S, Vᴴ), alg::BlockPermutedDiagonalAlgorithm
 )
-  MatrixAlgebraKit.check_input(svd_full!, A, USVᴴ)
-  U, S, Vt = USVᴴ
+  check_input(svd_full!, A, (U, S, Vᴴ))
 
   # do decomposition on each block
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
-    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vt[bcol, bcol]))
+    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vᴴ[bcol, bcol]))
     usvᴴ′ = svd_full!(@view!(A[bI]), usvᴴ, alg.alg)
     @assert usvᴴ === usvᴴ′ "svd_full! might not be in-place"
   end
@@ -237,17 +232,17 @@ function MatrixAlgebraKit.svd_full!(
   # Vt[Block(col, col)] = LinearAlgebra.I
   for (row, col) in zip(emptyrows, emptycols)
     copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
-    copyto!(@view!(Vt[Block(col, col)]), LinearAlgebra.I)
+    copyto!(@view!(Vᴴ[Block(col, col)]), LinearAlgebra.I)
   end
 
   # also handle extra rows/cols
   for i in (length(emptyrows) + 1):length(emptycols)
-    copyto!(@view!(Vt[Block(emptycols[i], emptycols[i])]), LinearAlgebra.I)
+    copyto!(@view!(Vᴴ[Block(emptycols[i], emptycols[i])]), LinearAlgebra.I)
   end
   bn = blocksize(A, 2)
   for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
     copyto!(@view!(U[Block(emptyrows[k], bn + i)]), LinearAlgebra.I)
   end
 
-  return USVᴴ
+  return (U, S, Vᴴ)
 end

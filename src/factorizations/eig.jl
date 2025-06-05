@@ -4,6 +4,7 @@ using LinearAlgebra: LinearAlgebra, Diagonal
 using MatrixAlgebraKit:
   MatrixAlgebraKit,
   TruncationStrategy,
+  check_input,
   default_eig_algorithm,
   default_eigh_algorithm,
   diagview,
@@ -24,6 +25,26 @@ for f in [:default_eig_algorithm, :default_eigh_algorithm]
   end
 end
 
+function MatrixAlgebraKit.check_input(
+  ::typeof(eig_full!), A::AbstractBlockSparseMatrix, (D, V)
+)
+  @assert isa(D, AbstractBlockSparseMatrix) && isa(V, AbstractBlockSparseMatrix)
+  @assert eltype(V) === eltype(D) === complex(eltype(A))
+  @assert axes(A, 1) == axes(A, 2)
+  @assert axes(A) == axes(D) == axes(V)
+  return nothing
+end
+function MatrixAlgebraKit.check_input(
+  ::typeof(eigh_full!), A::AbstractBlockSparseMatrix, (D, V)
+)
+  @assert isa(D, AbstractBlockSparseMatrix) && isa(V, AbstractBlockSparseMatrix)
+  @assert eltype(V) === eltype(A)
+  @assert eltype(D) === real(eltype(A))
+  @assert axes(A, 1) == axes(A, 2)
+  @assert axes(A) == axes(D) == axes(V)
+  return nothing
+end
+
 for f in [:eig_full!, :eigh_full!]
   @eval begin
     function MatrixAlgebraKit.initialize_output(
@@ -37,6 +58,7 @@ for f in [:eig_full!, :eigh_full!]
     function MatrixAlgebraKit.$f(
       A::AbstractBlockSparseMatrix, (D, V), alg::BlockPermutedDiagonalAlgorithm
     )
+      check_input($f, A, (D, V))
       for I in eachstoredblockdiagindex(A)
         D[I], V[I] = $f(@view(A[I]), alg.alg)
       end
