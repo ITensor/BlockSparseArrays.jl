@@ -100,7 +100,7 @@ end
 # svd_trunc!
 # ----------
 
-@testset "svd_trunc ($m, $n) BlockSparseMatri{$T}" for ((m, n), T) in test_params
+@testset "svd_trunc ($m, $n) BlockSparseMatrix{$T}" for ((m, n), T) in test_params
   a = BlockSparseArray{T}(undef, m, n)
 
   # test blockdiagonal
