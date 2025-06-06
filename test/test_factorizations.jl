@@ -41,10 +41,19 @@ using Test: @inferred, @test, @test_throws, @testset
   MATRIX_FUNCTIONS = [MATRIX_FUNCTIONS; [:inv, :pinv]]
   # Only works when real, also isn't defined in Julia 1.10.
   MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
-  for f in MATRIX_FUNCTIONS
+  MATRIX_FUNCTIONS_LOW_ACCURACY = [:acoth]
+  for f in setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_LOW_ACCURACY)
     @eval begin
       fa = $f($a)
       @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √(eps(real($elt)))
+      @test fa isa BlockSparseMatrix
+      @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
+    end
+  end
+  for f in MATRIX_FUNCTIONS_LOW_ACCURACY
+    @eval begin
+      fa = $f($a)
+      @test Matrix(fa) ≈ $f(Matrix($a)) rtol = ∛(eps(real($elt)))
       @test fa isa BlockSparseMatrix
       @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
     end
