@@ -73,10 +73,33 @@ const MATRIX_FUNCTIONS = [
   :acoth,
 ]
 
+# Functions where the dense implementations in `LinearAlgebra` are
+# not type stable.
+const MATRIX_FUNCTIONS_UNSTABLE = [
+  :log,
+  :sqrt,
+  :acos,
+  :asin,
+  :atan,
+  :acsc,
+  :asec,
+  :acot,
+  :acosh,
+  :asinh,
+  :atanh,
+  :acsch,
+  :asech,
+  :acoth,
+]
+
+function initialize_output_blocksparse(f::F, a::AbstractMatrix) where {F}
+  B = Base.promote_op(f, blocktype(a))
+  return similar(a, BlockType(B))
+end
+
 function matrix_function_blocksparse(f::F, a::AbstractMatrix; kwargs...) where {F}
   blockisdiag(a) || throw(ArgumentError("`$f` only defined for block-diagonal matrices"))
-  B = Base.promote_op(f, blocktype(a))
-  fa = similar(a, BlockType(B))
+  fa = initialize_output_blocksparse(f, a)
   for I in blockdiagindices(a)
     fa[I] = f(a[I]; kwargs...)
   end
@@ -87,6 +110,15 @@ for f in MATRIX_FUNCTIONS
   @eval begin
     function Base.$f(a::AnyAbstractBlockSparseMatrix)
       return matrix_function_blocksparse($f, a)
+    end
+  end
+end
+
+for f in MATRIX_FUNCTIONS_UNSTABLE
+  @eval begin
+    function initialize_output_blocksparse(::typeof($f), a::AbstractMatrix)
+      B = similartype(blocktype(a), complex(eltype(a)))
+      return similar(a, BlockType(B))
     end
   end
 end

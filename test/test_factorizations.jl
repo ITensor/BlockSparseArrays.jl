@@ -32,28 +32,7 @@ using Random: Random
 using StableRNGs: StableRNG
 using Test: @inferred, @test, @test_throws, @testset
 
-# These functions involve inverses so break when there are zeros on the diagonal.
-MATRIX_FUNCTIONS_SINGULAR = [:csc, :cot, :csch, :coth]
-
-# Broken because of type stability issues. Fix manually by forcing to be complex.
-MATRIX_FUNCTIONS_UNSTABLE = [
-  :log,
-  :sqrt,
-  :acos,
-  :asin,
-  :atan,
-  :acsc,
-  :asec,
-  :acot,
-  :acosh,
-  :asinh,
-  :atanh,
-  :acsch,
-  :asech,
-  :acoth,
-]
-
-@testset "Matrix functions (eltype=$elt)" for elt in (Float32, Float64, ComplexF64)
+@testset "Matrix functions (T=$elt)" for elt in (Float32, Float64, ComplexF64)
   rng = StableRNG(123)
   a = BlockSparseMatrix{elt}(undef, [2, 3], [2, 3])
   a[Block(1, 1)] = randn(rng, elt, 2, 2)
@@ -62,8 +41,6 @@ MATRIX_FUNCTIONS_UNSTABLE = [
   MATRIX_FUNCTIONS = [MATRIX_FUNCTIONS; [:inv, :pinv]]
   # Only works when real, also isn't defined in Julia 1.10.
   MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
-  # Broken because of type stability issues. Fix manually by forcing to be complex.
-  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_UNSTABLE)
   for f in MATRIX_FUNCTIONS
     @eval begin
       fa = $f($a)
@@ -73,15 +50,27 @@ MATRIX_FUNCTIONS_UNSTABLE = [
     end
   end
 
-  # Skip inverse functions when there are missing/zero diagonal blocks.
+  # Catch case of off-diagonal blocks.
+  rng = StableRNG(123)
+  a = BlockSparseMatrix{elt}(undef, [2, 3], [2, 3])
+  a[Block(1, 1)] = randn(rng, elt, 2, 2)
+  a[Block(1, 2)] = randn(rng, elt, 2, 3)
+  for f in MATRIX_FUNCTIONS
+    @eval begin
+      @test_throws ArgumentError $f($a)
+    end
+  end
+
+  # Missing diagonal blocks.
   rng = StableRNG(123)
   a = BlockSparseMatrix{elt}(undef, [2, 3], [2, 3])
   a[Block(2, 2)] = randn(rng, elt, 3, 3)
   MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
-  # These functions involve inverses so break when there are zeros on the diagonal.
+  # These functions involve inverses so they break when there are zeros on the diagonal.
+  MATRIX_FUNCTIONS_SINGULAR = [
+    :log, :acsc, :asec, :acot, :acsch, :asech, :acoth, :csc, :cot, :csch, :coth
+  ]
   MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_SINGULAR)
-  # Broken because of type stability issues. Fix manually by forcing to be complex.
-  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_UNSTABLE)
   # Dense version is broken for some reason, investigate.
   MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
   for f in MATRIX_FUNCTIONS
@@ -92,9 +81,16 @@ MATRIX_FUNCTIONS_UNSTABLE = [
       @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
     end
   end
-  for f in MATRIX_FUNCTIONS_SINGULAR
+
+  SINGULAR_EXCEPTION = if VERSION < v"1.11-"
+    # A different exception is thrown in older versions of Julia.
+    LinearAlgebra.LAPACKException
+  else
+    LinearAlgebra.SingularException
+  end
+  for f in setdiff(MATRIX_FUNCTIONS_SINGULAR, [:log])
     @eval begin
-      @test_throws LinearAlgebra.SingularException $f($a)
+      @test_throws $SINGULAR_EXCEPTION $f($a)
     end
   end
 end
