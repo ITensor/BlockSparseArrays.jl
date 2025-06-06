@@ -53,7 +53,7 @@ using Test: @inferred, @test, @test_broken, @test_throws, @testset
   for f in MATRIX_FUNCTIONS_LOW_ACCURACY
     @eval begin
       fa = $f($a)
-      if !Sys.isapple() && isreal($elt)
+      if !Sys.isapple() && ($elt <: Real)
         # `acoth` appears to be broken on this matrix on Windows and Ubuntu
         # for real matrices.
         @test_broken Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
