@@ -53,7 +53,7 @@ using Test: @inferred, @test, @test_throws, @testset
   for f in MATRIX_FUNCTIONS_LOW_ACCURACY
     @eval begin
       fa = $f($a)
-      @test Matrix(fa) ≈ $f(Matrix($a)) rtol = ∛(eps(real($elt)))
+      @test Matrix(fa) ≈ $f(Matrix($a)) rtol = ∜(eps(real($elt)))
       @test fa isa BlockSparseMatrix
       @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
     end
