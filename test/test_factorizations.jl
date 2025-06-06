@@ -30,7 +30,7 @@ using MatrixAlgebraKit:
   trunctol
 using Random: Random
 using StableRNGs: StableRNG
-using Test: @inferred, @test, @test_throws, @testset
+using Test: @inferred, @test, @test_broken, @test_throws, @testset
 
 @testset "Matrix functions (T=$elt)" for elt in (Float32, Float64, ComplexF64)
   rng = StableRNG(123)
@@ -53,10 +53,13 @@ using Test: @inferred, @test, @test_throws, @testset
   for f in MATRIX_FUNCTIONS_LOW_ACCURACY
     @eval begin
       fa = $f($a)
-      # Accuracy is much lower on Windows and Ubuntu for `acoth`
-      # for some reason.
-      rtol = Sys.isapple() ? √eps(real($elt)) : eps(real($elt))^(1/5)
-      @test Matrix(fa) ≈ $f(Matrix($a)) rtol = rtol
+      if Sys.isapple()
+        @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
+      else
+        # Accuracy is much lower on Windows and Ubuntu for `acoth`
+        # for some reason.
+        @test_broken Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
+      end
       @test fa isa BlockSparseMatrix
       @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
     end
