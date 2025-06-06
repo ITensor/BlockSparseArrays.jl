@@ -32,3 +32,70 @@ function LinearAlgebra.tr(a::AnyAbstractBlockSparseMatrix)
   end
   return tr_a
 end
+
+# TODO: Define `SparseArraysBase.isdiag`, define as
+# `isdiag(blocks(a))`.
+function blockisdiag(a::AbstractArray)
+  return all(eachblockstoredindex(a)) do I
+    return allequal(Tuple(I))
+  end
+end
+
+const MATRIX_FUNCTIONS = [
+  :exp,
+  :cis,
+  :log,
+  :sqrt,
+  :cbrt,
+  :cos,
+  :sin,
+  :tan,
+  :csc,
+  :sec,
+  :cot,
+  :cosh,
+  :sinh,
+  :tanh,
+  :csch,
+  :sech,
+  :coth,
+  :acos,
+  :asin,
+  :atan,
+  :acsc,
+  :asec,
+  :acot,
+  :acosh,
+  :asinh,
+  :atanh,
+  :acsch,
+  :asech,
+  :acoth,
+]
+
+function matrix_function_blocksparse(f::F, a::AbstractMatrix; kwargs...) where {F}
+  blockisdiag(a) || throw(ArgumentError("`$f` only defined for block-diagonal matrices"))
+  B = Base.promote_op(f, blocktype(a))
+  fa = similar(a, BlockType(B))
+  for I in blockdiagindices(a)
+    fa[I] = f(a[I]; kwargs...)
+  end
+  return fa
+end
+
+for f in MATRIX_FUNCTIONS
+  @eval begin
+    function Base.$f(a::AnyAbstractBlockSparseMatrix)
+      return matrix_function_blocksparse($f, a)
+    end
+  end
+end
+
+function LinearAlgebra.inv(a::AnyAbstractBlockSparseMatrix)
+  return matrix_function_blocksparse(inv, a)
+end
+
+using LinearAlgebra: LinearAlgebra, pinv
+function LinearAlgebra.pinv(a::AnyAbstractBlockSparseMatrix; kwargs...)
+  return matrix_function_blocksparse(pinv, a; kwargs...)
+end

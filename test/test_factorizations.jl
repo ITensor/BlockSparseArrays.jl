@@ -1,6 +1,12 @@
 using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
 using BlockSparseArrays:
-  BlockSparseArray, BlockDiagonal, blockstoredlength, eachblockstoredindex
+  BlockSparseArrays,
+  BlockDiagonal,
+  BlockSparseArray,
+  BlockSparseMatrix,
+  blockstoredlength,
+  eachblockstoredindex
+using LinearAlgebra: LinearAlgebra, Diagonal, hermitianpart, pinv
 using MatrixAlgebraKit:
   diagview,
   eig_full,
@@ -22,10 +28,76 @@ using MatrixAlgebraKit:
   svd_trunc,
   truncrank,
   trunctol
-using LinearAlgebra: LinearAlgebra, Diagonal, hermitianpart
 using Random: Random
 using StableRNGs: StableRNG
-using Test: @inferred, @testset, @test
+using Test: @inferred, @test, @test_throws, @testset
+
+# These functions involve inverses so break when there are zeros on the diagonal.
+MATRIX_FUNCTIONS_SINGULAR = [:csc, :cot, :csch, :coth]
+
+# Broken because of type stability issues. Fix manually by forcing to be complex.
+MATRIX_FUNCTIONS_UNSTABLE = [
+  :log,
+  :sqrt,
+  :acos,
+  :asin,
+  :atan,
+  :acsc,
+  :asec,
+  :acot,
+  :acosh,
+  :asinh,
+  :atanh,
+  :acsch,
+  :asech,
+  :acoth,
+]
+
+@testset "Matrix functions (eltype=$elt)" for elt in (Float32, Float64, ComplexF64)
+  rng = StableRNG(123)
+  a = BlockSparseMatrix{elt}(undef, [2, 3], [2, 3])
+  a[Block(1, 1)] = randn(rng, elt, 2, 2)
+  a[Block(2, 2)] = randn(rng, elt, 3, 3)
+  MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
+  MATRIX_FUNCTIONS = [MATRIX_FUNCTIONS; [:inv, :pinv]]
+  # Only works when real, also isn't defined in Julia 1.10.
+  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
+  # Broken because of type stability issues. Fix manually by forcing to be complex.
+  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_UNSTABLE)
+  for f in MATRIX_FUNCTIONS
+    @eval begin
+      fa = $f($a)
+      @test Matrix(fa) ≈ $f(Matrix($a))
+      @test fa isa BlockSparseMatrix
+      @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
+    end
+  end
+
+  # Skip inverse functions when there are missing/zero diagonal blocks.
+  rng = StableRNG(123)
+  a = BlockSparseMatrix{elt}(undef, [2, 3], [2, 3])
+  a[Block(2, 2)] = randn(rng, elt, 3, 3)
+  MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
+  # These functions involve inverses so break when there are zeros on the diagonal.
+  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_SINGULAR)
+  # Broken because of type stability issues. Fix manually by forcing to be complex.
+  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_UNSTABLE)
+  # Dense version is broken for some reason, investigate.
+  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
+  for f in MATRIX_FUNCTIONS
+    @eval begin
+      fa = $f($a)
+      @test Matrix(fa) ≈ $f(Matrix($a))
+      @test fa isa BlockSparseMatrix
+      @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
+    end
+  end
+  for f in MATRIX_FUNCTIONS_SINGULAR
+    @eval begin
+      @test_throws LinearAlgebra.SingularException $f($a)
+    end
+  end
+end
 
 function test_svd(a, (U, S, Vᴴ); full=false)
   # Check that the SVD is correct
