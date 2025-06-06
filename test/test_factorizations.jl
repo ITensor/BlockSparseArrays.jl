@@ -53,12 +53,12 @@ using Test: @inferred, @test, @test_broken, @test_throws, @testset
   for f in MATRIX_FUNCTIONS_LOW_ACCURACY
     @eval begin
       fa = $f($a)
-      if Sys.isapple()
-        @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
-      else
-        # Accuracy is much lower on Windows and Ubuntu for `acoth`
-        # for some reason.
+      if !Sys.isapple() && isreal(elt)
+        # `acoth` appears to be broken on this matrix on Windows and Ubuntu
+        # for real matrices.
         @test_broken Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
+      else
+        @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
       end
       @test fa isa BlockSparseMatrix
       @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
