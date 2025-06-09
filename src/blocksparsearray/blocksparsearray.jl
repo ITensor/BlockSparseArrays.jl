@@ -173,7 +173,9 @@ end
 function BlockSparseArray{T,N}(
   ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}
 ) where {T,N}
-  return BlockSparseArray{T,N,Array{T,N}}(undef, axes)
+  # TODO: Use `similartype` to determine the block type.
+  A = Base.promote_op(similar, Array{T}, Tuple{eltype.(eachblockaxis.(axes))...})
+  return BlockSparseArray{T,N,A}(undef, axes)
 end
 
 function BlockSparseArray{T,N}(
@@ -228,6 +230,20 @@ function BlockSparseArray{T}(
   ::UndefInitializer, axes::Vararg{AbstractUnitRange{<:Integer}}
 ) where {T}
   return BlockSparseArray{T}(undef, axes)
+end
+
+function blocksparsezeros(elt::Type, axes...)
+  return BlockSparseArray{elt}(undef, axes...)
+end
+function blocksparsezeros(::BlockType{A}, axes...) where {A<:AbstractArray}
+  return BlockSparseArray{eltype(A),ndims(A),A}(undef, axes...)
+end
+function blocksparse(d::Dict{<:Block,<:AbstractArray}, axes...)
+  a = blocksparsezeros(BlockType(valtype(d)), axes...)
+  for I in eachindex(d)
+    a[I] = d[I]
+  end
+  return a
 end
 
 # Base `AbstractArray` interface

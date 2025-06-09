@@ -33,7 +33,8 @@ end
 # Take a collection of axes and mortar them
 # into a single blocked axis.
 function mortar_axis(axs)
-  return blockedrange(length.(axs))
+  ## return blockedrange(length.(axs))
+  return blockrange(axs)
 end
 
 # Custom `BlockedUnitRange` constructor that takes a unit range

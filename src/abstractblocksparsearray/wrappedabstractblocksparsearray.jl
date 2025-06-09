@@ -230,10 +230,16 @@ function Base.similar(
   return similar(arraytype, eltype(arraytype), axes)
 end
 
+# This circumvents some issues with `TypeParameterAccessors.similartype`.
+# TODO: Fix this poperly in `TypeParameterAccessors.jl`.
+function _similartype(arraytype::Type{<:AbstractArray}, elt::Type, axt)
+  return Base.promote_op(similar, arraytype, elt, axt)
+end
+
 function blocksparse_similar(a, elt::Type, axes::Tuple)
-  return BlockSparseArray{elt,length(axes),similartype(blocktype(a), elt, axes)}(
-    undef, axes
-  )
+  block_axt = Tuple{eltype.(eachblockaxis.(axes))...}
+  blockt = _similartype(blocktype(a), Type{elt}, block_axt)
+  return BlockSparseArray{elt,length(axes),blockt}(undef, axes)
 end
 @interface ::AbstractBlockSparseArrayInterface function Base.similar(
   a::AbstractArray, elt::Type, axes::Tuple{Vararg{Int}}

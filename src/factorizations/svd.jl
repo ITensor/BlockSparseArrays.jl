@@ -20,14 +20,21 @@ function MatrixAlgebraKit.default_svd_algorithm(
   return BlockPermutedDiagonalAlgorithm(alg)
 end
 
+# TODO: Put this in a common location or package,
+# maybe `TypeParameterAccessors.jl`?
+# Also define `imagtype`, `complextype`, etc.
+realtype(a::AbstractArray) = realtype(typeof(a))
+function realtype(A::Type{<:AbstractArray})
+  return Base.promote_op(real, A)
+end
+
+using DiagonalArrays: diagonaltype
 function similar_output(
   ::typeof(svd_compact!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
 )
   U = similar(A, axes(A, 1), S_axes[1])
   T = real(eltype(A))
-  # TODO: this should be replaced with a more general similar function that can handle setting
-  # the blocktype and element type - something like S = similar(A, BlockType(...))
-  S = BlockSparseMatrix{T,Diagonal{T,Vector{T}}}(undef, S_axes)
+  S = similar(A, BlockType(diagonaltype(realtype(blocktype(A)))), S_axes)
   Vt = similar(A, S_axes[2], axes(A, 2))
   return U, S, Vt
 end
@@ -49,9 +56,9 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    len = minimum(length, (brows[row], bcols[col]))
-    u_axes[col] = brows[row][Base.OneTo(len)]
-    v_axes[col] = bcols[col][Base.OneTo(len)]
+    b = argmin(length, (brows[row], bcols[col]))
+    u_axes[col] = b
+    v_axes[col] = b
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
