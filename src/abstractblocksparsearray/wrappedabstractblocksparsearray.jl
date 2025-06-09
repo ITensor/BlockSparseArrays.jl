@@ -232,12 +232,15 @@ end
 
 # This circumvents some issues with `TypeParameterAccessors.similartype`.
 # TODO: Fix this poperly in `TypeParameterAccessors.jl`.
-function _similartype(arraytype::Type{<:AbstractArray}, elt::Type, axt)
-  return Base.promote_op(similar, arraytype, elt, axt)
+function _similartype(arrayt::Type{<:AbstractArray}, elt::Type, axt::Type{<:Tuple})
+  return Base.promote_op(similar, arrayt, elt, axt)
+end
+function _similartype(arrayt::Type{<:AbstractArray}, axt::Type{<:Tuple})
+  return Base.promote_op(similar, arrayt, axt)
 end
 
 function blocksparse_similar(a, elt::Type, axes::Tuple)
-  block_axt = Tuple{eltype.(eachblockaxis.(axes))...}
+  block_axt = Tuple{blockaxistype.(axes)...}
   blockt = _similartype(blocktype(a), Type{elt}, block_axt)
   return BlockSparseArray{elt,length(axes),blockt}(undef, axes)
 end

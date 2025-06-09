@@ -173,8 +173,8 @@ end
 function BlockSparseArray{T,N}(
   ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}
 ) where {T,N}
-  # TODO: Use `similartype` to determine the block type.
-  A = Base.promote_op(similar, Array{T}, Tuple{eltype.(eachblockaxis.(axes))...})
+  axt = Tuple{blockaxistype.(axes)...}
+  A = _similartype(Array{T}, axt)
   return BlockSparseArray{T,N,A}(undef, axes)
 end
 

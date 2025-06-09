@@ -29,12 +29,17 @@ axis(a::AbstractVector) = axes(a, 1)
 function eachblockaxis(a::AbstractVector)
   return map(axis, blocks(a))
 end
+function blockaxistype(a::AbstractVector)
+  return eltype(eachblockaxis(a))
+end
 
 # Take a collection of axes and mortar them
 # into a single blocked axis.
 function mortar_axis(axs)
-  ## return blockedrange(length.(axs))
   return blockrange(axs)
+end
+function mortar_axis(axs::Vector{<:Base.OneTo{<:Integer}})
+  return blockedrange(length.(axs))
 end
 
 # Custom `BlockedUnitRange` constructor that takes a unit range
