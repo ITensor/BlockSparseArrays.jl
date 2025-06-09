@@ -33,7 +33,6 @@ function similar_output(
   ::typeof(svd_compact!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
 )
   U = similar(A, axes(A, 1), S_axes[1])
-  T = real(eltype(A))
   S = similar(A, BlockType(diagonaltype(realtype(blocktype(A)))), S_axes)
   Vt = similar(A, S_axes[2], axes(A, 2))
   return U, S, Vt
