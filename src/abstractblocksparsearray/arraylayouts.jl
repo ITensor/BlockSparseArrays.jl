@@ -27,9 +27,8 @@ function Base.similar(
   elt::Type,
   axes,
 ) where {A,B}
-  # TODO: Check that this equals `similartype(blocktype(B), elt, axes)`,
-  # or maybe promote them?
-  output_blocktype = similartype(blocktype(A), elt, axes)
+  # TODO: Use something like `Base.promote_op(*, A, B)` to determine the output block type.
+  output_blocktype = similartype(blocktype(A), Type{elt}, Tuple{blockaxistype.(axes)...})
   return similar(BlockSparseArray{elt,length(axes),output_blocktype}, axes)
 end
 
