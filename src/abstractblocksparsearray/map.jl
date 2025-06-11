@@ -111,9 +111,13 @@ function Base.isreal(a::AnyAbstractBlockSparseArray)
   return @interface interface(a) isreal(a)
 end
 
+# Helps with specialization.
 function Base.:*(x::Number, a::AnyAbstractBlockSparseArray)
   return map(Base.Fix1(*, x), a)
 end
 function Base.:*(a::AnyAbstractBlockSparseArray, x::Number)
   return map(Base.Fix2(*, x), a)
+end
+function Base.:/(a::AnyAbstractBlockSparseArray, x::Number)
+  return map(Base.Fix2(/, x), a)
 end

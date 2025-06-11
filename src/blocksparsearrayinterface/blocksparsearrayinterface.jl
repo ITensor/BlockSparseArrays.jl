@@ -16,7 +16,8 @@ using BlockArrays:
   blocklength,
   blocks,
   findblockindex
-using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface, zero!
+using DerivableInterfaces:
+  DerivableInterfaces, @interface, AbstractArrayInterface, DefaultArrayInterface, zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
   AbstractSparseArrayInterface,
@@ -104,13 +105,29 @@ blocktype(a::BlockArray) = eltype(blocks(a))
 abstract type AbstractBlockSparseArrayInterface{N} <: AbstractSparseArrayInterface{N} end
 
 # TODO: Also support specifying the `blocktype` along with the `eltype`.
-function Base.similar(::AbstractBlockSparseArrayInterface, T::Type, ax::Tuple)
-  return similar(BlockSparseArray{T}, ax)
+function Base.similar(interface::AbstractBlockSparseArrayInterface, T::Type, ax::Tuple)
+  N = length(ax)
+  block_axt = Tuple{blockaxistype.(ax)...}
+  B = _similartype(blockinterface(interface), Type{T}, block_axt)
+  return similar(BlockSparseArray{T,N,B}, ax)
 end
 
-struct BlockSparseArrayInterface{N} <: AbstractBlockSparseArrayInterface{N} end
+struct BlockSparseArrayInterface{N,B<:AbstractArrayInterface{N}} <:
+       AbstractBlockSparseArrayInterface{N}
+  blockinterface::B
+end
+blockinterface(interface::BlockSparseArrayInterface) = getfield(interface, :blockinterface)
+function BlockSparseArrayInterface{N}(blockinterface::AbstractArrayInterface{N}) where {N}
+  return BlockSparseArrayInterface{N,typeof(blockinterface)}(blockinterface)
+end
+function BlockSparseArrayInterface{N}() where {N}
+  return BlockSparseArrayInterface{N}(DefaultArrayInterface{N}())
+end
 BlockSparseArrayInterface(::Val{N}) where {N} = BlockSparseArrayInterface{N}()
 BlockSparseArrayInterface{M}(::Val{N}) where {M,N} = BlockSparseArrayInterface{N}()
+function BlockSparseArrayInterface{M,B}(::Val{N}) where {M,B<:AbstractArrayInterface{M},N}
+  return BlockSparseArrayInterface{N,B}(B(Val(N)))
+end
 BlockSparseArrayInterface() = BlockSparseArrayInterface{Any}()
 
 @interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(a::AbstractArray)

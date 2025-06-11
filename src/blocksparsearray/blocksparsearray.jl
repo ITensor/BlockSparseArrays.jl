@@ -173,7 +173,9 @@ end
 function BlockSparseArray{T,N}(
   ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}
 ) where {T,N}
-  return BlockSparseArray{T,N,Array{T,N}}(undef, axes)
+  axt = Tuple{blockaxistype.(axes)...}
+  A = _similartype(Array{T}, axt)
+  return BlockSparseArray{T,N,A}(undef, axes)
 end
 
 function BlockSparseArray{T,N}(
@@ -230,6 +232,20 @@ function BlockSparseArray{T}(
   return BlockSparseArray{T}(undef, axes)
 end
 
+function blocksparsezeros(elt::Type, axes...)
+  return BlockSparseArray{elt}(undef, axes...)
+end
+function blocksparsezeros(::BlockType{A}, axes...) where {A<:AbstractArray}
+  return BlockSparseArray{eltype(A),ndims(A),A}(undef, axes...)
+end
+function blocksparse(d::Dict{<:Block,<:AbstractArray}, axes...)
+  a = blocksparsezeros(BlockType(valtype(d)), axes...)
+  for I in eachindex(d)
+    a[I] = d[I]
+  end
+  return a
+end
+
 # Base `AbstractArray` interface
 Base.axes(a::BlockSparseArray) = a.axes
 
@@ -237,6 +253,10 @@ Base.axes(a::BlockSparseArray) = a.axes
 # This is used by `blocks(::AnyAbstractBlockSparseArray)`.
 @interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::BlockSparseArray) =
   a.blocks
+
+function blocktype(arraytype::Type{<:BlockSparseArray{<:Any,<:Any,A}}) where {A}
+  return A
+end
 
 # TODO: Use `TypeParameterAccessors`.
 function blockstype(
