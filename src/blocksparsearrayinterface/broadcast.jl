@@ -24,6 +24,7 @@ end
 #   return BlockSparseArrayStyle{ndims(arraytype)}()
 # end
 
+BlockSparseArrayStyle{N}() where {N} = BlockSparseArrayStyle{N}(DefaultArrayStyle{N}())
 BlockSparseArrayStyle(::Val{N}) where {N} = BlockSparseArrayStyle{N}()
 BlockSparseArrayStyle{M}(::Val{N}) where {M,N} = BlockSparseArrayStyle{N}()
 
