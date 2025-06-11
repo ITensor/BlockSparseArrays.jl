@@ -101,18 +101,21 @@ blockstype(a::BlockArray) = blockstype(typeof(a))
 blocktype(arraytype::Type{<:BlockArray}) = eltype(blockstype(arraytype))
 blocktype(a::BlockArray) = eltype(blocks(a))
 
-abstract type AbstractBlockSparseArrayInterface <: AbstractSparseArrayInterface end
+abstract type AbstractBlockSparseArrayInterface{N} <: AbstractSparseArrayInterface{N} end
 
 # TODO: Also support specifying the `blocktype` along with the `eltype`.
-function DerivableInterfaces.arraytype(::AbstractBlockSparseArrayInterface, T::Type)
-  return BlockSparseArray{T}
+function Base.similar(::AbstractBlockSparseArrayInterface, T::Type, ax::Tuple)
+  return similar(BlockSparseArray{T}, ax)
 end
 
-struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
+struct BlockSparseArrayInterface{N} <: AbstractBlockSparseArrayInterface{N} end
+BlockSparseArrayInterface(::Val{N}) where {N} = BlockSparseArrayInterface{N}()
+BlockSparseArrayInterface{M}(::Val{N}) where {M,N} = BlockSparseArrayInterface{N}()
+BlockSparseArrayInterface() = BlockSparseArrayInterface{Any}()
 
-@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::AbstractArray) = error(
-  "Not implemented"
-)
+@interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(a::AbstractArray)
+  return error("Not implemented")
+end
 
 @interface ::AbstractBlockSparseArrayInterface function SparseArraysBase.isstored(
   a::AbstractArray{<:Any,N}, I::Vararg{Int,N}
