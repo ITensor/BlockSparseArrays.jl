@@ -113,7 +113,7 @@ end
 function Base.similar(interface::AbstractBlockSparseArrayInterface, T::Type, ax::Tuple)
   # TODO: Generalize by storing the block interface in the block sparse array interface.
   N = length(ax)
-  B = similartype(blockinterface(interface), T, Tuple{blockaxistype.(ax)...})
+  B = similartype(typeof(blockinterface(interface)), Type{T}, Tuple{blockaxistype.(ax)...})
   return similar(BlockSparseArray{T,N,B}, ax)
 end
 
@@ -124,8 +124,8 @@ end
 function BlockSparseArrayInterface{N}(blockinterface::AbstractArrayInterface{N}) where {N}
   return BlockSparseArrayInterface{N,typeof(blockinterface)}(blockinterface)
 end
-function BlockSparseArrayInterface{M,B}(::Val{N}) where {M,B,N}
-  return BlockSparseArrayInterface{N,B}(blockinterface(B)(Val(N)))
+function BlockSparseArrayInterface{M,B}(::Val{N}) where {M,B<:AbstractArrayInterface{M},N}
+  return BlockSparseArrayInterface{N}(B(Val(N)))
 end
 function BlockSparseArrayInterface{N}() where {N}
   return BlockSparseArrayInterface{N}(DefaultArrayInterface{N}())
