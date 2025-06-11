@@ -3,13 +3,21 @@ using GPUArraysCore: @allowscalar
 using MapBroadcast: Mapped
 using DerivableInterfaces: DerivableInterfaces, @interface
 
-abstract type AbstractBlockSparseArrayStyle{N} <: AbstractArrayStyle{N} end
+abstract type AbstractBlockSparseArrayStyle{N,B} <: AbstractArrayStyle{N} end
 
-function DerivableInterfaces.interface(::Type{<:AbstractBlockSparseArrayStyle})
-  return BlockSparseArrayInterface()
+function DerivableInterfaces.interface(
+  ::Type{<:AbstractBlockSparseArrayStyle{N,B}}
+) where {N,B}
+  return BlockSparseArrayInterface(interface(B))
 end
 
-struct BlockSparseArrayStyle{N} <: AbstractBlockSparseArrayStyle{N} end
+struct BlockSparseArrayStyle{N,B<:AbstractArrayStyle{N}} <:
+       AbstractBlockSparseArrayStyle{N,B}
+  blockstyle::B
+end
+function BlockSparseArrayStyle{N}(blockstyle::AbstractArrayStyle{N}) where {N}
+  return BlockSparseArrayStyle{N,typeof(blockstyle)}(blockstyle)
+end
 
 # Define for new sparse array types.
 # function Broadcast.BroadcastStyle(arraytype::Type{<:MyBlockSparseArray})

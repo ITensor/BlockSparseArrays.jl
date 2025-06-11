@@ -16,7 +16,8 @@ using BlockArrays:
   blocklength,
   blocks,
   findblockindex
-using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface, zero!
+using DerivableInterfaces:
+  DerivableInterfaces, @interface, AbstractArrayInterface, DefaultArrayInterface, zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
   AbstractSparseArrayInterface,
@@ -104,11 +105,17 @@ blocktype(a::BlockArray) = eltype(blocks(a))
 abstract type AbstractBlockSparseArrayInterface <: AbstractSparseArrayInterface end
 
 # TODO: Also support specifying the `blocktype` along with the `eltype`.
-function DerivableInterfaces.arraytype(::AbstractBlockSparseArrayInterface, T::Type)
-  return BlockSparseArray{T}
+function DerivableInterfaces.arraytype(
+  interface::AbstractBlockSparseArrayInterface, T::Type
+)
+  B = DerivableInterfaces.arraytype(interface.blockinterface, T)
+  return BlockSparseArray{T,<:Any,B}
 end
 
-struct BlockSparseArrayInterface <: AbstractBlockSparseArrayInterface end
+struct BlockSparseArrayInterface{B<:AbstractArrayInterface} <:
+       AbstractBlockSparseArrayInterface
+  blockinterface::B
+end
 
 @interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::AbstractArray) = error(
   "Not implemented"
