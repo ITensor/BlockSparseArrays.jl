@@ -16,7 +16,8 @@ using BlockArrays:
   blocklength,
   blocks,
   findblockindex
-using DerivableInterfaces: DerivableInterfaces, @interface, DefaultArrayInterface, zero!
+using DerivableInterfaces:
+  DerivableInterfaces, @interface, AbstractArrayInterface, DefaultArrayInterface, zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
   AbstractSparseArrayInterface,
@@ -101,14 +102,34 @@ blockstype(a::BlockArray) = blockstype(typeof(a))
 blocktype(arraytype::Type{<:BlockArray}) = eltype(blockstype(arraytype))
 blocktype(a::BlockArray) = eltype(blocks(a))
 
-abstract type AbstractBlockSparseArrayInterface{N} <: AbstractSparseArrayInterface{N} end
+abstract type AbstractBlockSparseArrayInterface{N,B<:AbstractArrayInterface{N}} <:
+              AbstractSparseArrayInterface{N} end
 
-# TODO: Also support specifying the `blocktype` along with the `eltype`.
-function Base.similar(::AbstractBlockSparseArrayInterface, T::Type, ax::Tuple)
-  return similar(BlockSparseArray{T}, ax)
+function blockinterface(interface::AbstractBlockSparseArrayInterface{<:Any,B}) where {B}
+  return B()
 end
 
-struct BlockSparseArrayInterface{N} <: AbstractBlockSparseArrayInterface{N} end
+# TODO: Also support specifying the `blocktype` along with the `eltype`.
+function Base.similar(interface::AbstractBlockSparseArrayInterface, T::Type, ax::Tuple)
+  # TODO: Generalize by storing the block interface in the block sparse array interface.
+  N = length(ax)
+  B = similartype(blockinterface(interface), T, Tuple{blockaxistype.(ax)...})
+  return similar(BlockSparseArray{T,N,B}, ax)
+end
+
+struct BlockSparseArrayInterface{N,B<:AbstractArrayInterface{N}} <:
+       AbstractBlockSparseArrayInterface{N,B}
+  blockinterface::B
+end
+function BlockSparseArrayInterface{N}(blockinterface::AbstractArrayInterface{N}) where {N}
+  return BlockSparseArrayInterface{N,typeof(blockinterface)}(blockinterface)
+end
+function BlockSparseArrayInterface{M,B}(::Val{N}) where {M,B,N}
+  return BlockSparseArrayInterface{N,B}(blockinterface(B)(Val(N)))
+end
+function BlockSparseArrayInterface{N}() where {N}
+  return BlockSparseArrayInterface{N}(DefaultArrayInterface{N}())
+end
 BlockSparseArrayInterface(::Val{N}) where {N} = BlockSparseArrayInterface{N}()
 BlockSparseArrayInterface{M}(::Val{N}) where {M,N} = BlockSparseArrayInterface{N}()
 BlockSparseArrayInterface() = BlockSparseArrayInterface{Any}()

@@ -29,6 +29,9 @@ axis(a::AbstractVector) = axes(a, 1)
 function eachblockaxis(a::AbstractVector)
   return map(axis, blocks(a))
 end
+function blockaxistype(a::AbstractVector)
+  return eltype(eachblockaxis(a))
+end
 
 # Take a collection of axes and mortar them
 # into a single blocked axis.

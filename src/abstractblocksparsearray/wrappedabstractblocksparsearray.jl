@@ -231,9 +231,9 @@ function Base.similar(
 end
 
 function blocksparse_similar(a, elt::Type, axes::Tuple)
-  return BlockSparseArray{elt,length(axes),similartype(blocktype(a), elt, axes)}(
-    undef, axes
-  )
+  ndims = length(axes)
+  blockt = similartype(blocktype(a), Type{elt}, Tuple{blockaxistype.(axes)...})
+  return BlockSparseArray{elt,ndims,blockt}(undef, axes)
 end
 @interface ::AbstractBlockSparseArrayInterface function Base.similar(
   a::AbstractArray, elt::Type, axes::Tuple{Vararg{Int}}

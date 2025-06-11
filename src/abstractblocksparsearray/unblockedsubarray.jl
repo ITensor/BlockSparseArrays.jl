@@ -30,10 +30,6 @@ function Broadcast.BroadcastStyle(arraytype::Type{<:UnblockedSubArray})
   return BroadcastStyle(blocktype(parenttype(arraytype)))
 end
 
-function TypeParameterAccessors.similartype(arraytype::Type{<:UnblockedSubArray}, elt::Type)
-  return similartype(blocktype(parenttype(arraytype)), elt)
-end
-
 function Base.similar(
   a::UnblockedSubArray, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
 )
