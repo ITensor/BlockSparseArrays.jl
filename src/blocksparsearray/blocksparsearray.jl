@@ -6,7 +6,7 @@ using BlockArrays:
   blockedrange,
   blocklength,
   undef_blocks
-using DerivableInterfaces: @interface
+using DerivableInterfaces: @interface, similartype
 using Dictionaries: Dictionary
 using SparseArraysBase: SparseArrayDOK
 
@@ -173,7 +173,9 @@ end
 function BlockSparseArray{T,N}(
   ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}
 ) where {T,N}
-  return BlockSparseArray{T,N,Array{T,N}}(undef, axes)
+  axt = Tuple{blockaxistype.(axes)...}
+  A = similartype(Array{T}, axt)
+  return BlockSparseArray{T,N,A}(undef, axes)
 end
 
 function BlockSparseArray{T,N}(
