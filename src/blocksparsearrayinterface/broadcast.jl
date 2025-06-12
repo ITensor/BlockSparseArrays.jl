@@ -12,7 +12,8 @@ blockstyle(::AbstractBlockSparseArrayStyle{N,B}) where {N,B<:AbstractArrayStyle{
 function Broadcast.BroadcastStyle(
   style1::AbstractBlockSparseArrayStyle, style2::AbstractBlockSparseArrayStyle
 )
-  return BlockSparseArrayStyle(BroadcastStyle(blockstyle(style1), blockstyle(style2)))
+  style = Broadcast.result_style(blockstyle(style1), blockstyle(style2))
+  return BlockSparseArrayStyle(style)
 end
 
 function DerivableInterfaces.interface(
