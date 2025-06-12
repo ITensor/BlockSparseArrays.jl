@@ -1,13 +1,22 @@
-using Base.Broadcast: BroadcastStyle, AbstractArrayStyle, DefaultArrayStyle, Broadcasted
+using Base.Broadcast:
+  Broadcast, BroadcastStyle, AbstractArrayStyle, DefaultArrayStyle, Broadcasted
 using GPUArraysCore: @allowscalar
 using MapBroadcast: Mapped
 using DerivableInterfaces: DerivableInterfaces, @interface
 
-abstract type AbstractBlockSparseArrayStyle{N,B} <: AbstractArrayStyle{N} end
+abstract type AbstractBlockSparseArrayStyle{N,B<:AbstractArrayStyle{N}} <:
+              AbstractArrayStyle{N} end
+blockstyle(::AbstractBlockSparseArrayStyle{<:Any,B}) where {<:Any,B} = B()
+
+function Broadcast.BroadcastStyle(
+  style1::AbstractBlockSparseArrayStyle, style2::AbstractBlockSparseArrayStyle
+)
+  return BlockSparseArrayStyle(BroadcastStyle(blockstyle(style1), blockstyle(style2)))
+end
 
 function DerivableInterfaces.interface(
   ::Type{<:AbstractBlockSparseArrayStyle{N,B}}
-) where {N,B}
+) where {N,B<:AbstractArrayStyle{N}}
   return BlockSparseArrayInterface(interface(B))
 end
 
