@@ -30,11 +30,9 @@ function BlockSparseArrayStyle{N}(blockstyle::AbstractArrayStyle{N}) where {N}
   return BlockSparseArrayStyle{N,typeof(blockstyle)}(blockstyle)
 end
 
-# Define for new sparse array types.
-# function Broadcast.BroadcastStyle(arraytype::Type{<:MyBlockSparseArray})
-#   return BlockSparseArrayStyle{ndims(arraytype)}()
-# end
-
+function BlockSparseArrayStyle{N,B}() where {N,B<:AbstractArrayStyle{N}}
+  return BlockSparseArrayStyle{N,B}(B())
+end
 BlockSparseArrayStyle{N}() where {N} = BlockSparseArrayStyle{N}(DefaultArrayStyle{N}())
 BlockSparseArrayStyle(::Val{N}) where {N} = BlockSparseArrayStyle{N}()
 BlockSparseArrayStyle{M}(::Val{N}) where {M,N} = BlockSparseArrayStyle{N}()
