@@ -230,6 +230,27 @@ function BlockSparseArray{T}(
   return BlockSparseArray{T}(undef, axes)
 end
 
+# Convenient constructors.
+function blocksparsezeros(elt::Type, axes...)
+  return BlockSparseArray{elt}(undef, axes...)
+end
+function blocksparsezeros(::BlockType{A}, axes...) where {A<:AbstractArray}
+  # TODO: Use:
+  # ```julia
+  # B = similartype(A, Type{eltype(A)}, Tuple{blockaxistype.(axes)...})
+  # BlockSparseArray{eltype(A),length(axes),B}(undef, axes...)
+  # ```
+  # to make a bit more generic.
+  return BlockSparseArray{eltype(A),ndims(A),A}(undef, axes...)
+end
+function blocksparse(d::Dict{<:Block,<:AbstractArray}, axes...)
+  a = blocksparsezeros(BlockType(valtype(d)), axes...)
+  for I in eachindex(d)
+    a[I] = d[I]
+  end
+  return a
+end
+
 # Base `AbstractArray` interface
 Base.axes(a::BlockSparseArray) = a.axes
 

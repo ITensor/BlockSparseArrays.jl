@@ -21,9 +21,12 @@ using BlockSparseArrays:
   BlockSparseArray,
   BlockSparseMatrix,
   BlockSparseVector,
+  BlockType,
   BlockView,
   blockdiagindices,
   blockreshape,
+  blocksparse,
+  blocksparsezeros,
   blockstoredlength,
   blockstype,
   blocktype,
@@ -131,6 +134,37 @@ arrayts = (Array, JLArray)
     )
       @test_throws ArgumentError BlockSparseVector{elt}(undef, dims...)
     end
+
+    # Convenient constructors.
+    a = blocksparsezeros(elt, [2, 3], [2, 3])
+    @test iszero(a)
+    @test iszero(blockstoredlength(a))
+    @test a isa BlockSparseMatrix{elt,Matrix{elt}}
+    @test blocktype(a) == Matrix{elt}
+    @test blockstype(a) <: SparseMatrixDOK{Matrix{elt}}
+    @test blocksize(a) == (2, 2)
+    @test blocksizes(a) == [(2, 2) (2, 3); (3, 2) (3, 3)]
+
+    a = blocksparsezeros(BlockType(arrayt{elt,2}), [2, 3], [2, 3])
+    @test iszero(a)
+    @test iszero(blockstoredlength(a))
+    @test a isa BlockSparseMatrix{elt,arrayt{elt,2}}
+    @test blocktype(a) == arrayt{elt,2}
+    @test blockstype(a) <: SparseMatrixDOK{arrayt{elt,2}}
+    @test blocksize(a) == (2, 2)
+    @test blocksizes(a) == [(2, 2) (2, 3); (3, 2) (3, 3)]
+
+    d = Dict(Block(1, 1) => dev(randn(elt, 2, 2)), Block(2, 2) => dev(randn(elt, 3, 3)))
+    a = blocksparse(d, [2, 3], [2, 3])
+    @test !iszero(a)
+    @test a[Block(1, 1)] == d[Block(1, 1)]
+    @test a[Block(2, 2)] == d[Block(2, 2)]
+    @test blockstoredlength(a) == 2
+    @test a isa BlockSparseMatrix{elt,arrayt{elt,2}}
+    @test blocktype(a) == arrayt{elt,2}
+    @test blockstype(a) <: SparseMatrixDOK{arrayt{elt,2}}
+    @test blocksize(a) == (2, 2)
+    @test blocksizes(a) == [(2, 2) (2, 3); (3, 2) (3, 3)]
   end
   @testset "blockstype, blocktype" begin
     a = arrayt(randn(elt, 2, 2))
