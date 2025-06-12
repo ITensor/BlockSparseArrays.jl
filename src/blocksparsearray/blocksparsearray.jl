@@ -6,9 +6,10 @@ using BlockArrays:
   blockedrange,
   blocklength,
   undef_blocks
-using DerivableInterfaces: @interface, similartype
+using DerivableInterfaces: @interface
 using Dictionaries: Dictionary
 using SparseArraysBase: SparseArrayDOK
+using TypeParameterAccessors: similartype
 
 """
     SparseArrayDOK{T}(undef_blocks, axes)

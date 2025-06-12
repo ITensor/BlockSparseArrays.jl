@@ -11,6 +11,10 @@ using LinearAlgebra: LinearAlgebra, dot, mul!
   return a_dest
 end
 
+function DerivableInterfaces.interface(m::MulAdd)
+  return interface(m.A, m.B, m.C)
+end
+
 function ArrayLayouts.materialize!(
   m::MatMulMatAdd{
     <:BlockLayout{<:SparseLayout},
@@ -18,8 +22,7 @@ function ArrayLayouts.materialize!(
     <:BlockLayout{<:SparseLayout},
   },
 )
-  α, a1, a2, β, a_dest = m.α, m.A, m.B, m.β, m.C
-  @interface BlockSparseArrayInterface() muladd!(m.α, m.A, m.B, m.β, m.C)
+  @interface interface(m) muladd!(m.α, m.A, m.B, m.β, m.C)
   return m.C
 end
 function ArrayLayouts.materialize!(
@@ -29,7 +32,7 @@ function ArrayLayouts.materialize!(
     <:BlockLayout{<:SparseLayout},
   },
 )
-  @interface BlockSparseArrayInterface() matmul!(m)
+  @interface interface(m) matmul!(m)
   return m.C
 end
 
@@ -42,5 +45,5 @@ end
 end
 
 function Base.copy(d::Dot{<:BlockLayout{<:SparseLayout},<:BlockLayout{<:SparseLayout}})
-  return @interface BlockSparseArrayInterface() dot(d.A, d.B)
+  return @interface interface(d.A, d.B) dot(d.A, d.B)
 end

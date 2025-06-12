@@ -1,5 +1,7 @@
+using DiagonalArrays: diagonaltype
 using MatrixAlgebraKit:
   MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!, svd_full!
+using TypeParameterAccessors: realtype
 
 """
     BlockPermutedDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
@@ -24,10 +26,7 @@ function similar_output(
   ::typeof(svd_compact!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
 )
   U = similar(A, axes(A, 1), S_axes[1])
-  T = real(eltype(A))
-  # TODO: this should be replaced with a more general similar function that can handle setting
-  # the blocktype and element type - something like S = similar(A, BlockType(...))
-  S = BlockSparseMatrix{T,Diagonal{T,Vector{T}}}(undef, S_axes)
+  S = similar(A, BlockType(diagonaltype(realtype(blocktype(A)))), S_axes)
   Vt = similar(A, S_axes[2], axes(A, 2))
   return U, S, Vt
 end
