@@ -6,7 +6,8 @@ using DerivableInterfaces: DerivableInterfaces, @interface
 
 abstract type AbstractBlockSparseArrayStyle{N,B<:AbstractArrayStyle{N}} <:
               AbstractArrayStyle{N} end
-blockstyle(::AbstractBlockSparseArrayStyle{<:Any,B}) where {<:Any,B} = B()
+
+blockstyle(::AbstractBlockSparseArrayStyle{N,B}) where {N,B<:AbstractArrayStyle{N}} = B()
 
 function Broadcast.BroadcastStyle(
   style1::AbstractBlockSparseArrayStyle, style2::AbstractBlockSparseArrayStyle
