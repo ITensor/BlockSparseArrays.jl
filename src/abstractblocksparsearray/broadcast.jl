@@ -1,8 +1,8 @@
 using BlockArrays: AbstractBlockedUnitRange, BlockSlice
-using Base.Broadcast: Broadcast
+using Base.Broadcast: Broadcast, BroadcastStyle
 
 function Broadcast.BroadcastStyle(arraytype::Type{<:AnyAbstractBlockSparseArray})
-  return BlockSparseArrayStyle{ndims(arraytype)}()
+  return BlockSparseArrayStyle(BroadcastStyle(blocktype(arraytype)))
 end
 
 # Fix ambiguity error with `BlockArrays`.
