@@ -17,7 +17,12 @@ using BlockArrays:
   blocks,
   findblockindex
 using DerivableInterfaces:
-  DerivableInterfaces, @interface, AbstractArrayInterface, DefaultArrayInterface, zero!
+  DerivableInterfaces,
+  @interface,
+  AbstractArrayInterface,
+  DefaultArrayInterface,
+  interface,
+  zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
   AbstractSparseArrayInterface,
@@ -125,7 +130,8 @@ function BlockSparseArrayInterface{N}(blockinterface::AbstractArrayInterface{N})
   return BlockSparseArrayInterface{N,typeof(blockinterface)}(blockinterface)
 end
 function BlockSparseArrayInterface{M,B}(::Val{N}) where {M,B<:AbstractArrayInterface{M},N}
-  return BlockSparseArrayInterface{N}(B(Val(N)))
+  B′ = B(Val(N))
+  return BlockSparseArrayInterface(B′)
 end
 function BlockSparseArrayInterface{N}() where {N}
   return BlockSparseArrayInterface{N}(DefaultArrayInterface{N}())
@@ -133,6 +139,14 @@ end
 BlockSparseArrayInterface(::Val{N}) where {N} = BlockSparseArrayInterface{N}()
 BlockSparseArrayInterface{M}(::Val{N}) where {M,N} = BlockSparseArrayInterface{N}()
 BlockSparseArrayInterface() = BlockSparseArrayInterface{Any}()
+
+function DerivableInterfaces.combine_interface_rule(
+  interface1::AbstractBlockSparseArrayInterface,
+  interface2::AbstractBlockSparseArrayInterface,
+)
+  B = interface(blockinterface(interface1), blockinterface(interface2))
+  return BlockSparseArrayInterface(B)
+end
 
 @interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(a::AbstractArray)
   return error("Not implemented")

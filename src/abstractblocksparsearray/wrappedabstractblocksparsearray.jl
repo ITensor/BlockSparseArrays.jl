@@ -29,8 +29,8 @@ const AnyAbstractBlockSparseVecOrMat{T,N} = Union{
   AnyAbstractBlockSparseVector{T},AnyAbstractBlockSparseMatrix{T}
 }
 
-function DerivableInterfaces.interface(::Type{<:AnyAbstractBlockSparseArray})
-  return BlockSparseArrayInterface()
+function DerivableInterfaces.interface(arrayt::Type{<:AnyAbstractBlockSparseArray})
+  return BlockSparseArrayInterface(interface(blocktype(arrayt)))
 end
 
 # a[1:2, 1:2]
