@@ -259,6 +259,12 @@ Base.axes(a::BlockSparseArray) = a.axes
 @interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::BlockSparseArray) =
   a.blocks
 
+function blocktype(
+  arraytype::Type{<:BlockSparseArray{T,N,A}}
+) where {T,N,A<:AbstractArray{T,N}}
+  return A
+end
+
 # TODO: Use `TypeParameterAccessors`.
 function blockstype(
   arraytype::Type{<:BlockSparseArray{T,N,A,Blocks}}
