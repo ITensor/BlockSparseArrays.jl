@@ -171,11 +171,22 @@ function BlockSparseArray{T,N,A}(
   return BlockSparseArray{T,N,A}(undef, (dim1, dim_rest...))
 end
 
+function unchecked_similartype(a, args...)
+  A = Base.promote_op(similar, a, args...)
+  return !isconcretetype(A) ? Array{T,N} : A
+end
+
 function BlockSparseArray{T,N}(
   ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}
 ) where {T,N}
   axt = Tuple{blockaxistype.(axes)...}
-  A = similartype(Array{T}, axt)
+  # Ideally we would use:
+  # ```julia
+  # A = similartype(Array{T}, axt)
+  # ```
+  # but that doesn't work when `similar` isn't defined or
+  # isn't type stable.
+  A = unchecked_similartype(Array{T}, axt)
   return BlockSparseArray{T,N,A}(undef, axes)
 end
 
