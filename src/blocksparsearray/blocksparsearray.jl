@@ -250,6 +250,9 @@ end
 function blocksparsezeros(elt::Type, axes...)
   return BlockSparseArray{elt}(undef, axes...)
 end
+function blocksparsezeros(axes...)
+  return blocksparsezeros(Float64, axes...)
+end
 function blocksparsezeros(::BlockType{A}, axes...) where {A<:AbstractArray}
   # TODO: Use:
   # ```julia

@@ -159,6 +159,15 @@ arrayts = (Array, JLArray)
     end
 
     # Convenient constructors.
+    a = blocksparsezeros([2, 3], [2, 3])
+    @test iszero(a)
+    @test iszero(blockstoredlength(a))
+    @test a isa BlockSparseMatrix{Float64,Matrix{Float64}}
+    @test blocktype(a) == Matrix{Float64}
+    @test blockstype(a) <: SparseMatrixDOK{Matrix{Float64}}
+    @test blocksize(a) == (2, 2)
+    @test blocksizes(a) == [(2, 2) (2, 3); (3, 2) (3, 3)]
+
     a = blocksparsezeros(elt, [2, 3], [2, 3])
     @test iszero(a)
     @test iszero(blockstoredlength(a))
