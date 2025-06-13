@@ -171,9 +171,11 @@ function BlockSparseArray{T,N,A}(
   return BlockSparseArray{T,N,A}(undef, (dim1, dim_rest...))
 end
 
-function unchecked_similartype(a, args...)
-  A = Base.promote_op(similar, a, args...)
-  return !isconcretetype(A) ? Array{T,N} : A
+function similartype_unchecked(
+  A::Type{<:AbstractArray{T}}, axt::Type{<:Tuple{Vararg{Any,N}}}
+) where {T,N}
+  A′ = Base.promote_op(similar, A, axt)
+  return !isconcretetype(A′) ? Array{T,N} : A′
 end
 
 function BlockSparseArray{T,N}(
@@ -186,7 +188,7 @@ function BlockSparseArray{T,N}(
   # ```
   # but that doesn't work when `similar` isn't defined or
   # isn't type stable.
-  A = unchecked_similartype(Array{T}, axt)
+  A = similartype_unchecked(Array{T}, axt)
   return BlockSparseArray{T,N,A}(undef, axes)
 end
 

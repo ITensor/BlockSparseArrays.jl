@@ -33,6 +33,7 @@ using BlockSparseArrays:
   eachblockstoredindex,
   eachstoredblock,
   eachstoredblockdiagindex,
+  similartype_unchecked,
   sparsemortar,
   view!
 using GPUArraysCore: @allowscalar
@@ -43,6 +44,20 @@ using Test: @test, @test_broken, @test_throws, @testset, @inferred
 using TestExtras: @constinferred
 using TypeParameterAccessors: TypeParameterAccessors, Position
 include("TestBlockSparseArraysUtils.jl")
+
+@testset "similartype_unchecked" begin
+  @test @constinferred(similartype_unchecked(Array{Float32}, NTuple{2,Int})) ===
+    Matrix{Float32}
+  @test @constinferred(similartype_unchecked(Array{Float32}, NTuple{2,Base.OneTo{Int}})) ===
+    Matrix{Float32}
+  @test @constinferred(similartype_unchecked(AbstractArray{Float32}, NTuple{2,Int})) ===
+    Matrix{Float32}
+  @test @constinferred(similartype_unchecked(JLArray{Float32}, NTuple{2,Int})) ===
+    JLMatrix{Float32}
+  @test @constinferred(
+    similartype_unchecked(JLArray{Float32}, NTuple{2,Base.OneTo{Int}})
+  ) === JLMatrix{Float32}
+end
 
 arrayts = (Array, JLArray)
 @testset "BlockSparseArrays (arraytype=$arrayt, eltype=$elt)" for arrayt in arrayts,
