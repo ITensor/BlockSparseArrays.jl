@@ -18,7 +18,6 @@ const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
   T,N,AbstractBlockSparseArray,AbstractBlockSparseArray{T,N}
 }
 
-# TODO: Rename `AnyBlockSparseArray`.
 const AnyAbstractBlockSparseArray{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
@@ -413,4 +412,8 @@ function Adapt.adapt_structure(to, a::SubArray{<:Any,<:Any,<:AbstractBlockSparse
   # TODO: Fix adapt for blocked unit ranges by making an AdaptExt for
   # BlockArrays.jl.
   return SubArray(adapt(to, parent(a)), parentindices(a))
+end
+
+function Base.show(io::IO, a::AnyAbstractBlockSparseArray)
+  return show(io, convert(Array, a))
 end
