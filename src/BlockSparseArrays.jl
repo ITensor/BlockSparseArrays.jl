@@ -45,6 +45,7 @@ include("blocksparsearray/blockdiagonalarray.jl")
 include("BlockArraysSparseArraysBaseExt/BlockArraysSparseArraysBaseExt.jl")
 
 # factorizations
+include("factorizations/tensorproducts.jl")
 include("factorizations/svd.jl")
 include("factorizations/truncation.jl")
 include("factorizations/qr.jl")

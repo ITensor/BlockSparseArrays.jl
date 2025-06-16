@@ -25,10 +25,11 @@ end
 function similar_output(
   ::typeof(svd_compact!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
 )
-  U = similar(A, axes(A, 1), S_axes[1])
-  S = similar(A, BlockType(diagonaltype(realtype(blocktype(A)))), S_axes)
-  Vt = similar(A, S_axes[2], axes(A, 2))
-  return U, S, Vt
+  BU, BS, BVᴴ = fieldtypes(Base.promote_op(svd_compact!, blocktype(A), typeof(alg.alg)))
+  U = similar(A, BlockType(BU), (axes(A, 1), S_axes[1]))
+  S = similar(A, BlockType(BS), S_axes)
+  Vᴴ = similar(A, BlockType(BVᴴ), (S_axes[2], axes(A, 2)))
+  return U, S, Vᴴ
 end
 
 function MatrixAlgebraKit.initialize_output(
@@ -48,9 +49,8 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    len = minimum(length, (brows[row], bcols[col]))
-    u_axes[col] = brows[row][Base.OneTo(len)]
-    v_axes[col] = bcols[col][Base.OneTo(len)]
+    u_axes[col] = infimum(brows[row], bcols[col])
+    v_axes[col] = infimum(bcols[col], brows[row])
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -58,9 +58,8 @@ function MatrixAlgebraKit.initialize_output(
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
   for (row, col) in zip(emptyrows, emptycols)
-    len = minimum(length, (brows[row], bcols[col]))
-    u_axes[col] = brows[row][Base.OneTo(len)]
-    v_axes[col] = bcols[col][Base.OneTo(len)]
+    u_axes[col] = infimum(brows[row], bcols[col])
+    v_axes[col] = infimum(bcols[col], brows[row])
   end
 
   u_axis = mortar_axis(u_axes)
