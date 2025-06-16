@@ -1172,11 +1172,11 @@ arrayts = (Array, JLArray)
       @test isstored(a)
       @test isone(blockstoredlength(a))
       @test issetequal(eachblockstoredindex(a), [Block()])
-      @test iszero(a)
+      @test iszero(adapt(Array)(a))
       @test b isa arrayt{elt,0}
       @test size(b) == ()
       # Converting to `Array` works around a bug in `iszero(JLArray{Float64}(undef))`.
-      @test iszero(Array(b))
+      @test iszero(adapt(Array)(b))
     end
   end
   @testset "LinearAlgebra" begin
