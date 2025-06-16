@@ -561,6 +561,11 @@ function view!(a::AbstractArray{<:Any,N}, index::Vararg{Block{1},N}) where {N}
   blocks(a)[Int.(index)...] = blocks(a)[Int.(index)...]
   return blocks(a)[Int.(index)...]
 end
+# Fix ambiguity error.
+function view!(a::AbstractArray{<:Any,0})
+  blocks(a)[] = blocks(a)[]
+  return blocks(a)[]
+end
 
 function view!(a::AbstractArray{<:Any,N}, index::BlockIndexRange{N}) where {N}
   # TODO: Is there a better code pattern for this?

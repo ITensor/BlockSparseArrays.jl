@@ -39,7 +39,8 @@ using BlockSparseArrays:
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray, JLMatrix
 using LinearAlgebra: Adjoint, Transpose, dot, norm, tr
-using SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, storedlength
+using SparseArraysBase:
+  SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, isstored, storedlength
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
 using TestExtras: @constinferred
 using TypeParameterAccessors: TypeParameterAccessors, Position
@@ -1158,6 +1159,24 @@ arrayts = (Array, JLArray)
       @test @view(a[blk...]) == x
       @test view!(a, blk...) == x
       @test @view!(a[blk...]) == x
+    end
+    # 0-dim case
+    # Regression test for https://github.com/ITensor/BlockSparseArrays.jl/issues/148
+    for I in ((), (Block(),))
+      a = dev(BlockSparseArray{elt}(undef))
+      @test !isstored(a)
+      @test iszero(blockstoredlength(a))
+      @test isempty(eachblockstoredindex(a))
+      @test iszero(a)
+      b = @view! a[I...]
+      @test isstored(a)
+      @test isone(blockstoredlength(a))
+      @test issetequal(eachblockstoredindex(a), [Block()])
+      @test iszero(a)
+      @test b isa arrayt{elt,0}
+      @test size(b) == ()
+      # Converting to `Array` works around a bug in `iszero(JLArray{Float64}(undef))`.
+      @test iszero(Array(b))
     end
   end
   @testset "LinearAlgebra" begin
