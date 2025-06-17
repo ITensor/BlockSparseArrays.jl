@@ -70,7 +70,7 @@ end
 
 arrayts = (Array, JLArray)
 @testset "BlockSparseArrays (arraytype=$arrayt, eltype=$elt)" for arrayt in arrayts,
-  elt in (Float32, Float64, Complex{Float32}, Complex{Float64})
+  elt in (Float32, Float64, ComplexF32)
 
   dev(a) = adapt(arrayt, a)
   @testset "Broken" begin
@@ -339,6 +339,42 @@ arrayts = (Array, JLArray)
         @test @allowscalar(b[Block()[]]) == 2
         @test Array(b) isa Array{elt,0}
         @test Array(b) == fill(2)
+      end
+    end
+
+    @testset "Abstract block type" begin
+      a = BlockSparseMatrix{elt,AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
+      @test sprint(show, MIME"text/plain"(), a) isa String
+      @test iszero(storedlength(a))
+      @test iszero(blockstoredlength(a))
+      a[Block(1, 1)] = dev(randn(elt, 2, 2))
+      a[Block(2, 2)] = dev(randn(elt, 3, 3))
+      @test !iszero(a[Block(1, 1)])
+      @test a[Block(1, 1)] isa arrayt{elt,2}
+      @test !iszero(a[Block(2, 2)])
+      @test a[Block(2, 2)] isa arrayt{elt,2}
+      @test iszero(a[Block(2, 1)])
+      @test a[Block(2, 1)] isa Matrix{elt}
+      @test iszero(a[Block(1, 2)])
+      @test a[Block(1, 2)] isa Matrix{elt}
+
+      if arrayt === Array
+        b = copy(a)
+        @test Array(b) ≈ Array(a)
+
+        b = a + a
+        @test Array(b) ≈ Array(a) + Array(a)
+
+        b = 3a
+        @test Array(b) ≈ 3Array(a)
+
+        b = a * a
+        @test Array(b) ≈ Array(a) * Array(a)
+      else
+        @test_broken copy(a)
+        @test_broken a * a
+        @test_broken a + a
+        @test_broken 3a
       end
     end
 

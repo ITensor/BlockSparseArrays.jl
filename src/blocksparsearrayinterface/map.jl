@@ -151,8 +151,12 @@ end
 function map_stored_blocks(f, a::AbstractArray)
   block_stored_indices = collect(eachblockstoredindex(a))
   if isempty(block_stored_indices)
+    eltype_a′ = Base.promote_op(f, eltype(a))
     blocktype_a′ = Base.promote_op(f, blocktype(a))
-    return BlockSparseArray{eltype(blocktype_a′),ndims(a),blocktype_a′}(undef, axes(a))
+    eltype_a′′ = !isconcretetype(eltype_a′) ? Any : eltype_a′
+    blocktype_a′′ =
+      !isconcretetype(blocktype_a′) ? AbstractArray{eltype_a′′,ndims(a)} : blocktype_a′
+    return BlockSparseArray{eltype_a′′,ndims(a),blocktype_a′′}(undef, axes(a))
   end
   stored_blocks = map(B -> f(@view!(a[B])), block_stored_indices)
   blocktype_a′ = eltype(stored_blocks)
