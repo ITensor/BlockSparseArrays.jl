@@ -22,10 +22,21 @@ function MatrixAlgebraKit.default_svd_algorithm(
   return BlockPermutedDiagonalAlgorithm(alg)
 end
 
+function output_type(
+  ::typeof(svd_compact!),
+  A::Type{<:AbstractMatrix{T}},
+  Alg::Type{<:MatrixAlgebraKit.AbstractAlgorithm},
+) where {T}
+  USVᴴ = Base.promote_op(svd_compact!, A, Alg)
+  !isconcretetype(USVᴴ) &&
+    return Tuple{AbstractMatrix{T},AbstractMatrix{realtype(T)},AbstractMatrix{T}}
+  return USVᴴ
+end
+
 function similar_output(
   ::typeof(svd_compact!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
 )
-  BU, BS, BVᴴ = fieldtypes(Base.promote_op(svd_compact!, blocktype(A), typeof(alg.alg)))
+  BU, BS, BVᴴ = fieldtypes(output_type(svd_compact!, blocktype(A), typeof(alg.alg)))
   U = similar(A, BlockType(BU), (axes(A, 1), S_axes[1]))
   S = similar(A, BlockType(BS), S_axes)
   Vᴴ = similar(A, BlockType(BVᴴ), (S_axes[2], axes(A, 2)))

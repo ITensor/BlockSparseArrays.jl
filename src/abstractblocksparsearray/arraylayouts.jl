@@ -23,13 +23,37 @@ function ArrayLayouts.MemoryLayout(
 end
 
 function Base.similar(
-  mul::MulAdd{<:BlockLayout{<:SparseLayout},<:BlockLayout{<:SparseLayout},<:Any,<:Any,A,B},
+  mul::MulAdd{
+    <:BlockLayout{<:SparseLayout,BlockLayoutA},
+    <:BlockLayout{<:SparseLayout,BlockLayoutB},
+    LayoutC,
+    T,
+    A,
+    B,
+    C,
+  },
   elt::Type,
   axes,
-) where {A,B}
-  # TODO: Use something like `Base.promote_op(*, A, B)` to determine the output block type.
-  output_blocktype = similartype(blocktype(A), Type{elt}, Tuple{blockaxistype.(axes)...})
-  return similar(BlockSparseArray{elt,length(axes),output_blocktype}, axes)
+) where {BlockLayoutA,BlockLayoutB,LayoutC,T,A,B,C}
+
+  # TODO: Consider using this instead:
+  # ```julia
+  # blockmultype = MulAdd{BlockLayoutA,BlockLayoutB,LayoutC,T,blocktype(A),blocktype(B),C}
+  # output_blocktype = Base.promote_op(
+  #   similar, blockmultype, Type{elt}, Tuple{eltype.(eachblockaxis.(axes))...}
+  # )
+  # ```
+  # The issue is that it in some cases it seems to lose some information about the block types.
+
+  # TODO: Maybe this should be:
+  # output_blocktype = Base.promote_op(
+  #   mul!, blocktype(mul.A), blocktype(mul.B), blocktype(mul.C), typeof(mul.α), typeof(mul.β)
+  # )
+
+  output_blocktype = Base.promote_op(*, blocktype(mul.A), blocktype(mul.B))
+  output_blocktype′ =
+    !isconcretetype(output_blocktype) ? AbstractMatrix{elt} : output_blocktype
+  return similar(BlockSparseArray{elt,length(axes),output_blocktype′}, axes)
 end
 
 # Materialize a SubArray view.

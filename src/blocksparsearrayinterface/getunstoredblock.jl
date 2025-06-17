@@ -11,6 +11,7 @@ end
   ax = ntuple(N) do d
     return only(axes(f.axes[d][Block(I[d])]))
   end
+  !isconcretetype(A) && return zero!(similar(Array{eltype(A),N}, ax))
   return zero!(similar(A, ax))
 end
 @inline function (f::GetUnstoredBlock)(
