@@ -1,3 +1,4 @@
+using Adapt: adapt
 using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
 using BlockSparseArrays:
   BlockSparseArrays,

@@ -18,6 +18,38 @@ function union_eachblockstoredindex(as::AbstractArray...)
   return ∪(map(eachblockstoredindex, as)...)
 end
 
+# Get a view of a block assuming it is stored.
+function viewblock_stored(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
+  return blocks(a)[Int.(I)...]
+end
+function viewblock_stored(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
+  return viewblock_stored(a, Tuple(I)...)
+end
+
+using FillArrays: Zeros
+# Get a view of a block if it is stored, otherwise return a lazy zeros.
+function viewblock_or_zeros(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
+  if isstored(a, I...)
+    return viewblock_stored(a, I...)
+  else
+    block_ax = map((ax, i) -> eachblockaxis(ax)[Int(i)], axes(a), I)
+    return Zeros{eltype(a)}(block_ax)
+  end
+end
+function viewblock_or_zeros(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
+  return viewblock_or_zeros(a, Tuple(I)...)
+end
+
+function map_block!(f, a_dest::AbstractArray, I::Block, a_srcs::AbstractArray...)
+  a_srcs_I = map(a_src -> viewblock_or_zeros(a_src, I), a_srcs)
+  if isstored(a_dest, I)
+    a_dest[I] .= f.(a_srcs_I...)
+  else
+    a_dest[I] = Broadcast.broadcast_preserving_zero_d(f, a_srcs_I...)
+  end
+  return a_dest
+end
+
 function map_blockwise!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
   # TODO: This assumes element types are numbers, generalize this logic.
   f_preserves_zeros = f(zero.(eltype.(a_srcs))...) == zero(eltype(a_dest))
@@ -27,22 +59,7 @@ function map_blockwise!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
     BlockRange(a_dest)
   end
   for I in Is
-    # TODO: Use:
-    # block_dest = @view a_dest[I]
-    # or:
-    # block_dest = @view! a_dest[I]
-    block_dest = blocks_maybe_single(a_dest)[Int.(Tuple(I))...]
-    # TODO: Use:
-    # block_srcs = map(a_src -> @view(a_src[I]), a_srcs)
-    block_srcs = map(a_srcs) do a_src
-      return blocks_maybe_single(a_src)[Int.(Tuple(I))...]
-    end
-    # TODO: Use `map!!` to handle immutable blocks.
-    map!(f, block_dest, block_srcs...)
-    # Replace the entire block, handles initializing new blocks
-    # or if blocks are immutable.
-    # TODO: Use `a_dest[I] = block_dest`.
-    blocks(a_dest)[Int.(Tuple(I))...] = block_dest
+    map_block!(f, a_dest, I, a_srcs...)
   end
   return a_dest
 end
