@@ -286,13 +286,11 @@ function Base.similar(
   elt::Type,
   axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
 )
-  # TODO: Use `@interface interface(a) similar(...)`.
   return @interface interface(a) similar(a, elt, axes)
 end
 
 # Fixes ambiguity error.
 function Base.similar(a::AnyAbstractBlockSparseArray, elt::Type, axes::Tuple{})
-  # TODO: Use `@interface interface(a) similar(...)`.
   return @interface interface(a) similar(a, elt, axes)
 end
 
@@ -304,7 +302,6 @@ function Base.similar(
     AbstractBlockedUnitRange{<:Integer},Vararg{AbstractBlockedUnitRange{<:Integer}}
   },
 )
-  # TODO: Use `@interface interface(a) similar(...)`.
   return @interface interface(a) similar(a, elt, axes)
 end
 
@@ -314,7 +311,6 @@ function Base.similar(
   elt::Type,
   axes::Tuple{AbstractUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
-  # TODO: Use `@interface interface(a) similar(...)`.
   return @interface interface(a) similar(a, elt, axes)
 end
 
@@ -324,8 +320,16 @@ function Base.similar(
   elt::Type,
   axes::Tuple{AbstractBlockedUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
-  # TODO: Use `@interface interface(a) similar(...)`.
   return @interface interface(a) similar(a, elt, axes)
+end
+function Base.similar(a::AnyAbstractBlockSparseArray, elt::Type)
+  return @interface interface(a) similar(a, elt, axes(a))
+end
+function Base.similar(
+  a::AnyAbstractBlockSparseArray,
+  axes::Tuple{AbstractBlockedUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
+)
+  return @interface interface(a) similar(a, eltype(a), axes)
 end
 
 # Fixes ambiguity errors with BlockArrays.
@@ -346,7 +350,6 @@ end
 function Base.similar(
   a::AnyAbstractBlockSparseArray, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
 )
-  # TODO: Use `@interface interface(a) similar(...)`.
   return @interface interface(a) similar(a, elt, axes)
 end
 
