@@ -35,10 +35,6 @@ arrayts = (Array, JLArray)
   b = 3a
   @test Array(b) ≈ 3Array(a)
 
-  if arrayt === Array
-    b = a * a
-    @test Array(b) ≈ Array(a) * Array(a)
-  else
-    @test_broken a * a
-  end
+  b = a * a
+  @test Array(b) ≈ Array(a) * Array(a)
 end
