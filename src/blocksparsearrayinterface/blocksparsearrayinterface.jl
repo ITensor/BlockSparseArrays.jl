@@ -42,9 +42,8 @@ function eachblockstoredindex(a::AbstractArray)
   return Block.(Tuple.(eachstoredindex(blocks(a))))
 end
 
-function SparseArraysBase.isstored(
-  a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}
-) where {N}
+function SparseArraysBase.isstored(a::AbstractArray, I1::Block{1}, Irest::Block{1}...)
+  I = (I1, Irest...)
   return isstored(blocks(a), Int.(I)...)
 end
 function SparseArraysBase.isstored(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
