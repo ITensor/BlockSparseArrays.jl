@@ -63,6 +63,19 @@ function Base.setindex!(a::AbstractBlockSparseArray{<:Any,0}, value, ::Block{0})
   return a
 end
 
+# Custom `_convert` works around the issue that
+# `convert(::Type{<:Diagonal}, ::AbstractMatrix)` isnt' defined
+# in Julia v1.10 (https://github.com/JuliaLang/julia/pull/48895,
+# https://github.com/JuliaLang/julia/pull/52487).
+# TODO: Delete once we drop support for Julia v1.10.
+_convert(::Type{T}, a::AbstractArray) where {T} = convert(T, a)
+using LinearAlgebra: LinearAlgebra, Diagonal, diag, isdiag
+_construct(T::Type{<:Diagonal}, a::AbstractMatrix) = T(diag(a))
+function _convert(T::Type{<:Diagonal}, a::AbstractMatrix)
+  LinearAlgebra.checksquare(a)
+  return isdiag(a) ? _construct(T, a) : throw(InexactError(:convert, T, a))
+end
+
 function Base.setindex!(
   a::AbstractBlockSparseArray{<:Any,N}, value, I::Vararg{Block{1},N}
 ) where {N}
@@ -74,7 +87,12 @@ function Base.setindex!(
       ),
     )
   end
-  blocks(a)[Int.(I)...] = value
+  # Custom `_convert` works around the issue that
+  # `convert(::Type{<:Diagonal}, ::AbstractMatrix)` isnt' defined
+  # in Julia v1.10 (https://github.com/JuliaLang/julia/pull/48895,
+  # https://github.com/JuliaLang/julia/pull/52487).
+  # TODO: Delete once we drop support for Julia v1.10.
+  blocks(a)[Int.(I)...] = _convert(blocktype(a), value)
   return a
 end
 
