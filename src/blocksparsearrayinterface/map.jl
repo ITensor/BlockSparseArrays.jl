@@ -40,10 +40,6 @@ function viewblock_or_zeros(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
   return viewblock_or_zeros(a, Tuple(I)...)
 end
 
-_convert(::Type{T}, a::AbstractArray) where {T} = convert(T, a)
-using LinearAlgebra: Diagonal
-_convert(::Type{T}, a::AbstractArray) where {T<:Diagonal} = convert(T, a)
-
 function map_block!(f, a_dest::AbstractArray, I::Block, a_srcs::AbstractArray...)
   a_srcs_I = map(a_src -> viewblock_or_zeros(a_src, I), a_srcs)
   if isstored(a_dest, I)
