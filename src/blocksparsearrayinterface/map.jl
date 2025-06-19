@@ -26,14 +26,14 @@ function viewblock_stored(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
   return viewblock_stored(a, Tuple(I)...)
 end
 
-using FillArrays: Zeros
+using FillArrays: Zeros, fillsimilar
 # Get a view of a block if it is stored, otherwise return a lazy zeros.
 function viewblock_or_zeros(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
   if isstored(a, I...)
     return viewblock_stored(a, I...)
   else
     block_ax = map((ax, i) -> eachblockaxis(ax)[Int(i)], axes(a), I)
-    return Zeros{eltype(a)}(block_ax)
+    return fillsimilar(Zeros{eltype(a)}(block_ax), block_ax)
   end
 end
 function viewblock_or_zeros(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
