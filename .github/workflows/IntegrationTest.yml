@@ -20,6 +20,7 @@ jobs:
            - 'FusionTensors'
            - 'GradedArrays'
            - 'ITensorBase'
+           - 'KroneckerArrays'
            - 'NamedDimsArrays'
            - 'QuantumOperatorDefinitions'
     uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@main"
