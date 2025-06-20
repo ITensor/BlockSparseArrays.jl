@@ -34,79 +34,85 @@ using StableRNGs: StableRNG
 using Test: @inferred, @test, @test_broken, @test_throws, @testset
 
 @testset "Matrix functions (T=$elt)" for elt in (Float32, Float64, ComplexF64)
-  rng = StableRNG(123)
-  a = BlockSparseMatrix{elt}(undef, [2, 3], [2, 3])
-  a[Block(1, 1)] = randn(rng, elt, 2, 2)
-  a[Block(2, 2)] = randn(rng, elt, 3, 3)
-  MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
-  MATRIX_FUNCTIONS = [MATRIX_FUNCTIONS; [:inv, :pinv]]
-  # Only works when real, also isn't defined in Julia 1.10.
-  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
-  MATRIX_FUNCTIONS_LOW_ACCURACY = [:acoth]
-  for f in setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_LOW_ACCURACY)
-    @eval begin
-      fa = $f($a)
-      @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √(eps(real($elt)))
-      @test fa isa BlockSparseMatrix
-      @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
-    end
-  end
-  for f in MATRIX_FUNCTIONS_LOW_ACCURACY
-    @eval begin
-      fa = $f($a)
-      if !Sys.isapple() && ($elt <: Real)
-        # `acoth` appears to be broken on this matrix on Windows and Ubuntu
-        # for real matrices.
-        @test_broken Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
-      else
-        @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
+  for matrixt in (Matrix, AbstractMatrix)
+    a = BlockSparseMatrix{elt,matrixt{elt}}(undef, [2, 3], [2, 3])
+    rng = StableRNG(123)
+    a[Block(1, 1)] = randn(rng, elt, 2, 2)
+    a[Block(2, 2)] = randn(rng, elt, 3, 3)
+    MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
+    MATRIX_FUNCTIONS = [MATRIX_FUNCTIONS; [:inv, :pinv]]
+    # Only works when real, also isn't defined in Julia 1.10.
+    MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
+    MATRIX_FUNCTIONS_LOW_ACCURACY = [:acoth]
+    for f in setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_LOW_ACCURACY)
+      @eval begin
+        fa = $f($a)
+        @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √(eps(real($elt)))
+        @test fa isa BlockSparseMatrix
+        @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
       end
-      @test fa isa BlockSparseMatrix
-      @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
+    end
+    for f in MATRIX_FUNCTIONS_LOW_ACCURACY
+      @eval begin
+        fa = $f($a)
+        if !Sys.isapple() && ($elt <: Real)
+          # `acoth` appears to be broken on this matrix on Windows and Ubuntu
+          # for real matrices.
+          @test_broken Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
+        else
+          @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
+        end
+        @test fa isa BlockSparseMatrix
+        @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
+      end
     end
   end
 
   # Catch case of off-diagonal blocks.
-  rng = StableRNG(123)
-  a = BlockSparseMatrix{elt}(undef, [2, 3], [2, 3])
-  a[Block(1, 1)] = randn(rng, elt, 2, 2)
-  a[Block(1, 2)] = randn(rng, elt, 2, 3)
-  for f in MATRIX_FUNCTIONS
-    @eval begin
-      @test_throws ArgumentError $f($a)
+  for matrixt in (Matrix, AbstractMatrix)
+    a = BlockSparseMatrix{elt,matrixt{elt}}(undef, [2, 3], [2, 3])
+    rng = StableRNG(123)
+    a[Block(1, 1)] = randn(rng, elt, 2, 2)
+    a[Block(1, 2)] = randn(rng, elt, 2, 3)
+    for f in BlockSparseArrays.MATRIX_FUNCTIONS
+      @eval begin
+        @test_throws ArgumentError $f($a)
+      end
     end
   end
 
   # Missing diagonal blocks.
-  rng = StableRNG(123)
-  a = BlockSparseMatrix{elt}(undef, [2, 3], [2, 3])
-  a[Block(2, 2)] = randn(rng, elt, 3, 3)
-  MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
-  # These functions involve inverses so they break when there are zeros on the diagonal.
-  MATRIX_FUNCTIONS_SINGULAR = [
-    :log, :acsc, :asec, :acot, :acsch, :asech, :acoth, :csc, :cot, :csch, :coth
-  ]
-  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_SINGULAR)
-  # Dense version is broken for some reason, investigate.
-  MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
-  for f in MATRIX_FUNCTIONS
-    @eval begin
-      fa = $f($a)
-      @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √(eps(real($elt)))
-      @test fa isa BlockSparseMatrix
-      @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
+  for matrixt in (Matrix, AbstractMatrix)
+    a = BlockSparseMatrix{elt,matrixt{elt}}(undef, [2, 3], [2, 3])
+    rng = StableRNG(123)
+    a[Block(2, 2)] = randn(rng, elt, 3, 3)
+    MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
+    # These functions involve inverses so they break when there are zeros on the diagonal.
+    MATRIX_FUNCTIONS_SINGULAR = [
+      :log, :acsc, :asec, :acot, :acsch, :asech, :acoth, :csc, :cot, :csch, :coth
+    ]
+    MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_SINGULAR)
+    # Dense version is broken for some reason, investigate.
+    MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, [:cbrt])
+    for f in MATRIX_FUNCTIONS
+      @eval begin
+        fa = $f($a)
+        @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √(eps(real($elt)))
+        @test fa isa BlockSparseMatrix
+        @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
+      end
     end
-  end
 
-  SINGULAR_EXCEPTION = if VERSION < v"1.11-"
-    # A different exception is thrown in older versions of Julia.
-    LinearAlgebra.LAPACKException
-  else
-    LinearAlgebra.SingularException
-  end
-  for f in setdiff(MATRIX_FUNCTIONS_SINGULAR, [:log])
-    @eval begin
-      @test_throws $SINGULAR_EXCEPTION $f($a)
+    SINGULAR_EXCEPTION = if VERSION < v"1.11-"
+      # A different exception is thrown in older versions of Julia.
+      LinearAlgebra.LAPACKException
+    else
+      LinearAlgebra.SingularException
+    end
+    for f in setdiff(MATRIX_FUNCTIONS_SINGULAR, [:log])
+      @eval begin
+        @test_throws $SINGULAR_EXCEPTION $f($a)
+      end
     end
   end
 end
