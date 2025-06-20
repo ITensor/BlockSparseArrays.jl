@@ -95,7 +95,7 @@ const MATRIX_FUNCTIONS_UNSTABLE = [
 function initialize_output_blocksparse(f::F, a::AbstractMatrix) where {F}
   blockt = Base.promote_op(f, blocktype(a))
   elt′ = Base.promote_op(f, eltype(a))
-  blockt′ = if blockt >: AbstractMatrix{elt′} || blockt === Union{}
+  blockt′ = if !(blockt <: AbstractMatrix{elt′}) || blockt === Union{}
     AbstractMatrix{elt′}
   else
     blockt
@@ -125,7 +125,7 @@ for f in MATRIX_FUNCTIONS_UNSTABLE
     function initialize_output_blocksparse(::typeof($f), a::AbstractMatrix)
       elt′ = complex(eltype(a))
       blockt = Base.promote_op(similar, blocktype(a), elt′)
-      blockt′ = if blockt >: AbstractMatrix{elt′} || blockt === Union{}
+      blockt′ = if !(blockt <: AbstractMatrix{elt′}) || blockt === Union{}
         AbstractMatrix{elt′}
       else
         blockt
