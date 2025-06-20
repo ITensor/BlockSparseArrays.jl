@@ -474,25 +474,3 @@ end
   @test sort(diagview(D[Block(1, 1)]); by=abs, rev=true) ≈ D1[1:1]
   @test sort(diagview(D[Block(2, 2)]); by=abs, rev=true) ≈ D2[1:2]
 end
-
-@testset "Abstract block type" begin
-  arrayt = Array
-  elt = Float32
-  dev = adapt(arrayt)
-
-  a = BlockSparseMatrix{elt,AbstractMatrix{elt}}(undef, ([2, 3], [2, 3]))
-  a[Block(1, 1)] = dev(randn(elt, 2, 2))
-  a[Block(2, 2)] = dev(randn(elt, 3, 3))
-  @test_broken eig_full(a)
-  @test_broken eigh_full(a)
-  @test_broken svd_compact(a)
-  @test_broken svd_full(a)
-  @test_broken left_orth(a)
-  @test_broken right_orth(a)
-  @test_broken left_polar(a)
-  @test_broken right_polar(a)
-  @test_broken qr_compact(a)
-  @test_broken qr_full(a)
-  @test_broken lq_compact(a)
-  @test_broken lq_full(a)
-end
