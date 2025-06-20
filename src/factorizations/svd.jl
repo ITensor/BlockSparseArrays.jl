@@ -10,24 +10,26 @@ A wrapper for `MatrixAlgebraKit.AbstractAlgorithm` that implements the wrapped a
 a block-by-block basis, which is possible if the input matrix is a block-diagonal matrix or
 a block permuted block-diagonal matrix.
 """
-struct BlockPermutedDiagonalAlgorithm{A<:MatrixAlgebraKit.AbstractAlgorithm} <:
-       MatrixAlgebraKit.AbstractAlgorithm
-  alg::A
+struct BlockPermutedDiagonalAlgorithm{F} <: MatrixAlgebraKit.AbstractAlgorithm
+  falg::F
+end
+function block_algorithm(alg::BlockPermutedDiagonalAlgorithm, a::AbstractMatrix)
+  return block_algorithm(alg, typeof(a))
+end
+function block_algorithm(alg::BlockPermutedDiagonalAlgorithm, A::Type{<:AbstractMatrix})
+  return alg.falg(A)
 end
 
 function MatrixAlgebraKit.default_svd_algorithm(
-  A::Type{<:AbstractBlockSparseMatrix}; kwargs...
+  ::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
-  alg = default_svd_algorithm(blocktype(A); kwargs...)
-  return BlockPermutedDiagonalAlgorithm(alg)
+  return BlockPermutedDiagonalAlgorithm() do block
+    return default_svd_algorithm(block; kwargs...)
+  end
 end
 
-function output_type(
-  ::typeof(svd_compact!),
-  A::Type{<:AbstractMatrix{T}},
-  Alg::Type{<:MatrixAlgebraKit.AbstractAlgorithm},
-) where {T}
-  USVᴴ = Base.promote_op(svd_compact!, A, Alg)
+function output_type(::typeof(svd_compact!), A::Type{<:AbstractMatrix{T}}) where {T}
+  USVᴴ = Base.promote_op(svd_compact!, A)
   !isconcretetype(USVᴴ) &&
     return Tuple{AbstractMatrix{T},AbstractMatrix{realtype(T)},AbstractMatrix{T}}
   return USVᴴ
@@ -36,7 +38,7 @@ end
 function similar_output(
   ::typeof(svd_compact!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
 )
-  BU, BS, BVᴴ = fieldtypes(output_type(svd_compact!, blocktype(A), typeof(alg.alg)))
+  BU, BS, BVᴴ = fieldtypes(output_type(svd_compact!, blocktype(A)))
   U = similar(A, BlockType(BU), (axes(A, 1), S_axes[1]))
   S = similar(A, BlockType(BS), S_axes)
   Vᴴ = similar(A, BlockType(BVᴴ), (S_axes[2], axes(A, 2)))
@@ -81,8 +83,10 @@ function MatrixAlgebraKit.initialize_output(
   # allocate output
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
     U[brow, bcol], S[bcol, bcol], Vt[bcol, bcol] = MatrixAlgebraKit.initialize_output(
-      svd_compact!, @view!(A[bI]), alg.alg
+      svd_compact!, block, block_alg
     )
   end
 
@@ -140,8 +144,10 @@ function MatrixAlgebraKit.initialize_output(
   # allocate output
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
     U[brow, bcol], S[bcol, bcol], Vt[bcol, bcol] = MatrixAlgebraKit.initialize_output(
-      svd_full!, @view!(A[bI]), alg.alg
+      svd_full!, block, block_alg
     )
   end
 
@@ -196,7 +202,9 @@ function MatrixAlgebraKit.svd_compact!(
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
     usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vᴴ[bcol, bcol]))
-    usvᴴ′ = svd_compact!(@view!(A[bI]), usvᴴ, alg.alg)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
+    usvᴴ′ = svd_compact!(block, usvᴴ, block_alg)
     @assert usvᴴ === usvᴴ′ "svd_compact! might not be in-place"
   end
 
@@ -226,7 +234,9 @@ function MatrixAlgebraKit.svd_full!(
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
     usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vᴴ[bcol, bcol]))
-    usvᴴ′ = svd_full!(@view!(A[bI]), usvᴴ, alg.alg)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
+    usvᴴ′ = svd_full!(block, usvᴴ, block_alg)
     @assert usvᴴ === usvᴴ′ "svd_full! might not be in-place"
   end
 

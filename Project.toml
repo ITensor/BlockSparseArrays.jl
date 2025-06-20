@@ -1,7 +1,7 @@
 name = "BlockSparseArrays"
 uuid = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.7.17"
+version = "0.7.18"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"

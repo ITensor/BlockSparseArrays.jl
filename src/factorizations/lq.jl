@@ -3,8 +3,9 @@ using MatrixAlgebraKit: MatrixAlgebraKit, default_lq_algorithm, lq_compact!, lq_
 function MatrixAlgebraKit.default_lq_algorithm(
   A::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
-  alg = default_lq_algorithm(blocktype(A); kwargs...)
-  return BlockPermutedDiagonalAlgorithm(alg)
+  return BlockPermutedDiagonalAlgorithm() do block
+    return default_lq_algorithm(block; kwargs...)
+  end
 end
 
 function similar_output(
@@ -58,8 +59,10 @@ function MatrixAlgebraKit.initialize_output(
   # allocate output
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
     L[brow, brow], Q[brow, bcol] = MatrixAlgebraKit.initialize_output(
-      lq_compact!, @view!(A[bI]), alg.alg
+      lq_compact!, block, block_alg
     )
   end
 
@@ -105,8 +108,10 @@ function MatrixAlgebraKit.initialize_output(
   # allocate output
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
     L[brow, brow], Q[brow, bcol] = MatrixAlgebraKit.initialize_output(
-      lq_full!, @view!(A[bI]), alg.alg
+      lq_full!, block, block_alg
     )
   end
 
@@ -154,7 +159,9 @@ function MatrixAlgebraKit.lq_compact!(
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
     lq = (@view!(L[brow, brow]), @view!(Q[brow, bcol]))
-    lq′ = lq_compact!(@view!(A[bI]), lq, alg.alg)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
+    lq′ = lq_compact!(block, lq, block_alg)
     @assert lq === lq′ "lq_compact! might not be in-place"
   end
 
@@ -183,7 +190,9 @@ function MatrixAlgebraKit.lq_full!(
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
     lq = (@view!(L[brow, brow]), @view!(Q[brow, bcol]))
-    lq′ = lq_full!(@view!(A[bI]), lq, alg.alg)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
+    lq′ = lq_full!(block, lq, block_alg)
     @assert lq === lq′ "lq_full! might not be in-place"
   end
 

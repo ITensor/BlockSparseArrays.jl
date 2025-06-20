@@ -2,10 +2,11 @@ using MatrixAlgebraKit:
   MatrixAlgebraKit, default_qr_algorithm, lq_compact!, lq_full!, qr_compact!, qr_full!
 
 function MatrixAlgebraKit.default_qr_algorithm(
-  A::Type{<:AbstractBlockSparseMatrix}; kwargs...
+  ::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )
-  alg = default_qr_algorithm(blocktype(A); kwargs...)
-  return BlockPermutedDiagonalAlgorithm(alg)
+  return BlockPermutedDiagonalAlgorithm() do block
+    return default_qr_algorithm(block; kwargs...)
+  end
 end
 
 function similar_output(
@@ -59,8 +60,10 @@ function MatrixAlgebraKit.initialize_output(
   # allocate output
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
     Q[brow, bcol], R[bcol, bcol] = MatrixAlgebraKit.initialize_output(
-      qr_compact!, @view!(A[bI]), alg.alg
+      qr_compact!, block, block_alg
     )
   end
 
@@ -106,8 +109,10 @@ function MatrixAlgebraKit.initialize_output(
   # allocate output
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
     Q[brow, bcol], R[bcol, bcol] = MatrixAlgebraKit.initialize_output(
-      qr_full!, @view!(A[bI]), alg.alg
+      qr_full!, block, block_alg
     )
   end
 
@@ -155,7 +160,9 @@ function MatrixAlgebraKit.qr_compact!(
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
     qr = (@view!(Q[brow, bcol]), @view!(R[bcol, bcol]))
-    qr′ = qr_compact!(@view!(A[bI]), qr, alg.alg)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
+    qr′ = qr_compact!(block, qr, block_alg)
     @assert qr === qr′ "qr_compact! might not be in-place"
   end
 
@@ -184,7 +191,9 @@ function MatrixAlgebraKit.qr_full!(
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
     qr = (@view!(Q[brow, bcol]), @view!(R[bcol, bcol]))
-    qr′ = qr_full!(@view!(A[bI]), qr, alg.alg)
+    block = @view!(A[bI])
+    block_alg = block_algorithm(alg, block)
+    qr′ = qr_full!(block, qr, block_alg)
     @assert qr === qr′ "qr_full! might not be in-place"
   end
 
