@@ -95,7 +95,7 @@ to_block(I::BlockIndexRange{1}) = Block(I)
 to_block(I::BlockIndexVector) = Block(I)
 to_block_indices(I::Block{1}) = Colon()
 to_block_indices(I::BlockIndexRange{1}) = only(I.indices)
-to_block_indices(I::BlockIndexVector) = I.indices
+to_block_indices(I::BlockIndexVector) = only(I.indices)
 
 function Base.view(
   a::AbstractBlockSparseArray{<:Any,N},
