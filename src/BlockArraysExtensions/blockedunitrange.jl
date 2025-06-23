@@ -292,34 +292,53 @@ end
   return b[GenericBlockIndex(tuple(K, J...))]
 end
 
-function blockindextype(TB::Type{<:Integer}, TI::Vararg{Type{<:Integer},N}) where {N}
-  return BlockIndex{N,NTuple{N,TB},Tuple{TI...}}
-end
-function blockindextype(TB::Type{<:Integer}, TI::Vararg{Type,N}) where {N}
-  return GenericBlockIndex{N,NTuple{N,TB},Tuple{TI...}}
-end
+# Work around the fact that it is type piracy to define
+# `Base.getindex(a::Block, b...)`.
+_getindex(a::Block{N}, b::Vararg{Any,N}) where {N} = GenericBlockIndex(a, b)
+_getindex(a::Block{N}, b::Vararg{Integer,N}) where {N} = a[b...]
+# Fix ambiguity.
+_getindex(a::Block{0}) = a[]
 
-struct BlockIndexVector{N,I<:NTuple{N,AbstractVector},TB<:Integer,BT} <: AbstractArray{BT,N}
+## function blockindextype(TB::Type{<:Integer}, TI::Vararg{Type{<:Integer},N}) where {N}
+##   return BlockIndex{N,NTuple{N,TB},Tuple{TI...}}
+## end
+## function blockindextype(TB::Type{<:Integer}, TI::Vararg{Type,N}) where {N}
+##   return GenericBlockIndex{N,NTuple{N,TB},Tuple{TI...}}
+## end
+
+struct BlockIndexVector{N,BT,I<:NTuple{N,AbstractVector},TB<:Integer} <: AbstractArray{BT,N}
   block::Block{N,TB}
   indices::I
-  function BlockIndexVector(
+  function BlockIndexVector{N,BT}(
     block::Block{N,TB}, indices::I
-  ) where {N,I<:NTuple{N,AbstractVector},TB<:Integer}
-    BT = blockindextype(TB, eltype.(indices)...)
-    return new{N,I,TB,BT}(block, indices)
+  ) where {N,BT,I<:NTuple{N,AbstractVector},TB<:Integer}
+    return new{N,BT,I,TB}(block, indices)
   end
+end
+function BlockIndexVector{1,BT}(block::Block{1}, indices::AbstractVector) where {BT}
+  return BlockIndexVector{1,BT}(block, (indices,))
+end
+function BlockIndexVector(
+  block::Block{N,TB}, indices::NTuple{N,AbstractVector}
+) where {N,TB<:Integer}
+  BT = Base.promote_op(_getindex, typeof(block), eltype.(indices)...)
+  return BlockIndexVector{N,BT}(block, indices)
 end
 function BlockIndexVector(block::Block{1}, indices::AbstractVector)
   return BlockIndexVector(block, (indices,))
 end
 Base.size(a::BlockIndexVector) = length.(a.indices)
 function Base.getindex(a::BlockIndexVector{N}, I::Vararg{Integer,N}) where {N}
-  return a.block[map((r, i) -> r[i], a.indices, I)...]
+  return _getindex(Block(a), getindex.(a.indices, I)...)
 end
 BlockArrays.block(b::BlockIndexVector) = b.block
 BlockArrays.Block(b::BlockIndexVector) = b.block
 
 Base.copy(a::BlockIndexVector) = BlockIndexVector(a.block, copy.(a.indices))
+
+function Base.getindex(b::AbstractBlockedUnitRange, Kkr::BlockIndexVector{1})
+  b[block(Kkr)][Kkr.indices...]
+end
 
 using ArrayLayouts: LayoutArray
 @propagate_inbounds Base.getindex(b::AbstractArray{T,N}, K::BlockIndexVector{N}) where {T,N} = b[block(
