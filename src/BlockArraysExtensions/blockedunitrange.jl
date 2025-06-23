@@ -292,6 +292,24 @@ end
   return b[GenericBlockIndex(tuple(K, J...))]
 end
 
+# TODO: Delete this once `BlockArrays.BlockIndex` is generalized.
+@inline function Base.to_indices(
+  A, inds, I::Tuple{AbstractVector{<:GenericBlockIndex{1}},Vararg{Any}}
+)
+  return (unblock(A, inds, I), to_indices(A, _maybetail(inds), Base.tail(I))...)
+end
+
+# This is a specialization of `BlockArrays.unblock`:
+# https://github.com/JuliaArrays/BlockArrays.jl/blob/v1.6.3/src/views.jl#L8-L11
+# that is used in the `to_indices` logic for blockwise slicing in
+# BlockArrays.jl.
+# TODO: Ideally this would be defined in BlockArrays.jl once the slicing
+# there is made more generic.
+function BlockArrays.unblock(A, inds, I::Tuple{GenericBlockIndex{1},Vararg{Any}})
+  B = first(I)
+  return _blockslice(B, inds[1][B])
+end
+
 # Work around the fact that it is type piracy to define
 # `Base.getindex(a::Block, b...)`.
 _getindex(a::Block{N}, b::Vararg{Any,N}) where {N} = GenericBlockIndex(a, b)
@@ -355,6 +373,17 @@ function blockedunitrange_getindices(
   indices::BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
 )
   return mortar(map(b -> a[b], blocks(indices)))
+end
+
+# This is a specialization of `BlockArrays.unblock`:
+# https://github.com/JuliaArrays/BlockArrays.jl/blob/v1.6.3/src/views.jl#L8-L11
+# that is used in the `to_indices` logic for blockwise slicing in
+# BlockArrays.jl.
+# TODO: Ideally this would be defined in BlockArrays.jl once the slicing
+# there is made more generic.
+function BlockArrays.unblock(A, inds, I::Tuple{BlockIndexVector{1},Vararg{Any}})
+  B = first(I)
+  return _blockslice(B, inds[1][B])
 end
 
 function to_blockindices(a::AbstractBlockedUnitRange{<:Integer}, I::AbstractArray{Bool})

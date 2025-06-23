@@ -1,6 +1,23 @@
 using BlockArrays:
-  Block, BlockIndex, BlockedArray, BlockedVector, block, blockedrange, blockindex, mortar
-using BlockSparseArrays: BlockSparseArrays, BlockIndexVector, GenericBlockIndex
+  Block,
+  BlockIndex,
+  BlockSlice,
+  BlockedArray,
+  BlockedVector,
+  block,
+  blockedrange,
+  blockindex,
+  mortar
+using BlockSparseArrays:
+  BlockSparseArrays,
+  BlockIndexVector,
+  BlockIndices,
+  GenericBlockIndex,
+  blocksparsezeros,
+  blockedunitrange_getindices,
+  to_block,
+  to_block_indices,
+  to_blockindexrange
 using Test: @test, @test_broken, @testset
 
 # blockrange
@@ -157,4 +174,111 @@ using Test: @test, @test_broken, @testset
   i = GenericBlockIndex(Block(2), 2)
   @test to_indices(a, (i, i)) == (4, 4)
   @test to_indices(a, axes(a), (i, i)) == (4, 4)
+
+  r = blockedrange([2, 3])
+  i = mortar([BlockIndexVector(Block(2), [1, 3]), BlockIndexVector(Block(1), [2])])
+  @test blockedunitrange_getindices(r, i) == mortar([[3, 5], [2]])
+
+  r = blockedrange([2, 3])
+  T = GenericBlockIndex{1,Tuple{Int},Tuple{Int}}
+  i = mortar([
+    BlockIndexVector{1,T}(Block(2), [1, 3]), BlockIndexVector{1,T}(Block(1), [2])
+  ])
+  @test blockedunitrange_getindices(r, i) == mortar([[3, 5], [2]])
+
+  # Internal functions.
+  @test to_block(Block(2)) === Block(2)
+  @test to_block(Block(2)[2:3]) === Block(2)
+  @test to_block(BlockIndexVector(Block(2), [1, 3])) === Block(2)
+  @test to_block_indices(Block(2)) === (:)
+  @test to_block_indices(Block(2)[2:3]) === 2:3
+  @test to_block_indices(BlockIndexVector(Block(2), [1, 3])) == [1, 3]
+
+  a = blocksparsezeros([2, 3], [2, 3])
+  i = Block(2)[2:3]
+  @test to_indices(a, (i, i)) ===
+    to_indices(a, axes(a), (i, i)) ===
+    (BlockSlice(i, 4:5), BlockSlice(i, 4:5))
+
+  a = blocksparsezeros([2, 3], [2, 3])
+  i = mortar([Block(2)[2:3], Block(1)[2:2]])
+  for I in (to_indices(a, (i, i)), to_indices(a, axes(a), (i, i)))
+    for Iⱼ in I
+      @test Iⱼ == BlockIndices(i, mortar([4:5, 2:2]))
+      @test Iⱼ isa BlockIndices
+      @test Iⱼ.blocks == i
+      @test Iⱼ.indices == mortar([4:5, 2:2])
+    end
+  end
+
+  a = blocksparsezeros([2, 3], [2, 3])
+  i = BlockIndexVector(Block(2), [1, 3])
+  for I in (to_indices(a, (i, i)), to_indices(a, axes(a), (i, i)))
+    for Iⱼ in I
+      @test Iⱼ == BlockIndices(i, [3, 5])
+      @test Iⱼ isa BlockIndices
+      @test Iⱼ.blocks == i
+      @test Iⱼ.indices == [3, 5]
+    end
+  end
+
+  a = blocksparsezeros([2, 3], [2, 3])
+  T = GenericBlockIndex{1,Tuple{Int},Tuple{Int}}
+  i = BlockIndexVector{1,T}(Block(2), [1, 3])
+  for I in (to_indices(a, (i, i)), to_indices(a, axes(a), (i, i)))
+    for Iⱼ in I
+      @test Iⱼ == BlockIndices(i, [3, 5])
+      @test Iⱼ isa BlockIndices
+      @test Iⱼ.blocks == i
+      @test Iⱼ.indices == [3, 5]
+    end
+  end
+
+  a = blocksparsezeros([2, 3], [2, 3])
+  i = mortar([BlockIndexVector(Block(2), [1, 3]), BlockIndexVector(Block(1), [2])])
+  for I in (to_indices(a, (i, i)), to_indices(a, axes(a), (i, i)))
+    for Iⱼ in I
+      @test Iⱼ == BlockIndices(i, mortar([[3, 5], [2]]))
+      @test Iⱼ isa BlockIndices
+      @test Iⱼ.blocks == i
+      @test Iⱼ.indices == mortar([[3, 5], [2]])
+    end
+  end
+
+  a = blocksparsezeros([2, 3], [2, 3])
+  i = [BlockIndexVector(Block(2), [1, 3]), BlockIndexVector(Block(1), [2])]
+  for I in (to_indices(a, (i, i)), to_indices(a, axes(a), (i, i)))
+    for Iⱼ in I
+      @test Iⱼ == BlockIndices(mortar(i), mortar([[3, 5], [2]]))
+      @test Iⱼ isa BlockIndices
+      @test Iⱼ.blocks == mortar(i)
+      @test Iⱼ.indices == mortar([[3, 5], [2]])
+    end
+  end
+
+  a = blocksparsezeros([2, 3], [2, 3])
+  T = GenericBlockIndex{1,Tuple{Int},Tuple{Int}}
+  i = mortar([
+    BlockIndexVector{1,T}(Block(2), [1, 3]), BlockIndexVector{1,T}(Block(1), [2])
+  ])
+  for I in (to_indices(a, (i, i)), to_indices(a, axes(a), (i, i)))
+    for Iⱼ in I
+      @test Iⱼ == BlockIndices(i, mortar([[3, 5], [2]]))
+      @test Iⱼ isa BlockIndices
+      @test Iⱼ.blocks == i
+      @test Iⱼ.indices == mortar([[3, 5], [2]])
+    end
+  end
+
+  a = blocksparsezeros([2, 3], [2, 3])
+  T = GenericBlockIndex{1,Tuple{Int},Tuple{Int}}
+  i = [BlockIndexVector{1,T}(Block(2), [1, 3]), BlockIndexVector{1,T}(Block(1), [2])]
+  for I in (to_indices(a, (i, i)), to_indices(a, axes(a), (i, i)))
+    for Iⱼ in I
+      @test Iⱼ == BlockIndices(mortar(i), mortar([[3, 5], [2]]))
+      @test Iⱼ isa BlockIndices
+      @test Iⱼ.blocks == mortar(i)
+      @test Iⱼ.indices == mortar([[3, 5], [2]])
+    end
+  end
 end
