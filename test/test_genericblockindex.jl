@@ -1,4 +1,5 @@
-using BlockArrays: Block, BlockIndex, BlockedVector, block, blockindex
+using BlockArrays:
+  Block, BlockIndex, BlockedArray, BlockedVector, block, blockedrange, blockindex, mortar
 using BlockSparseArrays: BlockSparseArrays, BlockIndexVector, GenericBlockIndex
 using Test: @test, @test_broken, @testset
 
@@ -124,4 +125,36 @@ using Test: @test, @test_broken, @testset
   @test a[i1, i2] == [("b", "c") ("b", "d"); ("a", "c") ("a", "d")]
   @test a[i] == [("b", "c") ("b", "d"); ("a", "c") ("a", "d")]
   @test a[i2, i2] == [("c", "c") ("c", "d"); ("d", "c") ("d", "d")]
+
+  r = blockedrange([2, 3])
+  i = mortar([BlockIndexVector(Block(2), [1]), BlockIndexVector(Block(1), [1, 2])])
+  # TODO: Check the indices make sense and are in bounds.
+  @test BlockSparseArrays.blockrange(r, i) == [Block(2), Block(1)]
+
+  r = blockedrange([2, 3])
+  i = mortar([BlockIndexVector(Block(2), ["x"]), BlockIndexVector(Block(1), ["y", "z"])])
+  # TODO: Check the indices make sense and are in bounds.
+  @test BlockSparseArrays.blockrange(r, i) == [Block(2), Block(1)]
+
+  i = GenericBlockIndex(Block(2), 1)
+  # TODO: Is this a good definition?
+  @test Base.to_index(i) === i
+
+  r = blockedrange([2, 3])
+  @test checkindex(Bool, r, GenericBlockIndex(Block(1), 1))
+  @test checkindex(Bool, r, GenericBlockIndex(Block(1), 2))
+  @test !checkindex(Bool, r, GenericBlockIndex(Block(1), 3))
+  @test checkindex(Bool, r, GenericBlockIndex(Block(2), 1))
+  @test checkindex(Bool, r, GenericBlockIndex(Block(2), 2))
+  @test checkindex(Bool, r, GenericBlockIndex(Block(2), 3))
+  @test !checkindex(Bool, r, GenericBlockIndex(Block(2), 4))
+  @test !checkindex(Bool, r, GenericBlockIndex(Block(3), 1))
+
+  a = BlockedArray(randn(5, 5), [2, 3], [2, 3])
+  i = GenericBlockIndex(Block(1), 1)
+  @test to_indices(a, (i, i)) == (1, 1)
+  @test to_indices(a, axes(a), (i, i)) == (1, 1)
+  i = GenericBlockIndex(Block(2), 2)
+  @test to_indices(a, (i, i)) == (4, 4)
+  @test to_indices(a, axes(a), (i, i)) == (4, 4)
 end

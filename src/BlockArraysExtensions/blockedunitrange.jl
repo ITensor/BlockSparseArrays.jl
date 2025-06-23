@@ -299,13 +299,6 @@ _getindex(a::Block{N}, b::Vararg{Integer,N}) where {N} = a[b...]
 # Fix ambiguity.
 _getindex(a::Block{0}) = a[]
 
-## function blockindextype(TB::Type{<:Integer}, TI::Vararg{Type{<:Integer},N}) where {N}
-##   return BlockIndex{N,NTuple{N,TB},Tuple{TI...}}
-## end
-## function blockindextype(TB::Type{<:Integer}, TI::Vararg{Type,N}) where {N}
-##   return GenericBlockIndex{N,NTuple{N,TB},Tuple{TI...}}
-## end
-
 struct BlockIndexVector{N,BT,I<:NTuple{N,AbstractVector},TB<:Integer} <: AbstractArray{BT,N}
   block::Block{N,TB}
   indices::I
@@ -337,7 +330,7 @@ BlockArrays.Block(b::BlockIndexVector) = b.block
 Base.copy(a::BlockIndexVector) = BlockIndexVector(a.block, copy.(a.indices))
 
 function Base.getindex(b::AbstractBlockedUnitRange, Kkr::BlockIndexVector{1})
-  b[block(Kkr)][Kkr.indices...]
+  return b[block(Kkr)][Kkr.indices...]
 end
 
 using ArrayLayouts: LayoutArray
