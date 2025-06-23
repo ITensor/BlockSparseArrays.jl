@@ -166,7 +166,7 @@ function BlockArrays.viewblock(
     <:AbstractBlockSparseArray{T,N},
     <:Tuple{Vararg{Union{BlockSliceCollection,SubBlockSliceCollection},N}},
   },
-  block::Union{Block{N},BlockIndexRange{N}},
+  block::Union{Block{N},BlockIndexRange{N},BlockIndexVector{N}},
 ) where {T,N}
   return viewblock(a, to_tuple(block)...)
 end
@@ -223,6 +223,14 @@ function to_blockindexrange(
 end
 function to_blockindexrange(
   a::BlockIndices{<:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector}}}, I::Block{1}
+)
+  # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
+  # work right now.
+  return blocks(a.blocks)[Int(I)]
+end
+function to_blockindexrange(
+  a::BlockIndices{<:BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector}}},
+  I::Block{1},
 )
   # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
   # work right now.

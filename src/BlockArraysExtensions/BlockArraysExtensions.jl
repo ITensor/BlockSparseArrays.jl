@@ -167,8 +167,14 @@ const BlockIndexRangeSlices = BlockIndices{
 const BlockIndexVectorSlices = BlockIndices{
   <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector}}
 }
+const GenericBlockIndexVectorSlices = BlockIndices{
+  <:BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector}}
+}
 const SubBlockSliceCollection = Union{
-  BlockIndexRangeSlice,BlockIndexRangeSlices,BlockIndexVectorSlices
+  BlockIndexRangeSlice,
+  BlockIndexRangeSlices,
+  BlockIndexVectorSlices,
+  GenericBlockIndexVectorSlices,
 }
 
 # TODO: This is type piracy. This is used in `reindex` when making

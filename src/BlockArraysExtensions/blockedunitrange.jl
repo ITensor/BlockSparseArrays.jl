@@ -177,19 +177,6 @@ function blockedunitrange_getindices(
 end
 
 function blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange,
-  indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
-)
-  return mortar(map(b -> a[b], blocks(indices)))
-end
-function blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange,
-  indices::BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
-)
-  return mortar(map(b -> a[b], blocks(indices)))
-end
-
-function blockedunitrange_getindices(
   a::AbstractBlockedUnitRange, indices::AbstractVector{Bool}
 )
   blocked_indices = BlockedVector(indices, axes(a))
@@ -344,6 +331,19 @@ using ArrayLayouts: LayoutArray
 @propagate_inbounds Base.getindex(b::LayoutArray{T,1}, K::BlockIndexVector{1}) where {T} = b[block(
   K
 )][K.indices...]
+
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange,
+  indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
+)
+  return mortar(map(b -> a[b], blocks(indices)))
+end
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange,
+  indices::BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
+)
+  return mortar(map(b -> a[b], blocks(indices)))
+end
 
 function to_blockindices(a::AbstractBlockedUnitRange{<:Integer}, I::AbstractArray{Bool})
   I_blocks = blocks(BlockedVector(I, blocklengths(a)))
