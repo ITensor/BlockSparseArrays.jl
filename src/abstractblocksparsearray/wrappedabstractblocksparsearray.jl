@@ -78,9 +78,32 @@ function Base.to_indices(
   return @interface interface(a) to_indices(a, inds, I)
 end
 
+# a[mortar([Block(1)[[1, 2]], Block(2)[[1, 3]]])]
+function Base.to_indices(
+  a::AnyAbstractBlockSparseArray,
+  inds,
+  I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector{1}}},Vararg{Any}},
+)
+  return @interface interface(a) to_indices(a, inds, I)
+end
+function Base.to_indices(
+  a::AnyAbstractBlockSparseArray,
+  inds,
+  I::Tuple{BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector{1}}},Vararg{Any}},
+)
+  return @interface interface(a) to_indices(a, inds, I)
+end
+
 # a[[Block(1)[1:2], Block(2)[1:2]], [Block(1)[1:2], Block(2)[1:2]]]
 function Base.to_indices(
   a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:BlockIndexRange{1}},Vararg{Any}}
+)
+  return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
+end
+
+# a[[Block(1)[[1, 2]], Block(2)[[1, 2]]], [Block(1)[[1, 2]], Block(2)[[1, 2]]]]
+function Base.to_indices(
+  a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:BlockIndexVector{1}},Vararg{Any}}
 )
   return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
 end

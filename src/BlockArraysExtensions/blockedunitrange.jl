@@ -177,6 +177,19 @@ function blockedunitrange_getindices(
 end
 
 function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange,
+  indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
+)
+  return mortar(map(b -> a[b], blocks(indices)))
+end
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange,
+  indices::BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
+)
+  return mortar(map(b -> a[b], blocks(indices)))
+end
+
+function blockedunitrange_getindices(
   a::AbstractBlockedUnitRange, indices::AbstractVector{Bool}
 )
   blocked_indices = BlockedVector(indices, axes(a))

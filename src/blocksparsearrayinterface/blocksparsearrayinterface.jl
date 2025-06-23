@@ -229,6 +229,23 @@ end
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
+@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+  a,
+  inds,
+  I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector{1}}},Vararg{Any}},
+)
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+  a,
+  inds,
+  I::Tuple{BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector{1}}},Vararg{Any}},
+)
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
 # a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
 # Permute and merge blocks.
 # TODO: This isn't merging blocks yet, that needs to be implemented that.
