@@ -392,6 +392,13 @@ function blockrange(
   return map(Block, blocks(r))
 end
 
+function blockrange(
+  axis::AbstractUnitRange,
+  r::BlockVector{<:GenericBlockIndex{1},<:AbstractVector{<:BlockIndexVector}},
+)
+  return map(Block, blocks(r))
+end
+
 function blockrange(axis::AbstractUnitRange, r)
   return error("Slicing not implemented for range of type `$(typeof(r))`.")
 end

@@ -244,6 +244,15 @@ BlockArrays.blockindex(b::GenericBlockIndex{1}) = b.α[1]
 function GenericBlockIndex(indcs::Tuple{Vararg{GenericBlockIndex{1},N}}) where {N}
   GenericBlockIndex(block.(indcs), blockindex.(indcs))
 end
+
+function Base.checkindex(
+  ::Type{Bool}, axis::AbstractBlockedUnitRange, ind::GenericBlockIndex{1}
+)
+  return checkindex(Bool, axis, block(ind)) &&
+         checkbounds(Bool, axis[block(ind)], blockindex(ind))
+end
+Base.to_index(i::GenericBlockIndex) = i
+
 function print_tuple_elements(io::IO, @nospecialize(t))
   if !isempty(t)
     print(io, t[1])
@@ -259,6 +268,13 @@ function Base.show(io::IO, B::GenericBlockIndex)
   print_tuple_elements(io, B.α)
   print(io, "]")
   return nothing
+end
+
+# https://github.com/JuliaArrays/BlockArrays.jl/blob/v1.6.3/src/views.jl#L31-L32
+_maybetail(::Tuple{}) = ()
+_maybetail(t::Tuple) = Base.tail(t)
+@inline function Base.to_indices(A, inds, I::Tuple{GenericBlockIndex{1},Vararg{Any}})
+  return (inds[1][I[1]], to_indices(A, _maybetail(inds), Base.tail(I))...)
 end
 
 using Base: @propagate_inbounds
