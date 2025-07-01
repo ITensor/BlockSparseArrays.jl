@@ -1,4 +1,4 @@
-using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, norm, tr
+using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, diag, norm, tr
 
 # Like: https://github.com/JuliaLang/julia/blob/v1.11.1/stdlib/LinearAlgebra/src/transpose.jl#L184
 # but also takes the dual of the axes.
@@ -31,6 +31,24 @@ function LinearAlgebra.tr(a::AnyAbstractBlockSparseMatrix)
     tr_a += tr(@view(a[I]))
   end
   return tr_a
+end
+
+# TODO: Define in DiagonalArrays.jl.
+function diagaxis(a::AbstractArray)
+  LinearAlgebra.checksquare(a)
+  return axes(a, 1)
+end
+function LinearAlgebra.diag(a::AnyAbstractBlockSparseMatrix)
+  # TODO: Add `checkblocksquare` to also check it is square blockwise.
+  LinearAlgebra.checksquare(a)
+  diagaxes = map(blockdiagindices(a)) do I
+    return diagaxis(@view(a[I]))
+  end
+  r = blockrange(diagaxes)
+  stored_blocks = Dict((
+    Tuple(I)[1] => diag(@view!(a[I])) for I in eachstoredblockdiagindex(a)
+  ))
+  return blocksparse(stored_blocks, (r,))
 end
 
 # TODO: Define `SparseArraysBase.isdiag`, define as

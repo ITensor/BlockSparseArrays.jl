@@ -314,6 +314,8 @@ end
 # `Base.getindex(a::Block, b...)`.
 _getindex(a::Block{N}, b::Vararg{Any,N}) where {N} = GenericBlockIndex(a, b)
 _getindex(a::Block{N}, b::Vararg{Integer,N}) where {N} = a[b...]
+_getindex(a::Block{N}, b::Vararg{AbstractUnitRange{<:Integer},N}) where {N} = a[b...]
+_getindex(a::Block{N}, b::Vararg{AbstractVector,N}) where {N} = BlockIndexVector(a, b)
 # Fix ambiguity.
 _getindex(a::Block{0}) = a[]
 
@@ -372,7 +374,11 @@ function blockedunitrange_getindices(
   a::AbstractBlockedUnitRange,
   indices::BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
 )
-  return mortar(map(b -> a[b], blocks(indices)))
+  blks = map(b -> a[b], blocks(indices))
+  # Preserve any extra structure in the axes, like a
+  # Kronecker structure, symmetry sectors, etc.
+  ax = mortar_axis(map(b -> axis(a[b]), blocks(indices)))
+  return mortar(blks, (ax,))
 end
 
 # This is a specialization of `BlockArrays.unblock`:

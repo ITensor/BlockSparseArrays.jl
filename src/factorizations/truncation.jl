@@ -1,14 +1,11 @@
-using MatrixAlgebraKit: TruncationStrategy, diagview, eig_trunc!, eigh_trunc!, svd_trunc!
-
-function MatrixAlgebraKit.diagview(A::BlockSparseMatrix{T,Diagonal{T,Vector{T}}}) where {T}
-  D = BlockSparseVector{T}(undef, axes(A, 1))
-  for I in eachblockstoredindex(A)
-    if ==(Int.(Tuple(I))...)
-      D[Tuple(I)[1]] = diagview(A[I])
-    end
-  end
-  return D
-end
+using MatrixAlgebraKit:
+  TruncationStrategy,
+  diagview,
+  eig_trunc!,
+  eigh_trunc!,
+  findtruncated,
+  svd_trunc!,
+  truncate!
 
 """
     BlockPermutedDiagonalTruncationStrategy(strategy::TruncationStrategy)
@@ -27,7 +24,7 @@ function MatrixAlgebraKit.truncate!(
   strategy::TruncationStrategy,
 )
   # TODO assert blockdiagonal
-  return MatrixAlgebraKit.truncate!(
+  return truncate!(
     svd_trunc!, (U, S, Vᴴ), BlockPermutedDiagonalTruncationStrategy(strategy)
   )
 end
@@ -38,9 +35,7 @@ for f in [:eig_trunc!, :eigh_trunc!]
       (D, V)::NTuple{2,AbstractBlockSparseMatrix},
       strategy::TruncationStrategy,
     )
-      return MatrixAlgebraKit.truncate!(
-        $f, (D, V), BlockPermutedDiagonalTruncationStrategy(strategy)
-      )
+      return truncate!($f, (D, V), BlockPermutedDiagonalTruncationStrategy(strategy))
     end
   end
 end
@@ -50,10 +45,22 @@ end
 function MatrixAlgebraKit.findtruncated(
   values::AbstractVector, strategy::BlockPermutedDiagonalTruncationStrategy
 )
-  ind = MatrixAlgebraKit.findtruncated(values, strategy.strategy)
+  ind = findtruncated(Vector(values), strategy.strategy)
   indexmask = falses(length(values))
   indexmask[ind] .= true
-  return indexmask
+  return to_truncated_indices(values, indexmask)
+end
+
+# Allow customizing the indices output by `findtruncated`
+# based on the type of `values`, for example to preserve
+# a block or Kronecker structure.
+to_truncated_indices(values, I) = I
+function to_truncated_indices(values::AbstractBlockVector, I::AbstractVector{Bool})
+  I′ = BlockedVector(I, blocklengths(axis(values)))
+  blocks = map(BlockRange(values)) do b
+    return _getindex(b, to_truncated_indices(values[b], I′[b]))
+  end
+  return blocks
 end
 
 function MatrixAlgebraKit.truncate!(
@@ -61,7 +68,7 @@ function MatrixAlgebraKit.truncate!(
   (U, S, Vᴴ)::NTuple{3,AbstractBlockSparseMatrix},
   strategy::BlockPermutedDiagonalTruncationStrategy,
 )
-  I = MatrixAlgebraKit.findtruncated(diagview(S), strategy)
+  I = MatrixAlgebraKit.findtruncated(diag(S), strategy)
   return (U[:, I], S[I, I], Vᴴ[I, :])
 end
 for f in [:eig_trunc!, :eigh_trunc!]
@@ -71,7 +78,7 @@ for f in [:eig_trunc!, :eigh_trunc!]
       (D, V)::NTuple{2,AbstractBlockSparseMatrix},
       strategy::BlockPermutedDiagonalTruncationStrategy,
     )
-      I = MatrixAlgebraKit.findtruncated(diagview(D), strategy)
+      I = MatrixAlgebraKit.findtruncated(diag(D), strategy)
       return (D[I, I], V[:, I])
     end
   end
