@@ -68,6 +68,12 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length, :unsafe
 end
 Base.getindex(S::BlockIndices, i::Integer) = getindex(S.indices, i)
 
+# TODO: Move this to a `BlockArraysExtensions` library.
+function blockedunitrange_getindices(a::AbstractBlockedUnitRange, indices::BlockIndices)
+  # TODO: Is this a good definition? It ignores `indices.indices`.
+  return a[indices.blocks]
+end
+
 # Generalization of to `BlockArrays._blockslice`:
 # https://github.com/JuliaArrays/BlockArrays.jl/blob/v1.6.3/src/views.jl#L13-L14
 # Used by `BlockArrays.unblock`, which is used in `to_indices`

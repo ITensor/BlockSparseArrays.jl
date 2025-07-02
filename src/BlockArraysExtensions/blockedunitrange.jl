@@ -368,7 +368,11 @@ function blockedunitrange_getindices(
   a::AbstractBlockedUnitRange,
   indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector{1}}},
 )
-  return mortar(map(b -> a[b], blocks(indices)))
+  blks = map(b -> a[b], blocks(indices))
+  # Preserve any extra structure in the axes, like a
+  # Kronecker structure, symmetry sectors, etc.
+  ax = mortar_axis(map(b -> axis(a[b]), blocks(indices)))
+  return mortar(blks, (ax,))
 end
 function blockedunitrange_getindices(
   a::AbstractBlockedUnitRange,

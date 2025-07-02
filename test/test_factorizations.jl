@@ -146,20 +146,23 @@ test_params = Iterators.product(blockszs, eltypes)
   @test test_svd(a, usv_empty)
 
   # test blockdiagonal
+  rng = StableRNG(123)
   for i in LinearAlgebra.diagind(blocks(a))
     I = CartesianIndices(blocks(a))[i]
-    a[Block(I.I...)] = rand(T, size(blocks(a)[i]))
+    a[Block(I.I...)] = rand(rng, T, size(blocks(a)[i]))
   end
   usv = svd_compact(a)
   @test test_svd(a, usv)
 
-  perm = Random.randperm(length(m))
+  rng = StableRNG(123)
+  perm = Random.randperm(rng, length(m))
   b = a[Block.(perm), Block.(1:length(n))]
   usv = svd_compact(b)
   @test test_svd(b, usv)
 
   # test permuted blockdiagonal with missing row/col
-  I_removed = rand(eachblockstoredindex(b))
+  rng = StableRNG(123)
+  I_removed = rand(rng, eachblockstoredindex(b))
   c = copy(b)
   delete!(blocks(c).storage, CartesianIndex(Int.(Tuple(I_removed))))
   usv = svd_compact(c)
@@ -176,20 +179,23 @@ end
   @test test_svd(a, usv_empty; full=true)
 
   # test blockdiagonal
+  rng = StableRNG(123)
   for i in LinearAlgebra.diagind(blocks(a))
     I = CartesianIndices(blocks(a))[i]
-    a[Block(I.I...)] = rand(T, size(blocks(a)[i]))
+    a[Block(I.I...)] = rand(rng, T, size(blocks(a)[i]))
   end
   usv = svd_full(a)
   @test test_svd(a, usv; full=true)
 
-  perm = Random.randperm(length(m))
+  rng = StableRNG(123)
+  perm = Random.randperm(rng, length(m))
   b = a[Block.(perm), Block.(1:length(n))]
   usv = svd_full(b)
   @test test_svd(b, usv; full=true)
 
   # test permuted blockdiagonal with missing row/col
-  I_removed = rand(eachblockstoredindex(b))
+  rng = StableRNG(123)
+  I_removed = rand(rng, eachblockstoredindex(b))
   c = copy(b)
   delete!(blocks(c).storage, CartesianIndex(Int.(Tuple(I_removed))))
   usv = svd_full(c)
@@ -203,9 +209,10 @@ end
   a = BlockSparseArray{T}(undef, m, n)
 
   # test blockdiagonal
+  rng = StableRNG(123)
   for i in LinearAlgebra.diagind(blocks(a))
     I = CartesianIndices(blocks(a))[i]
-    a[Block(I.I...)] = rand(T, size(blocks(a)[i]))
+    a[Block(I.I...)] = rand(rng, T, size(blocks(a)[i]))
   end
 
   minmn = min(size(a)...)
@@ -236,7 +243,8 @@ end
   @test (V1ᴴ * V1ᴴ' ≈ LinearAlgebra.I)
 
   # test permuted blockdiagonal
-  perm = Random.randperm(length(m))
+  rng = StableRNG(123)
+  perm = Random.randperm(rng, length(m))
   b = a[Block.(perm), Block.(1:length(n))]
   for trunc in (truncrank(r), trunctol(atol))
     U1, S1, V1ᴴ = svd_trunc(b; trunc)
@@ -270,8 +278,9 @@ end
 @testset "qr_compact (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
   for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
     A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
-    A[Block(1, 1)] = randn(T, i, k)
-    A[Block(2, 2)] = randn(T, j, l)
+    rng = StableRNG(123)
+    A[Block(1, 1)] = randn(rng, T, i, k)
+    A[Block(2, 2)] = randn(rng, T, j, l)
     Q, R = qr_compact(A)
     @test Matrix(Q'Q) ≈ LinearAlgebra.I
     @test A ≈ Q * R
@@ -281,8 +290,9 @@ end
 @testset "qr_full (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
   for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
     A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
-    A[Block(1, 1)] = randn(T, i, k)
-    A[Block(2, 2)] = randn(T, j, l)
+    rng = StableRNG(123)
+    A[Block(1, 1)] = randn(rng, T, i, k)
+    A[Block(2, 2)] = randn(rng, T, j, l)
     Q, R = qr_full(A)
     Q′, R′ = qr_full(Matrix(A))
     @test size(Q) == size(Q′)
@@ -296,8 +306,9 @@ end
 @testset "lq_compact" for T in (Float32, Float64, ComplexF32, ComplexF64)
   for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
     A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
-    A[Block(1, 1)] = randn(T, i, k)
-    A[Block(2, 2)] = randn(T, j, l)
+    rng = StableRNG(123)
+    A[Block(1, 1)] = randn(rng, T, i, k)
+    A[Block(2, 2)] = randn(rng, T, j, l)
     L, Q = lq_compact(A)
     @test Matrix(Q * Q') ≈ LinearAlgebra.I
     @test A ≈ L * Q
@@ -307,8 +318,9 @@ end
 @testset "lq_full" for T in (Float32, Float64, ComplexF32, ComplexF64)
   for i in [2, 3], j in [2, 3], k in [2, 3], l in [2, 3]
     A = BlockSparseArray{T}(undef, ([i, j], [k, l]))
-    A[Block(1, 1)] = randn(T, i, k)
-    A[Block(2, 2)] = randn(T, j, l)
+    rng = StableRNG(123)
+    A[Block(1, 1)] = randn(rng, T, i, k)
+    A[Block(2, 2)] = randn(rng, T, j, l)
     L, Q = lq_full(A)
     L′, Q′ = lq_full(Matrix(A))
     @test size(L) == size(L′)
@@ -321,8 +333,9 @@ end
 
 @testset "left_polar (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
   A = BlockSparseArray{T}(undef, ([3, 4], [2, 3]))
-  A[Block(1, 1)] = randn(T, 3, 2)
-  A[Block(2, 2)] = randn(T, 4, 3)
+  rng = StableRNG(123)
+  A[Block(1, 1)] = randn(rng, T, 3, 2)
+  A[Block(2, 2)] = randn(rng, T, 4, 3)
 
   U, C = left_polar(A)
   @test U * C ≈ A
@@ -331,8 +344,9 @@ end
 
 @testset "right_polar (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
   A = BlockSparseArray{T}(undef, ([2, 3], [3, 4]))
-  A[Block(1, 1)] = randn(T, 2, 3)
-  A[Block(2, 2)] = randn(T, 3, 4)
+  rng = StableRNG(123)
+  A[Block(1, 1)] = randn(rng, T, 2, 3)
+  A[Block(2, 2)] = randn(rng, T, 3, 4)
 
   C, U = right_polar(A)
   @test C * U ≈ A
@@ -341,8 +355,9 @@ end
 
 @testset "left_orth (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
   A = BlockSparseArray{T}(undef, ([3, 4], [2, 3]))
-  A[Block(1, 1)] = randn(T, 3, 2)
-  A[Block(2, 2)] = randn(T, 4, 3)
+  rng = StableRNG(123)
+  A[Block(1, 1)] = randn(rng, T, 3, 2)
+  A[Block(2, 2)] = randn(rng, T, 4, 3)
 
   for kind in (:polar, :qr, :svd)
     U, C = left_orth(A; kind)
@@ -358,8 +373,9 @@ end
 
 @testset "right_orth (T=$T)" for T in (Float32, Float64, ComplexF32, ComplexF64)
   A = BlockSparseArray{T}(undef, ([2, 3], [3, 4]))
-  A[Block(1, 1)] = randn(T, 2, 3)
-  A[Block(2, 2)] = randn(T, 3, 4)
+  rng = StableRNG(123)
+  A[Block(1, 1)] = randn(rng, T, 2, 3)
+  A[Block(2, 2)] = randn(rng, T, 3, 4)
 
   for kind in (:lq, :polar, :svd)
     C, U = right_orth(A; kind)
