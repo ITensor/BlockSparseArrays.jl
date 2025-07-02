@@ -68,7 +68,7 @@ function MatrixAlgebraKit.truncate!(
   (U, S, Vᴴ)::NTuple{3,AbstractBlockSparseMatrix},
   strategy::BlockPermutedDiagonalTruncationStrategy,
 )
-  I = MatrixAlgebraKit.findtruncated(diag(S), strategy)
+  I = findtruncated(diag(S), strategy)
   return (U[:, I], S[I, I], Vᴴ[I, :])
 end
 for f in [:eig_trunc!, :eigh_trunc!]
@@ -78,7 +78,7 @@ for f in [:eig_trunc!, :eigh_trunc!]
       (D, V)::NTuple{2,AbstractBlockSparseMatrix},
       strategy::BlockPermutedDiagonalTruncationStrategy,
     )
-      I = MatrixAlgebraKit.findtruncated(diag(D), strategy)
+      I = findtruncated(diag(D), strategy)
       return (D[I, I], V[:, I])
     end
   end
