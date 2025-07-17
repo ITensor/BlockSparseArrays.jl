@@ -16,6 +16,11 @@ function Base.getindex(r::BlockUnitRange, I::Block{1})
   return eachblockaxis(r)[Int(I)] .+ (first(r.r[I]) - 1)
 end
 
+const BlockOneTo{T<:Integer,B,CS,R<:BlockedOneTo{T,CS}} = BlockUnitRange{T,B,CS,R}
+Base.axes(S::Base.Slice{<:BlockOneTo}) = (S.indices,)
+Base.axes1(S::Base.Slice{<:BlockOneTo}) = S.indices
+Base.unsafe_indices(S::Base.Slice{<:BlockOneTo}) = (S.indices,)
+
 function BlockArrays.combine_blockaxes(r1::BlockUnitRange, r2::BlockUnitRange)
   if eachblockaxis(r1) ≠ eachblockaxis(r2)
     return throw(ArgumentError("BlockUnitRanges must have the same block axes"))

@@ -302,6 +302,14 @@ end
 
 blockedslice_blocks(x::BlockSlice) = x.block
 blockedslice_blocks(x::BlockIndices) = x.blocks
+# Reinterpret the slice blockwise.
+function blockedslice_blocks(x::Base.Slice)
+  return mortar(
+    map(BlockRange(x.indices)) do b
+      return BlockIndexRange(b, Base.Slice(Base.axes1(x.indices[b])))
+    end,
+  )
+end
 
 # TODO: Define `@interface interface(a) viewblock`.
 function BlockArrays.viewblock(

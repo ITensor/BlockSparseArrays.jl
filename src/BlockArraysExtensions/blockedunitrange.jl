@@ -349,6 +349,15 @@ BlockArrays.Block(b::BlockIndexVector) = b.block
 
 Base.copy(a::BlockIndexVector) = BlockIndexVector(a.block, copy.(a.indices))
 
+# Copied from BlockArrays.BlockIndexRange.
+function Base.show(io::IO, B::BlockIndexVector)
+  show(io, Block(B))
+  print(io, "[")
+  print_tuple_elements(io, B.indices)
+  print(io, "]")
+end
+Base.show(io::IO, ::MIME"text/plain", B::BlockIndexVector) = show(io, B)
+
 function Base.getindex(b::AbstractBlockedUnitRange, Kkr::BlockIndexVector{1})
   return b[block(Kkr)][Kkr.indices...]
 end

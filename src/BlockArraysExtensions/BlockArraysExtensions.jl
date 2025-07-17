@@ -185,6 +185,7 @@ const GenericBlockIndexVectorSlices = BlockIndices{
   <:BlockVector{<:GenericBlockIndex{1},<:Vector{<:BlockIndexVector}}
 }
 const SubBlockSliceCollection = Union{
+  Base.Slice,
   BlockIndexRangeSlice,
   BlockIndexRangeSlices,
   BlockIndexVectorSlices,
