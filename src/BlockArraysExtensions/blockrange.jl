@@ -16,6 +16,7 @@ function Base.getindex(r::BlockUnitRange, I::Block{1})
   return eachblockaxis(r)[Int(I)] .+ (first(r.r[I]) - 1)
 end
 
+using BlockArrays: BlockedOneTo
 const BlockOneTo{T<:Integer,B,CS,R<:BlockedOneTo{T,CS}} = BlockUnitRange{T,B,CS,R}
 Base.axes(S::Base.Slice{<:BlockOneTo}) = (S.indices,)
 Base.axes1(S::Base.Slice{<:BlockOneTo}) = S.indices
