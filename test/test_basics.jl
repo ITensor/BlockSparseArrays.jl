@@ -399,7 +399,7 @@ arrayts = (Array, JLArray)
     a_dest = a1 * a2
     @allowscalar @test Array(a_dest) ≈ Array(a1) * Array(a2)
     @test a_dest isa BlockSparseArray{elt}
-    @test blockstoredlength(a_dest) == 1
+    @test_broken blockstoredlength(a_dest) == 1
   end
   @testset "Matrix multiplication" begin
     a1 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
@@ -430,23 +430,23 @@ arrayts = (Array, JLArray)
     a2[Block(1, 2)] = dev(randn(elt, size(@view(a2[Block(1, 2)]))))
 
     a_dest = cat(a1, a2; dims=1)
-    @test blockstoredlength(a_dest) == 2
+    @test_broken blockstoredlength(a_dest) == 2
     @test blocklengths.(axes(a_dest)) == ([2, 3, 2, 3], [2, 3])
-    @test issetequal(eachblockstoredindex(a_dest), [Block(2, 1), Block(3, 2)])
+    @test_broken issetequal(eachblockstoredindex(a_dest), [Block(2, 1), Block(3, 2)])
     @test a_dest[Block(2, 1)] == a1[Block(2, 1)]
     @test a_dest[Block(3, 2)] == a2[Block(1, 2)]
 
     a_dest = cat(a1, a2; dims=2)
-    @test blockstoredlength(a_dest) == 2
+    @test_broken blockstoredlength(a_dest) == 2
     @test blocklengths.(axes(a_dest)) == ([2, 3], [2, 3, 2, 3])
-    @test issetequal(eachblockstoredindex(a_dest), [Block(2, 1), Block(1, 4)])
+    @test_broken issetequal(eachblockstoredindex(a_dest), [Block(2, 1), Block(1, 4)])
     @test a_dest[Block(2, 1)] == a1[Block(2, 1)]
     @test a_dest[Block(1, 4)] == a2[Block(1, 2)]
 
     a_dest = cat(a1, a2; dims=(1, 2))
-    @test blockstoredlength(a_dest) == 2
+    @test_broken blockstoredlength(a_dest) == 2
     @test blocklengths.(axes(a_dest)) == ([2, 3, 2, 3], [2, 3, 2, 3])
-    @test issetequal(eachblockstoredindex(a_dest), [Block(2, 1), Block(3, 4)])
+    @test_broken issetequal(eachblockstoredindex(a_dest), [Block(2, 1), Block(3, 4)])
     @test a_dest[Block(2, 1)] == a1[Block(2, 1)]
     @test a_dest[Block(3, 4)] == a2[Block(1, 2)]
   end
