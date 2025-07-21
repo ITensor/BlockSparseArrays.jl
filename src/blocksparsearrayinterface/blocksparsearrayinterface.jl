@@ -410,7 +410,9 @@ function SparseArraysBase.getunstoredindex(
     _perm(a.array),
   )
 end
-function SparseArraysBase.eachstoredindex(a::SparsePermutedDimsArrayBlocks)
+function SparseArraysBase.eachstoredindex(
+  ::IndexCartesian, a::SparsePermutedDimsArrayBlocks
+)
   return map(I -> _getindices(I, _perm(a.array)), eachstoredindex(blocks(parent(a.array))))
 end
 ## TODO: Define `storedvalues` instead.
