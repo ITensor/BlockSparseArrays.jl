@@ -189,17 +189,25 @@ function Base.view(
 ) where {T,N}
   return viewblock(a, block...)
 end
-# Fix ambiguity error with BlockArrays.jl.
+
+# Disambiguate between block reindexing of blockwise views
+# (`BlockSliceCollection`) and subblockwise views (`SubBlockSliceCollection`),
+# which both include `Base.Slice`.
 function Base.view(
-  a::SubArray{
-    T,
-    N,
-    <:AbstractBlockSparseArray{T,N},
-    <:Tuple{Vararg{Union{Base.Slice,BlockSlice{Union{},<:Integer}},N}},
-  },
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{Base.Slice,N}}},
   block::Block{N},
 ) where {T,N}
   return viewblock(a, block)
+end
+
+# Block reindexing of blockwise views (`BlockSliceCollection`).
+function viewblock_blockslice(a::SubArray{<:Any,N}, block::Vararg{Block{1},N}) where {N}
+  I = CartesianIndex(Int.(block))
+  # TODO: Use `eachblockstoredindex`.
+  if I ∈ eachstoredindex(blocks(a))
+    return blocks(a)[I]
+  end
+  return BlockView(parent(a), Block.(Base.reindex(parentindices(blocks(a)), Tuple(I))))
 end
 
 # XXX: TODO: Distinguish if a sub-view of the block needs to be taken!
@@ -211,12 +219,17 @@ function BlockArrays.viewblock(
   a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSliceCollection,N}}},
   block::Vararg{Block{1},N},
 ) where {T,N}
-  I = CartesianIndex(Int.(block))
-  # TODO: Use `eachblockstoredindex`.
-  if I ∈ eachstoredindex(blocks(a))
-    return blocks(a)[I]
-  end
-  return BlockView(parent(a), Block.(Base.reindex(parentindices(blocks(a)), Tuple(I))))
+  return viewblock_blockslice(a, block...)
+end
+
+# Disambiguate between block reindexing of blockwise views
+# (`BlockSliceCollection`) and subblockwise views (`SubBlockSliceCollection`),
+# which both include `Base.Slice`.
+function BlockArrays.viewblock(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{Base.Slice,N}}},
+  block::Vararg{Block{1},N},
+) where {T,N}
+  return viewblock_blockslice(a, block...)
 end
 
 function to_blockindexrange(
