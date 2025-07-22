@@ -223,18 +223,24 @@ end
 # a[mortar([Block(1)[1:2], Block(2)[1:3]]), mortar([Block(1)[1:2], Block(2)[1:3]])]
 # a[[Block(1)[1:2], Block(2)[1:3]], [Block(1)[1:2], Block(2)[1:3]]]
 @interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
-  a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
-)
-  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
-  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
-end
-
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
   a,
   inds,
-  I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexVector{1}}},Vararg{Any}},
+  I::Tuple{
+    BlockVector{<:BlockIndex{1},<:Vector{<:Union{BlockIndexRange{1},BlockIndexVector{1}}}},
+    Vararg{Any},
+  },
 )
-  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  # Index the `inds` by the `BlockIndexRange`/`BlockIndexVector`s on each block
+  # in order to canonicalize the indices and preserve metadata,
+  # such as sector data for symmetric tensors.
+  bs = mortar(
+    map(blocks(I[1])) do bi
+      b = Block(bi)
+      binds = only(bi.indices)
+      return BlockIndexVector(b, Base.axes1(inds[1][b])[binds])
+    end,
+  )
+  I1 = BlockIndices(bs, blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 @interface ::AbstractBlockSparseArrayInterface function Base.to_indices(

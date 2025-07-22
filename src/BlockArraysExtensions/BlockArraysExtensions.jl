@@ -88,12 +88,22 @@ function _blockslice(x, y::AbstractVector)
   return BlockIndices(x, y)
 end
 
+# TODO: Constrain the type of `BlockIndices` more, this seems
+# to assume that `S.blocks` is a list of blocks as opposed to
+# a flat list of block indices like the definition below.
 function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
   # TODO: Check that `i.indices` is consistent with `S.indices`.
   # It seems like this isn't handling the case where `i` is a
   # subslice of a block correctly (i.e. it ignores `i.indices`).
   @assert length(S.indices[Block(i)]) == length(i.indices)
   return _blockslice(S.blocks[Int(Block(i))], S.indices[Block(i)])
+end
+
+function Base.getindex(
+  S::BlockIndices{<:AbstractBlockVector{<:BlockIndex{1}}}, i::BlockSlice{<:Block{1}}
+)
+  @assert length(S.indices[Block(i)]) == length(i.indices)
+  return _blockslice(S.blocks[Block(i)], S.indices[Block(i)])
 end
 
 # This is used in slicing like:

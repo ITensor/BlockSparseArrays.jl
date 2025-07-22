@@ -316,6 +316,15 @@ function Base.view(
 ) where {T,N}
   return viewblock(a, block...)
 end
+# Fix ambiguity error.
+function Base.view(
+  a::SubArray{
+    T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{SubBlockSliceCollection,N}}
+  },
+  block::Vararg{Block{1},N},
+) where {T,N}
+  return viewblock(a, block...)
+end
 function BlockArrays.viewblock(
   a::SubArray{
     T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{SubBlockSliceCollection,N}}
