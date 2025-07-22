@@ -362,10 +362,6 @@ function BlockArrays.viewblock(
   return @view parent(a)[brs...]
 end
 
-## function BlockArrays.viewblock
-##   a::SubArray{
-##     T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{Union{Base.Slice, BlockArrays.BlockSlice{Union{}, T} where T<:Integer, BlockSparseArrays.BlockIndices{Union{}, T} where T<:Integer},N}}, ::Vararg{Block{1}, N}) where {T, N}
-
 # TODO: Define `@interface interface(a) viewblock`.
 function BlockArrays.viewblock(
   a::SubArray{
