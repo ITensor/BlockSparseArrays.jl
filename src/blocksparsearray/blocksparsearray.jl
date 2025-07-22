@@ -8,7 +8,7 @@ using BlockArrays:
   undef_blocks
 using DerivableInterfaces: @interface
 using Dictionaries: Dictionary
-using SparseArraysBase: SparseArrayDOK
+using SparseArraysBase: SparseArrayDOK, Unstored
 using TypeParameterAccessors: similartype
 
 """
@@ -25,7 +25,7 @@ and should be imported from that package to use it as an input to this construct
 function SparseArraysBase.SparseArrayDOK{T,N}(
   ::UndefBlocksInitializer, ax::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}
 ) where {T,N}
-  return SparseArrayDOK{T,N}(undef, blocklength.(ax); getunstored=GetUnstoredBlock(ax))
+  return SparseArrayDOK{T,N}(undef, Unstored(ZeroBlocks{N,T}(ax)))
 end
 function SparseArraysBase.SparseArrayDOK{T,N}(
   ::UndefBlocksInitializer, ax::Vararg{AbstractUnitRange{<:Integer},N}
