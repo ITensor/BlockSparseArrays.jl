@@ -20,7 +20,7 @@ end
 @inline function Base.getindex(a::ZeroBlocks{N,A}, I::Vararg{Int,N}) where {N,A}
   # TODO: Use `BlockArrays.eachblockaxes`.
   ax = ntuple(N) do d
-    return only(axes(a.parentaxes[d][Block(I[d])]))
+    return eachblockaxis(a.parentaxes[d])[I[d]]
   end
   !isconcretetype(A) && return zero!(similar(Array{eltype(A),N}, ax))
   return zero!(similar(A, ax))

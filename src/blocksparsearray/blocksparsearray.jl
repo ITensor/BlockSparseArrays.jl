@@ -262,12 +262,18 @@ function blocksparsezeros(::BlockType{A}, axes...) where {A<:AbstractArray}
   # to make a bit more generic.
   return BlockSparseArray{eltype(A),ndims(A),A}(undef, axes...)
 end
-function blocksparse(d::Dict{<:Block,<:AbstractArray}, axes...)
-  a = blocksparsezeros(BlockType(valtype(d)), axes...)
+function blocksparse(d::Dict{<:Block,<:AbstractArray}, ax::Tuple)
+  blockaxtype = Tuple{map(eltype ∘ eachblockaxis, ax)...}
+  # TODO: Catch if inference fails and use `valtype(d)` instead.
+  blockt = Base.promote_op(similar, Type{valtype(d)}, blockaxtype)
+  a = blocksparsezeros(BlockType(blockt), ax)
   for I in eachindex(d)
     a[I] = d[I]
   end
   return a
+end
+function blocksparse(d::Dict{<:Block,<:AbstractArray}, ax::AbstractUnitRange...)
+  return blocksparse(d, ax)
 end
 
 # Base `AbstractArray` interface
