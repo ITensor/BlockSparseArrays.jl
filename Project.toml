@@ -22,9 +22,11 @@ TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 
 [weakdeps]
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
+TensorProducts = "decf83d6-1968-43f4-96dc-fdb3fe15fc6d"
 
 [extensions]
 BlockSparseArraysTensorAlgebraExt = "TensorAlgebra"
+BlockSparseArraysTensorProductsExt = "TensorProducts"
 
 [compat]
 Adapt = "4.1.1"
@@ -43,6 +45,7 @@ MatrixAlgebraKit = "0.2.2"
 SparseArraysBase = "0.7.1"
 SplitApplyCombine = "1.2.3"
 TensorAlgebra = "0.3.2"
+TensorProducts = "0.1.7"
 Test = "1.10"
 TypeParameterAccessors = "0.4.1"
 julia = "1.10"

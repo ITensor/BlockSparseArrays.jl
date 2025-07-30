@@ -49,12 +49,12 @@ function MatrixAlgebraKit.initialize_output(
   ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
 )
   bm, bn = blocksize(A)
-  (bmn, mindim) = findmin((bm, bn))
+  bmn = min(bm, bn)
 
   brows = eachblockaxis(axes(A, 1))
   bcols = eachblockaxis(axes(A, 2))
   u_axes = similar(brows, bmn)
-  v_axes = similar(bcols, bmn)
+  v_axes = similar(brows, bmn)
 
   # fill in values for blocks that are present
   bIs = collect(eachblockstoredindex(A))
@@ -62,9 +62,8 @@ function MatrixAlgebraKit.initialize_output(
   bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
     row, col = Int.(Tuple(bI))
-    dim = (row, col)[mindim]
-    u_axes[dim] = infimum(brows[row], bcols[col])
-    v_axes[dim] = infimum(bcols[col], brows[row])
+    u_axes[col] = infimum(brows[row], bcols[col])
+    v_axes[col] = infimum(bcols[col], brows[row])
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -84,10 +83,9 @@ function MatrixAlgebraKit.initialize_output(
   # allocate output
   for bI in eachblockstoredindex(A)
     brow, bcol = Tuple(bI)
-    bdim = (brow, bcol)[mindim]
     block = @view!(A[bI])
     block_alg = block_algorithm(alg, block)
-    U[brow, bdim], S[bdim, bdim], Vt[bdim, bcol] = MatrixAlgebraKit.initialize_output(
+    U[brow, bcol], S[bcol, bcol], Vt[bcol, bcol] = MatrixAlgebraKit.initialize_output(
       svd_compact!, block, block_alg
     )
   end

@@ -93,7 +93,7 @@ function Base.setindex!(
   # https://github.com/JuliaLang/julia/pull/52487).
   # TODO: Delete once we drop support for Julia v1.10.
   aI = @view! a[I...]
-  copyto!(aI, value)
+  aI .= value
   return a
 end
 
