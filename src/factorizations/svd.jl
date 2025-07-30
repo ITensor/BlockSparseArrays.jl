@@ -57,13 +57,14 @@ function MatrixAlgebraKit.initialize_output(
   v_axes = similar(brows, bmn)
 
   # fill in values for blocks that are present
-  bIs = collect(eachblockstoredindex(A))
+  bIs = sort!(collect(eachblockstoredindex(A)); by=Int ∘ last ∘ Tuple)
   browIs = Int.(first.(Tuple.(bIs)))
   bcolIs = Int.(last.(Tuple.(bIs)))
-  for bI in eachblockstoredindex(A)
+  for (I, bI) in enumerate(bIs)
     row, col = Int.(Tuple(bI))
-    u_axes[col] = infimum(brows[row], bcols[col])
-    v_axes[col] = infimum(bcols[col], brows[row])
+    ax = infimum(brows[row], bcols[col])
+    u_axes[I] = ax
+    v_axes[I] = ax
   end
 
   # fill in values for blocks that aren't present, pairing them in order of occurence
@@ -81,11 +82,12 @@ function MatrixAlgebraKit.initialize_output(
   U, S, Vt = similar_output(svd_compact!, A, S_axes, alg)
 
   # allocate output
-  for bI in eachblockstoredindex(A)
+  for (I, bI) in enumerate(bIs)
     brow, bcol = Tuple(bI)
+    bcol′ = Block(I)
     block = @view!(A[bI])
     block_alg = block_algorithm(alg, block)
-    U[brow, bcol], S[bcol, bcol], Vt[bcol, bcol] = MatrixAlgebraKit.initialize_output(
+    U[brow, bcol′], S[bcol′, bcol′], Vt[bcol′, bcol] = MatrixAlgebraKit.initialize_output(
       svd_compact!, block, block_alg
     )
   end
@@ -199,9 +201,11 @@ function MatrixAlgebraKit.svd_compact!(
   check_input(svd_compact!, A, (U, S, Vᴴ))
 
   # do decomposition on each block
-  for bI in eachblockstoredindex(A)
+  bIs = sort!(collect(eachblockstoredindex(A)); by=Int ∘ last ∘ Tuple)
+  for (I, bI) in enumerate(bIs)
     brow, bcol = Tuple(bI)
-    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vᴴ[bcol, bcol]))
+    bcol′ = Block(I)
+    usvᴴ = (@view!(U[brow, bcol′]), @view!(S[bcol′, bcol′]), @view!(Vᴴ[bcol′, bcol]))
     block = @view!(A[bI])
     block_alg = block_algorithm(alg, block)
     usvᴴ′ = svd_compact!(block, usvᴴ, block_alg)
