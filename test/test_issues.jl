@@ -14,7 +14,7 @@ using Test: @test, @testset
   @test U * S * Vᴴ ≈ a
   @test U' * U ≈ LinearAlgebra.I
   @test Vᴴ * Vᴴ' ≈ LinearAlgebra.I
-  
+
   U, S, Vᴴ = svd_full(a);
 
   @test U * S * Vᴴ ≈ a
