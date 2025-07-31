@@ -180,7 +180,10 @@ end
 # ```
 # but includes `BlockIndices`, where the blocks aren't contiguous.
 const BlockSliceCollection = Union{
-  Base.Slice,BlockSlice{<:BlockRange{1}},BlockIndices{<:Vector{<:Block{1}}}
+  Base.Slice,
+  BlockSlice{<:Block{1}},
+  BlockSlice{<:BlockRange{1}},
+  BlockIndices{<:Vector{<:Block{1}}},
 }
 const BlockIndexRangeSlice = BlockSlice{
   <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}

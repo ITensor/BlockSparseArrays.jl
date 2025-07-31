@@ -87,13 +87,19 @@ function Base.setindex!(
       ),
     )
   end
-  # Custom `_convert` works around the issue that
-  # `convert(::Type{<:Diagonal}, ::AbstractMatrix)` isnt' defined
-  # in Julia v1.10 (https://github.com/JuliaLang/julia/pull/48895,
-  # https://github.com/JuliaLang/julia/pull/52487).
-  # TODO: Delete once we drop support for Julia v1.10.
-  aI = @view! a[I...]
-  aI .= value
+  if !isconcretetype(blocktype(a))
+    # Custom `_convert` works around the issue that
+    # `convert(::Type{<:Diagonal}, ::AbstractMatrix)` isnt' defined
+    # in Julia v1.10 (https://github.com/JuliaLang/julia/pull/48895,
+    # https://github.com/JuliaLang/julia/pull/52487).
+    # TODO: Delete once we drop support for Julia v1.10.
+    blocks(a)[Int.(I)...] = _convert(blocktype(a), value)
+  else
+    # This writes into existing blocks, or constructs blocks
+    # using the axes.
+    aI = @view! a[I...]
+    aI .= value
+  end
   return a
 end
 

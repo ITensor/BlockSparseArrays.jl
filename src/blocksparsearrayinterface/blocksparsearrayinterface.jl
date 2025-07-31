@@ -537,7 +537,11 @@ function SparseArraysBase.getunstoredindex(
   return error("Not implemented.")
 end
 
+# Convert a blockwise slice on a block sparse array
+# to an elementwise slice on the corresponding sparse array
+# of blocks.
 to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)
+to_blocks_indices(I::BlockSlice{<:Block{1}}) = Int(I.block):Int(I.block)
 to_blocks_indices(I::BlockIndices{<:Vector{<:Block{1}}}) = Int.(I.blocks)
 to_blocks_indices(I::Base.Slice) = Base.OneTo(blocklength(I.indices))
 

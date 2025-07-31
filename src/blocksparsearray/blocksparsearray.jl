@@ -272,8 +272,10 @@ function blocksparse(d::Dict{<:Block,<:AbstractArray}, ax::Tuple)
   end
   return a
 end
-function blocksparse(d::Dict{<:Block,<:AbstractArray}, ax::AbstractUnitRange...)
-  return blocksparse(d, ax)
+function blocksparse(
+  d::Dict{<:Block,<:AbstractArray}, blocklens::AbstractVector{<:Integer}...
+)
+  return blocksparse(d, map(blockedrange, blocklens))
 end
 
 # Base `AbstractArray` interface
