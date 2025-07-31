@@ -68,8 +68,8 @@ function MatrixAlgebraKit.initialize_output(
   # this is a convention, which at least gives the expected results for blockdiagonal
   emptyrows = setdiff(1:bm, browIs)
   emptycols = setdiff(1:bn, bcolIs)
-  for (row, col) in zip(emptyrows, emptycols)
-    s_axes[col] = infimum(brows[row], bcols[col])
+  for (I, (row, col)) in enumerate(zip(emptyrows, emptycols))
+    s_axes[I + length(bIs)] = infimum(brows[row], bcols[col])
   end
 
   s_axis = mortar_axis(s_axes)
@@ -88,9 +88,9 @@ function MatrixAlgebraKit.initialize_output(
   end
 
   # allocate output for blocks that aren't present -- do we also fill identities here?
-  for (row, col) in zip(emptyrows, emptycols)
-    @view!(U[Block(row, col)])
-    @view!(Vt[Block(col, col)])
+  for (I, (row, col)) in enumerate(zip(emptyrows, emptycols))
+    @view!(U[Block(row, I + length(bIs))])
+    @view!(Vt[Block(I + length(bIs), col)])
   end
 
   return U, S, Vt
@@ -117,7 +117,7 @@ function MatrixAlgebraKit.initialize_output(
   v_axes = similar(bcols, bn)
 
   # fill in values for blocks that are present
-  bIs = sort!(collect(eachblockstoredindex(A)), by=Int ∘ last ∘ Tuple)
+  bIs = sort!(collect(eachblockstoredindex(A)); by=Int ∘ last ∘ Tuple)
   browIs = Int.(first.(Tuple.(bIs)))
   bcolIs = Int.(last.(Tuple.(bIs)))
   for (I, bI) in enumerate(bIs)
@@ -132,9 +132,9 @@ function MatrixAlgebraKit.initialize_output(
   u_axes[length(bIs) .+ (1:length(emptyrows))] .= brows[emptyrows]
   emptycols = setdiff(1:bn, bcolIs)
   v_axes[length(bIs) .+ (1:length(emptycols))] .= bcols[emptycols]
-  
+
   u_axis = mortar_axis(u_axes)
-  v_axis = mortar_axis(@show v_axes)
+  v_axis = mortar_axis(v_axes)
   S_axes = (u_axis, v_axis)
   U, S, Vt = similar_output(svd_full!, A, S_axes, alg)
 
@@ -151,12 +151,12 @@ function MatrixAlgebraKit.initialize_output(
 
   # allocate output for blocks that aren't present -- do we also fill identities here?
   for (I, row) in enumerate(emptyrows)
-    @view!(U[Block(row, I)])
+    @view!(U[Block(row, length(bIs) + I)])
   end
   for (I, col) in enumerate(emptycols)
-    @view!(Vt[Block(I, col)])
+    @view!(Vt[Block(length(bIs) + I, col)])
   end
-  
+
   return U, S, Vt
 end
 
@@ -210,9 +210,9 @@ function MatrixAlgebraKit.svd_compact!(
   # needs copyto! instead because size(::LinearAlgebra.I) doesn't work
   # U[Block(row, col)] = LinearAlgebra.I
   # Vᴴ[Block(col, col)] = LinearAlgebra.I
-  for (row, col) in zip(emptyrows, emptycols)
-    copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
-    copyto!(@view!(Vᴴ[Block(col, col)]), LinearAlgebra.I)
+  for (I, (row, col)) in enumerate(zip(emptyrows, emptycols))
+    copyto!(@view!(U[Block(row, I + length(bIs))]), LinearAlgebra.I)
+    copyto!(@view!(Vᴴ[Block(I + length(bIs), col)]), LinearAlgebra.I)
   end
 
   return (U, S, Vᴴ)
