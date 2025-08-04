@@ -119,15 +119,15 @@ end
 
 function test_svd(a, (U, S, Vᴴ); full=false)
   # Check that the SVD is correct
-  (U * S * Vᴴ ≈ a) || return false
-  (U' * U ≈ LinearAlgebra.I) || return false
-  (Vᴴ * Vᴴ' ≈ LinearAlgebra.I) || return false
-  full || return true
+  @test (U * S * Vᴴ ≈ a)
+  @test (U' * U ≈ LinearAlgebra.I)
+  @test (Vᴴ * Vᴴ' ≈ LinearAlgebra.I)
+  full || return nothing
 
   # Check factors are unitary
-  (U * U' ≈ LinearAlgebra.I) || return false
-  (Vᴴ' * Vᴴ ≈ LinearAlgebra.I) || return false
-  return true
+  @test (U * U' ≈ LinearAlgebra.I)
+  @test (Vᴴ' * Vᴴ ≈ LinearAlgebra.I)
+  return nothing
 end
 
 blockszs = (
@@ -143,7 +143,7 @@ test_params = Iterators.product(blockszs, eltypes)
 
   # test empty matrix
   usv_empty = svd_compact(a)
-  @test test_svd(a, usv_empty)
+  test_svd(a, usv_empty)
 
   # test blockdiagonal
   rng = StableRNG(123)
@@ -152,13 +152,13 @@ test_params = Iterators.product(blockszs, eltypes)
     a[Block(I.I...)] = rand(rng, T, size(blocks(a)[i]))
   end
   usv = svd_compact(a)
-  @test test_svd(a, usv)
+  test_svd(a, usv)
 
   rng = StableRNG(123)
   perm = Random.randperm(rng, length(m))
   b = a[Block.(perm), Block.(1:length(n))]
   usv = svd_compact(b)
-  @test test_svd(b, usv)
+  test_svd(b, usv)
 
   # test permuted blockdiagonal with missing row/col
   rng = StableRNG(123)
@@ -166,7 +166,7 @@ test_params = Iterators.product(blockszs, eltypes)
   c = copy(b)
   delete!(blocks(c).storage, CartesianIndex(Int.(Tuple(I_removed))))
   usv = svd_compact(c)
-  @test test_svd(c, usv)
+  test_svd(c, usv)
 end
 
 # svd_full!
@@ -176,7 +176,7 @@ end
 
   # test empty matrix
   usv_empty = svd_full(a)
-  @test test_svd(a, usv_empty; full=true)
+  test_svd(a, usv_empty; full=true)
 
   # test blockdiagonal
   rng = StableRNG(123)
@@ -185,13 +185,13 @@ end
     a[Block(I.I...)] = rand(rng, T, size(blocks(a)[i]))
   end
   usv = svd_full(a)
-  @test test_svd(a, usv; full=true)
+  test_svd(a, usv; full=true)
 
   rng = StableRNG(123)
   perm = Random.randperm(rng, length(m))
   b = a[Block.(perm), Block.(1:length(n))]
   usv = svd_full(b)
-  @test test_svd(b, usv; full=true)
+  test_svd(b, usv; full=true)
 
   # test permuted blockdiagonal with missing row/col
   rng = StableRNG(123)
@@ -199,7 +199,7 @@ end
   c = copy(b)
   delete!(blocks(c).storage, CartesianIndex(Int.(Tuple(I_removed))))
   usv = svd_full(c)
-  @test test_svd(c, usv; full=true)
+  test_svd(c, usv; full=true)
 end
 
 # svd_trunc!
