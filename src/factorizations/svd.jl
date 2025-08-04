@@ -29,58 +29,33 @@ function similar_output(
 end
 
 function MatrixAlgebraKit.initialize_output(
-  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
+  ::typeof(svd_compact!), ::AbstractBlockSparseMatrix, ::BlockPermutedDiagonalAlgorithm
 )
-  bm, bn = blocksize(A)
-  bmn = min(bm, bn)
-
+  return nothing
+end
+function MatrixAlgebraKit.initialize_output(
+  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
+)
   brows = eachblockaxis(axes(A, 1))
   bcols = eachblockaxis(axes(A, 2))
-  u_axes = similar(brows, bmn)
-  v_axes = similar(brows, bmn)
+  # using the property that zip stops as soon as one of the iterators is exhausted
+  s_axes = map(splat(infimum), zip(brows, bcols))
+  s_axis = mortar_axis(s_axes)
+  S_axes = (s_axis, s_axis)
+  U, S, Vᴴ = similar_output(svd_compact!, A, S_axes, alg)
 
-  # fill in values for blocks that are present
-  bIs = collect(eachblockstoredindex(A))
-  browIs = Int.(first.(Tuple.(bIs)))
-  bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
-    row, col = Int.(Tuple(bI))
-    u_axes[col] = infimum(brows[row], bcols[col])
-    v_axes[col] = infimum(bcols[col], brows[row])
-  end
-
-  # fill in values for blocks that aren't present, pairing them in order of occurence
-  # this is a convention, which at least gives the expected results for blockdiagonal
-  emptyrows = setdiff(1:bm, browIs)
-  emptycols = setdiff(1:bn, bcolIs)
-  for (row, col) in zip(emptyrows, emptycols)
-    u_axes[col] = infimum(brows[row], bcols[col])
-    v_axes[col] = infimum(bcols[col], brows[row])
-  end
-
-  u_axis = mortar_axis(u_axes)
-  v_axis = mortar_axis(v_axes)
-  S_axes = (u_axis, v_axis)
-  U, S, Vt = similar_output(svd_compact!, A, S_axes, alg)
-
-  # allocate output
-  for bI in eachblockstoredindex(A)
-    brow, bcol = Tuple(bI)
     block = @view!(A[bI])
     block_alg = block_algorithm(alg, block)
-    U[brow, bcol], S[bcol, bcol], Vt[bcol, bcol] = MatrixAlgebraKit.initialize_output(
+    I = first(Tuple(bI)) # == last(Tuple(bI))
+    U[I, I], S[I, I], Vᴴ[I, I] = MatrixAlgebraKit.initialize_output(
       svd_compact!, block, block_alg
     )
   end
 
-  # allocate output for blocks that aren't present -- do we also fill identities here?
-  for (row, col) in zip(emptyrows, emptycols)
-    @view!(U[Block(row, col)])
-    @view!(Vt[Block(col, col)])
-  end
-
-  return U, S, Vt
+  return U, S, Vᴴ
 end
+
 
 function similar_output(
   ::typeof(svd_full!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
@@ -93,65 +68,39 @@ function similar_output(
 end
 
 function MatrixAlgebraKit.initialize_output(
-  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
+  ::typeof(svd_full!), ::AbstractBlockSparseMatrix, ::BlockPermutedDiagonalAlgorithm
 )
-  bm, bn = blocksize(A)
+  return nothing
+end
 
-  brows = eachblockaxis(axes(A, 1))
-  u_axes = similar(brows)
+function MatrixAlgebraKit.initialize_output(
+  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
+)
+  U, S, Vᴴ = similar_output(svd_full!, A, axes(A), alg)
 
-  # fill in values for blocks that are present
-  bIs = collect(eachblockstoredindex(A))
-  browIs = Int.(first.(Tuple.(bIs)))
-  bcolIs = Int.(last.(Tuple.(bIs)))
   for bI in eachblockstoredindex(A)
-    row, col = Int.(Tuple(bI))
-    u_axes[col] = brows[row]
-  end
-
-  # fill in values for blocks that aren't present, pairing them in order of occurence
-  # this is a convention, which at least gives the expected results for blockdiagonal
-  emptyrows = setdiff(1:bm, browIs)
-  emptycols = setdiff(1:bn, bcolIs)
-  for (row, col) in zip(emptyrows, emptycols)
-    u_axes[col] = brows[row]
-  end
-  for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
-    u_axes[bn + i] = brows[emptyrows[k]]
-  end
-
-  u_axis = mortar_axis(u_axes)
-  S_axes = (u_axis, axes(A, 2))
-  U, S, Vt = similar_output(svd_full!, A, S_axes, alg)
-
-  # allocate output
-  for bI in eachblockstoredindex(A)
-    brow, bcol = Tuple(bI)
     block = @view!(A[bI])
     block_alg = block_algorithm(alg, block)
-    U[brow, bcol], S[bcol, bcol], Vt[bcol, bcol] = MatrixAlgebraKit.initialize_output(
+    I = first(Tuple(bI)) # == last(Tuple(bI))
+    U[I, I], S[I, I], Vᴴ[I, I] = MatrixAlgebraKit.initialize_output(
       svd_full!, block, block_alg
     )
   end
 
-  # allocate output for blocks that aren't present -- do we also fill identities here?
-  for (row, col) in zip(emptyrows, emptycols)
-    @view!(U[Block(row, col)])
-    @view!(Vt[Block(col, col)])
-  end
-  # also handle extra rows/cols
-  for i in (length(emptyrows) + 1):length(emptycols)
-    @view!(Vt[Block(emptycols[i], emptycols[i])])
-  end
-  for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
-    @view!(U[Block(emptyrows[k], bn + i)])
-  end
-
-  return U, S, Vt
+  return U, S, Vᴴ
 end
 
 function MatrixAlgebraKit.check_input(
-  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ)
+  ::typeof(svd_compact!),
+  A::AbstractBlockSparseMatrix,
+  USVᴴ,
+  ::BlockPermutedDiagonalAlgorithm,
+)
+  @assert isblockpermuteddiagonal(A)
+end
+
+function MatrixAlgebraKit.check_input(
+  ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ), ::BlockDiagonalAlgorithm
 )
   @assert isa(U, AbstractBlockSparseMatrix) &&
     isa(S, AbstractBlockSparseMatrix) &&
@@ -160,11 +109,19 @@ function MatrixAlgebraKit.check_input(
   @assert real(eltype(A)) == eltype(S)
   @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vᴴ, 2)
   @assert axes(S, 1) == axes(S, 2)
+  @assert isblockdiagonal(A)
   return nothing
 end
 
 function MatrixAlgebraKit.check_input(
-  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ)
+  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, USVᴴ, ::BlockPermutedDiagonalAlgorithm
+)
+  @assert isblockpermuteddiagonal(A)
+  return nothing
+end
+
+function MatrixAlgebraKit.check_input(
+  ::typeof(svd_full!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ), ::BlockDiagonalAlgorithm
 )
   @assert isa(U, AbstractBlockSparseMatrix) &&
     isa(S, AbstractBlockSparseMatrix) &&
@@ -173,78 +130,92 @@ function MatrixAlgebraKit.check_input(
   @assert real(eltype(A)) == eltype(S)
   @assert axes(A, 1) == axes(U, 1) && axes(A, 2) == axes(Vᴴ, 1) == axes(Vᴴ, 2)
   @assert axes(S, 2) == axes(A, 2)
+  @assert isblockdiagonal(A)
   return nothing
 end
 
 function MatrixAlgebraKit.svd_compact!(
-  A::AbstractBlockSparseMatrix, (U, S, Vᴴ), alg::BlockPermutedDiagonalAlgorithm
+  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockPermutedDiagonalAlgorithm
 )
-  check_input(svd_compact!, A, (U, S, Vᴴ))
+  check_input(svd_compact!, A, USVᴴ, alg)
 
-  # do decomposition on each block
-  for bI in eachblockstoredindex(A)
-    brow, bcol = Tuple(bI)
-    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vᴴ[bcol, bcol]))
-    block = @view!(A[bI])
-    block_alg = block_algorithm(alg, block)
-    usvᴴ′ = svd_compact!(block, usvᴴ, block_alg)
-    @assert usvᴴ === usvᴴ′ "svd_compact! might not be in-place"
+  Ad, rowperm, colperm = blockdiagonalize(A)
+  Ud, S, Vᴴd = svd_compact!(Ad, BlockDiagonalAlgorithm(alg))
+
+  inv_rowperm = Block.(invperm(Int.(rowperm)))
+  U = Ud[inv_rowperm, :]
+
+  inv_colperm = Block.(invperm(Int.(colperm)))
+  Vᴴ = Vᴴd[:, inv_colperm]
+
+  return U, S, Vᴴ
+end
+
+function MatrixAlgebraKit.svd_compact!(
+  A::AbstractBlockSparseMatrix, (U, S, Vᴴ), alg::BlockDiagonalAlgorithm
+)
+  check_input(svd_compact!, A, (U, S, Vᴴ), alg)
+
+  for I in 1:min(blocksize(A)...)
+    bI = Block(I, I)
+    if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
+      usvᴴ = (@view!(U[bI]), @view!(S[bI]), @view!(Vᴴ[bI]))
+      block = @view!(A[bI])
+      block_alg = block_algorithm(alg, block)
+      usvᴴ′ = svd_compact!(block, usvᴴ, block_alg)
+      @assert usvᴴ === usvᴴ′ "svd_compact! might not be in-place"
+    else
+      copyto!(@view!(U[bI]), LinearAlgebra.I)
+      copyto!(@view!(Vᴴ[bI]), LinearAlgebra.I)
+    end
   end
 
-  # fill in identities for blocks that aren't present
-  bIs = collect(eachblockstoredindex(A))
-  browIs = Int.(first.(Tuple.(bIs)))
-  bcolIs = Int.(last.(Tuple.(bIs)))
-  emptyrows = setdiff(1:blocksize(A, 1), browIs)
-  emptycols = setdiff(1:blocksize(A, 2), bcolIs)
-  # needs copyto! instead because size(::LinearAlgebra.I) doesn't work
-  # U[Block(row, col)] = LinearAlgebra.I
-  # Vᴴ[Block(col, col)] = LinearAlgebra.I
-  for (row, col) in zip(emptyrows, emptycols)
-    copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
-    copyto!(@view!(Vᴴ[Block(col, col)]), LinearAlgebra.I)
-  end
-
-  return (U, S, Vᴴ)
+  return U, S, Vᴴ
 end
 
 function MatrixAlgebraKit.svd_full!(
-  A::AbstractBlockSparseMatrix, (U, S, Vᴴ), alg::BlockPermutedDiagonalAlgorithm
+  A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockPermutedDiagonalAlgorithm
 )
-  check_input(svd_full!, A, (U, S, Vᴴ))
+  check_input(svd_full!, A, USVᴴ, alg)
 
-  # do decomposition on each block
-  for bI in eachblockstoredindex(A)
-    brow, bcol = Tuple(bI)
-    usvᴴ = (@view!(U[brow, bcol]), @view!(S[bcol, bcol]), @view!(Vᴴ[bcol, bcol]))
-    block = @view!(A[bI])
-    block_alg = block_algorithm(alg, block)
-    usvᴴ′ = svd_full!(block, usvᴴ, block_alg)
-    @assert usvᴴ === usvᴴ′ "svd_full! might not be in-place"
+  Ad, rowperm, colperm = blockdiagonalize(A)
+  Ud, S, Vᴴd = svd_full!(Ad, BlockDiagonalAlgorithm(alg))
+
+  inv_rowperm = Block.(invperm(Int.(rowperm)))
+  U = Ud[inv_rowperm, :]
+
+  inv_colperm = Block.(invperm(Int.(colperm)))
+  Vᴴ = Vᴴd[:, inv_colperm]
+
+  return U, S, Vᴴ
+end
+
+function MatrixAlgebraKit.svd_full!(
+  A::AbstractBlockSparseMatrix, (U, S, Vᴴ), alg::BlockDiagonalAlgorithm
+)
+  check_input(svd_full!, A, (U, S, Vᴴ), alg)
+
+  for I in 1:min(blocksize(A)...)
+    bI = Block(I, I)
+    if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
+      usvᴴ = (@view!(U[bI]), @view!(S[bI]), @view!(Vᴴ[bI]))
+      block = @view!(A[bI])
+      block_alg = block_algorithm(alg, block)
+      usvᴴ′ = svd_full!(block, usvᴴ, block_alg)
+      @assert usvᴴ === usvᴴ′ "svd_compact! might not be in-place"
+    else
+      copyto!(@view!(U[bI]), LinearAlgebra.I)
+      copyto!(@view!(Vᴴ[bI]), LinearAlgebra.I)
+    end
   end
 
-  # fill in identities for blocks that aren't present
-  bIs = collect(eachblockstoredindex(A))
-  browIs = Int.(first.(Tuple.(bIs)))
-  bcolIs = Int.(last.(Tuple.(bIs)))
-  emptyrows = setdiff(1:blocksize(A, 1), browIs)
-  emptycols = setdiff(1:blocksize(A, 2), bcolIs)
-  # needs copyto! instead because size(::LinearAlgebra.I) doesn't work
-  # U[Block(row, col)] = LinearAlgebra.I
-  # Vt[Block(col, col)] = LinearAlgebra.I
-  for (row, col) in zip(emptyrows, emptycols)
-    copyto!(@view!(U[Block(row, col)]), LinearAlgebra.I)
-    copyto!(@view!(Vᴴ[Block(col, col)]), LinearAlgebra.I)
+  # Complete the unitaries for rectangular inputs
+  for I in blocksize(A, 2)+1:blocksize(A, 1)
+    copyto!(@view!(U[Block(I, I)]), LinearAlgebra.I)
+  end
+  for I in blocksize(A, 1)+1:blocksize(A, 2)
+    copyto!(@view!(Vᴴ[Block(I, I)]), LinearAlgebra.I)
   end
 
-  # also handle extra rows/cols
-  for i in (length(emptyrows) + 1):length(emptycols)
-    copyto!(@view!(Vᴴ[Block(emptycols[i], emptycols[i])]), LinearAlgebra.I)
-  end
-  bn = blocksize(A, 2)
-  for (i, k) in enumerate((length(emptycols) + 1):length(emptyrows))
-    copyto!(@view!(U[Block(emptyrows[k], bn + i)]), LinearAlgebra.I)
-  end
-
-  return (U, S, Vᴴ)
+  return U, S, Vᴴ
 end
