@@ -56,7 +56,6 @@ function MatrixAlgebraKit.initialize_output(
   return U, S, Vᴴ
 end
 
-
 function similar_output(
   ::typeof(svd_full!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
 )
@@ -210,10 +209,10 @@ function MatrixAlgebraKit.svd_full!(
   end
 
   # Complete the unitaries for rectangular inputs
-  for I in blocksize(A, 2)+1:blocksize(A, 1)
+  for I in (blocksize(A, 2) + 1):blocksize(A, 1)
     copyto!(@view!(U[Block(I, I)]), LinearAlgebra.I)
   end
-  for I in blocksize(A, 1)+1:blocksize(A, 2)
+  for I in (blocksize(A, 1) + 1):blocksize(A, 2)
     copyto!(@view!(Vᴴ[Block(I, I)]), LinearAlgebra.I)
   end
 
