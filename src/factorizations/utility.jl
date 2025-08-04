@@ -53,6 +53,11 @@ function isblockdiagonal(A::AbstractBlockSparseMatrix)
   return true
 end
 
+function isblockpermuteddiagonal(A::AbstractBlockSparseMatrix)
+  return allunique(first.(eachblockstoredindex(A))) &&
+         allunique(last.(eachblockstoredindex(A)))
+end
+
 """
     BlockDiagonalAlgorithm([f]) <: MatrixAlgebraKit.AbstractAlgorithm
 
