@@ -3,23 +3,6 @@ using MatrixAlgebraKit:
   MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!, svd_full!
 using TypeParameterAccessors: realtype
 
-"""
-    BlockPermutedDiagonalAlgorithm(A::MatrixAlgebraKit.AbstractAlgorithm)
-  
-A wrapper for `MatrixAlgebraKit.AbstractAlgorithm` that implements the wrapped algorithm on
-a block-by-block basis, which is possible if the input matrix is a block-diagonal matrix or
-a block permuted block-diagonal matrix.
-"""
-struct BlockPermutedDiagonalAlgorithm{F} <: MatrixAlgebraKit.AbstractAlgorithm
-  falg::F
-end
-function block_algorithm(alg::BlockPermutedDiagonalAlgorithm, a::AbstractMatrix)
-  return block_algorithm(alg, typeof(a))
-end
-function block_algorithm(alg::BlockPermutedDiagonalAlgorithm, A::Type{<:AbstractMatrix})
-  return alg.falg(A)
-end
-
 function MatrixAlgebraKit.default_svd_algorithm(
   ::Type{<:AbstractBlockSparseMatrix}; kwargs...
 )

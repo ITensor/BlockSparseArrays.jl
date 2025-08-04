@@ -1,3 +1,5 @@
+using MatrixAlgebraKit: MatrixAlgebraKit
+
 function infimum(r1::AbstractUnitRange, r2::AbstractUnitRange)
   (isone(first(r1)) && isone(first(r2))) ||
     throw(ArgumentError("infimum only defined for ranges starting at 1"))
@@ -49,4 +51,24 @@ function isblockdiagonal(A::AbstractBlockSparseMatrix)
   # don't need to check for rows and cols appearing only once
   # this is guaranteed as long as eachblockstoredindex is unique, which we assume
   return true
+end
+
+"""
+    BlockPermutedDiagonalAlgorithm([f]) <: MatrixAlgebraKit.AbstractAlgorithm
+
+Type for handling algorithms on a block-by-block basis, which is possible for
+block-diagonal or block-permuted-diagonal input matrices.
+Additionally this wrapper may take a function that, given the input type of the blocks,
+returns the actual algorithm that will be used. This can be leveraged to allow for different
+algorithms for each block.
+"""
+struct BlockPermutedDiagonalAlgorithm{F} <: MatrixAlgebraKit.AbstractAlgorithm
+  falg::F
+end
+
+function block_algorithm(alg::BlockPermutedDiagonalAlgorithm, a::AbstractMatrix)
+  return block_algorithm(alg, typeof(a))
+end
+function block_algorithm(alg::BlockPermutedDiagonalAlgorithm, A::Type{<:AbstractMatrix})
+  return alg.falg(A)
 end
