@@ -54,21 +54,45 @@ function isblockdiagonal(A::AbstractBlockSparseMatrix)
 end
 
 """
+    BlockDiagonalAlgorithm([f]) <: MatrixAlgebraKit.AbstractAlgorithm
+
+Type for handling algorithms on a block-by-block basis, which is possible for
+block-diagonal input matrices.
+Additionally this algorithm may take a function that, given the individual blocks, returns
+the algorithm that will be used. This can be leveraged to allow for different algorithms for
+each block.
+"""
+struct BlockDiagonalAlgorithm{F} <: MatrixAlgebraKit.AbstractAlgorithm
+  falg::F
+end
+
+function block_algorithm(alg::BlockDiagonalAlgorithm, a::AbstractMatrix)
+  return block_algorithm(alg, typeof(a))
+end
+function block_algorithm(alg::BlockDiagonalAlgorithm, A::Type{<:AbstractMatrix})
+  return alg.falg(A)
+end
+
+"""
     BlockPermutedDiagonalAlgorithm([f]) <: MatrixAlgebraKit.AbstractAlgorithm
 
 Type for handling algorithms on a block-by-block basis, which is possible for
-block-diagonal or block-permuted-diagonal input matrices.
-Additionally this wrapper may take a function that, given the input type of the blocks,
-returns the actual algorithm that will be used. This can be leveraged to allow for different
-algorithms for each block.
+block-diagonal or block-permuted-diagonal input matrices. The algorithms proceed by first
+permuting to a block-diagonal form, and then carrying out the algorithm.
+Additionally this algorithm may take a function that, given the individual blocks, returns
+the algorithm that will be used. This can be leveraged to allow for different algorithms for
+each block.
 """
 struct BlockPermutedDiagonalAlgorithm{F} <: MatrixAlgebraKit.AbstractAlgorithm
   falg::F
 end
-
 function block_algorithm(alg::BlockPermutedDiagonalAlgorithm, a::AbstractMatrix)
   return block_algorithm(alg, typeof(a))
 end
 function block_algorithm(alg::BlockPermutedDiagonalAlgorithm, A::Type{<:AbstractMatrix})
   return alg.falg(A)
+end
+
+function BlockDiagonalAlgorithm(alg::BlockPermutedDiagonalAlgorithm)
+  return BlockDiagonalAlgorithm(alg.falg)
 end
