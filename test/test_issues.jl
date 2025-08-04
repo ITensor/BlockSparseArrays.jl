@@ -23,4 +23,3 @@ using Test: @test, @testset
   @test Vᴴ * Vᴴ' ≈ LinearAlgebra.I
   @test Vᴴ' * Vᴴ ≈ LinearAlgebra.I
 end
-
