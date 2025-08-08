@@ -180,7 +180,10 @@ end
 # ```
 # but includes `BlockIndices`, where the blocks aren't contiguous.
 const BlockSliceCollection = Union{
-  Base.Slice,BlockSlice{<:BlockRange{1}},BlockIndices{<:Vector{<:Block{1}}}
+  Base.Slice,
+  BlockSlice{<:Block{1}},
+  BlockSlice{<:BlockRange{1}},
+  BlockIndices{<:Vector{<:Block{1}}},
 }
 const BlockIndexRangeSlice = BlockSlice{
   <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}
@@ -267,13 +270,15 @@ tuple_oneto(n) = ntuple(identity, n)
 
 function _blockreshape(a::AbstractArray, axes::Tuple{Vararg{AbstractUnitRange}})
   reshaped_blocks_a = reshape(blocks(a), blocklength.(axes))
-  reshaped_a = similar(a, axes)
-  for I in eachstoredindex(reshaped_blocks_a)
-    block_size_I = map(i -> length(axes[i][Block(I[i])]), tuple_oneto(length(axes)))
+  function f(I)
+    block_axes_I = map(ntuple(identity, length(axes))) do i
+      return Base.axes1(axes[i][Block(I[i])])
+    end
     # TODO: Better converter here.
-    reshaped_a[Block(Tuple(I))] = reshape(reshaped_blocks_a[I], block_size_I)
+    return reshape(reshaped_blocks_a[I], block_axes_I)
   end
-  return reshaped_a
+  bs = Dict(Block(Tuple(I)) => f(I) for I in eachstoredindex(reshaped_blocks_a))
+  return blocksparse(bs, axes)
 end
 
 function blockreshape(

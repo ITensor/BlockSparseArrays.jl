@@ -18,10 +18,17 @@ function Base.AbstractArray{A}(a::ZeroBlocks{N}) where {N,A}
 end
 
 @inline function Base.getindex(a::ZeroBlocks{N,A}, I::Vararg{Int,N}) where {N,A}
+
+  #foreach(display, a.parentaxes)
+  #foreach(display ∘ eachblockaxis, a.parentaxes)
+
   # TODO: Use `BlockArrays.eachblockaxes`.
   ax = ntuple(N) do d
-    return only(axes(a.parentaxes[d][Block(I[d])]))
+    return eachblockaxis(a.parentaxes[d])[I[d]]
   end
+
+  #@show ax
+
   !isconcretetype(A) && return zero!(similar(Array{eltype(A),N}, ax))
   return zero!(similar(A, ax))
 end
