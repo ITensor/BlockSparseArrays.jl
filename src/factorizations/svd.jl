@@ -138,14 +138,10 @@ function MatrixAlgebraKit.svd_compact!(
 )
   check_input(svd_compact!, A, USVᴴ, alg)
 
-  Ad, rowperm, colperm = blockdiagonalize(A)
+  Ad, transform_rows, transform_cols = blockdiagonalize(A)
   Ud, S, Vᴴd = svd_compact!(Ad, BlockDiagonalAlgorithm(alg))
-
-  inv_rowperm = Block.(invperm(Int.(rowperm)))
-  U = Ud[inv_rowperm, :]
-
-  inv_colperm = Block.(invperm(Int.(colperm)))
-  Vᴴ = Vᴴd[:, inv_colperm]
+  U = transform_rows(Ud)
+  Vᴴ = transform_cols(Vᴴd)
 
   return U, S, Vᴴ
 end
@@ -177,14 +173,10 @@ function MatrixAlgebraKit.svd_full!(
 )
   check_input(svd_full!, A, USVᴴ, alg)
 
-  Ad, rowperm, colperm = blockdiagonalize(A)
+  Ad, transform_rows, transform_cols = blockdiagonalize(A)
   Ud, S, Vᴴd = svd_full!(Ad, BlockDiagonalAlgorithm(alg))
-
-  inv_rowperm = Block.(invperm(Int.(rowperm)))
-  U = Ud[inv_rowperm, :]
-
-  inv_colperm = Block.(invperm(Int.(colperm)))
-  Vᴴ = Vᴴd[:, inv_colperm]
+  U = transform_rows(Ud)
+  Vᴴ = transform_cols(Vᴴd)
 
   return U, S, Vᴴ
 end

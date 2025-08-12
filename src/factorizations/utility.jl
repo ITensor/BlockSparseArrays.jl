@@ -40,7 +40,13 @@ function blockdiagonalize(A::AbstractBlockSparseMatrix)
   emptycols = setdiff(Block.(1:blocksize(A, 2)), colperm)
   append!(colperm, emptycols)
 
-  return A[rowperm, colperm], rowperm, colperm
+  invrowperm = Block.(invperm(Int.(rowperm)))
+  transform_rows(A) = A[invrowperm, :]
+
+  invcolperm = Block.(invperm(Int.(colperm)))
+  transform_cols(A) = A[:, invcolperm]
+
+  return A[rowperm, colperm], transform_rows, transform_cols
 end
 
 function isblockdiagonal(A::AbstractBlockSparseMatrix)
