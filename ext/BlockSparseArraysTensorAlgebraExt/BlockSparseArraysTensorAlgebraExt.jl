@@ -24,10 +24,20 @@ function TensorAlgebra.matricize(
 )
   ax = fuseaxes(axes(a), biperm)
   reshaped_blocks_a = reshape(blocks(a), map(blocklength, ax))
-  bs = Dict(
-    Block(Tuple(I)) => matricize(reshaped_blocks_a[I], biperm) for
-    I in eachstoredindex(reshaped_blocks_a)
-  )
+  key(I) = Block(Tuple(I))
+  value(I) = matricize(reshaped_blocks_a[I], biperm)
+  Is = eachstoredindex(reshaped_blocks_a)
+  bs = if isempty(Is)
+    # Catch empty case and make sure the type is constrained properly.
+    # This seems to only be necessary in Julia versions below v1.11,
+    # try removing it when we drop support for those versions.
+    keytype = Base.promote_op(key, eltype(Is))
+    valtype = Base.promote_op(value, eltype(Is))
+    valtype′ = !isconcretetype(valtype) ? AbstractMatrix{eltype(a)} : valtype
+    Dict{keytype,valtype′}()
+  else
+    Dict(key(I) => value(I) for I in Is)
+  end
   return blocksparse(bs, ax)
 end
 

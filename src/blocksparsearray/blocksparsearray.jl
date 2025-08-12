@@ -263,13 +263,15 @@ function blocksparsezeros(::BlockType{A}, axes...) where {A<:AbstractArray}
   return BlockSparseArray{eltype(A),ndims(A),A}(undef, axes...)
 end
 function blocksparse(d::Dict, ax::Tuple)
+  d_narrow = if isempty(d)
+    Dict{Block{length(ax),Int},AbstractArray{Any,length(ax)}}()
+  else
+    Dict(Pair(kv) for kv in d)
+  end
+  return blocksparse(d_narrow, ax)
+end
+function blocksparse(d::Dict{<:Block{N},<:AbstractArray{<:Any,N}}, ax::Tuple) where {N}
   a = blocksparsezeros(BlockType(valtype(d)), ax...)
-
-  ## blockaxtype = Tuple{map(eltype ∘ eachblockaxis, ax)...}
-  ## # TODO: Catch if inference fails and use `valtype(d)` instead.
-  ## blockt = Base.promote_op(similar, Type{valtype(d)}, blockaxtype)
-  ## a = blocksparsezeros(BlockType(blockt), ax)
-
   for I in eachindex(d)
     a[I] = d[I]
   end
