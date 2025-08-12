@@ -22,6 +22,7 @@ using DerivableInterfaces:
   AbstractArrayInterface,
   DefaultArrayInterface,
   interface,
+  permuteddims,
   zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
@@ -312,7 +313,7 @@ end
 # `blockisequal_map[!]`.
 # TODO: Maybe define a `BlockIsEqualInterface` for these kinds of functions.
 function blockisequal_permutedims!(a_dest::AbstractArray, a_src::AbstractArray, perm)
-  blocks(a_dest) .= blocks(PermutedDimsArray(a_src, perm))
+  blocks(a_dest) .= blocks(permuteddims(a_src, perm))
   return a_dest
 end
 
@@ -322,7 +323,7 @@ end
 @interface ::AbstractBlockSparseArrayInterface function Base.permutedims(
   a::AbstractArray, perm
 )
-  a_dest = similar(PermutedDimsArray(a, perm))
+  a_dest = similar(permuteddims(a, perm))
   # TODO: Maybe define this as `@interface BlockIsEqualInterface() permutedims!(...)`.
   blockisequal_permutedims!(a_dest, a, perm)
   return a_dest
@@ -334,7 +335,7 @@ end
 @interface ::AbstractBlockSparseArrayInterface function Base.permutedims!(
   a_dest::AbstractArray, a_src::AbstractArray, perm
 )
-  if all(blockisequal.(axes(a_dest), axes(PermutedDimsArray(a_src, perm))))
+  if all(blockisequal.(axes(a_dest), axes(permuteddims(a_src, perm))))
     # TODO: Maybe define this as `@interface BlockIsEqualInterface() permutedims!(...)`.
     blockisequal_permutedims!(a_dest, a_src, perm)
     return a_dest
@@ -403,7 +404,7 @@ end
 function SparseArraysBase.getstoredindex(
   a::SparsePermutedDimsArrayBlocks{<:Any,N}, index::Vararg{Int,N}
 ) where {N}
-  return PermutedDimsArray(
+  return permuteddims(
     getstoredindex(blocks(parent(a.array)), _getindices(index, _invperm(a.array))...),
     _perm(a.array),
   )
@@ -411,7 +412,7 @@ end
 function SparseArraysBase.getunstoredindex(
   a::SparsePermutedDimsArrayBlocks{<:Any,N}, index::Vararg{Int,N}
 ) where {N}
-  return PermutedDimsArray(
+  return permuteddims(
     getunstoredindex(blocks(parent(a.array)), _getindices(index, _invperm(a.array))...),
     _perm(a.array),
   )
