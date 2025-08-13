@@ -11,21 +11,11 @@ function MatrixAlgebraKit.default_svd_algorithm(
   end
 end
 
-function output_type(::typeof(svd_compact!), A::Type{<:AbstractMatrix{T}}) where {T}
-  USVᴴ = Base.promote_op(svd_compact!, A)
-  !isconcretetype(USVᴴ) &&
-    return Tuple{AbstractMatrix{T},AbstractMatrix{realtype(T)},AbstractMatrix{T}}
-  return USVᴴ
-end
-
-function similar_output(
-  ::typeof(svd_compact!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
-)
-  BU, BS, BVᴴ = fieldtypes(output_type(svd_compact!, blocktype(A)))
-  U = similar(A, BlockType(BU), (axes(A, 1), S_axes[1]))
-  S = similar(A, BlockType(BS), S_axes)
-  Vᴴ = similar(A, BlockType(BVᴴ), (S_axes[2], axes(A, 2)))
-  return U, S, Vᴴ
+function output_type(
+  f::Union{typeof(svd_compact!),typeof(svd_full!)}, A::Type{<:AbstractMatrix{T}}
+) where {T}
+  USVᴴ = Base.promote_op(f, A)
+  return isconcretetype(USVᴴ) ? USVᴴ : Tuple{AbstractMatrix{T},AbstractMatrix{realtype(T)},AbstractMatrix{T}}
 end
 
 function MatrixAlgebraKit.initialize_output(
@@ -42,28 +32,13 @@ function MatrixAlgebraKit.initialize_output(
   s_axes = map(splat(infimum), zip(brows, bcols))
   s_axis = mortar_axis(s_axes)
   S_axes = (s_axis, s_axis)
-  U, S, Vᴴ = similar_output(svd_compact!, A, S_axes, alg)
 
-  for bI in eachblockstoredindex(A)
-    block = @view!(A[bI])
-    block_alg = block_algorithm(alg, block)
-    I = first(Tuple(bI)) # == last(Tuple(bI))
-    U[I, I], S[I, I], Vᴴ[I, I] = MatrixAlgebraKit.initialize_output(
-      svd_compact!, block, block_alg
-    )
-  end
+  BU, BS, BVᴴ = fieldtypes(output_type(svd_compact!, blocktype(A)))
+  U = similar(A, BlockType(BU), (axes(A, 1), S_axes[1]))
+  S = similar(A, BlockType(BS), S_axes)
+  Vᴴ = similar(A, BlockType(BVᴴ), (S_axes[2], axes(A, 2)))
 
   return U, S, Vᴴ
-end
-
-function similar_output(
-  ::typeof(svd_full!), A, S_axes, alg::MatrixAlgebraKit.AbstractAlgorithm
-)
-  U = similar(A, axes(A, 1), S_axes[1])
-  T = real(eltype(A))
-  S = similar(A, T, S_axes)
-  Vt = similar(A, S_axes[2], axes(A, 2))
-  return U, S, Vt
 end
 
 function MatrixAlgebraKit.initialize_output(
@@ -75,16 +50,10 @@ end
 function MatrixAlgebraKit.initialize_output(
   ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
 )
-  U, S, Vᴴ = similar_output(svd_full!, A, axes(A), alg)
-
-  for bI in eachblockstoredindex(A)
-    block = @view!(A[bI])
-    block_alg = block_algorithm(alg, block)
-    I = first(Tuple(bI)) # == last(Tuple(bI))
-    U[I, I], S[I, I], Vᴴ[I, I] = MatrixAlgebraKit.initialize_output(
-      svd_full!, block, block_alg
-    )
-  end
+  BU, BS, BVᴴ = fieldtypes(output_type(svd_full!, blocktype(A)))
+  U = similar(A, BlockType(BU), (axes(A, 1), axes(A, 1)))
+  S = similar(A, BlockType(BS), axes(A))
+  Vᴴ = similar(A, BlockType(BVᴴ), (axes(A, 2), axes(A, 2)))
 
   return U, S, Vᴴ
 end
@@ -154,11 +123,12 @@ function MatrixAlgebraKit.svd_compact!(
   for I in 1:min(blocksize(A)...)
     bI = Block(I, I)
     if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
-      usvᴴ = (@view!(U[bI]), @view!(S[bI]), @view!(Vᴴ[bI]))
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
-      usvᴴ′ = svd_compact!(block, usvᴴ, block_alg)
-      @assert usvᴴ === usvᴴ′ "svd_compact! might not be in-place"
+      bU, bS, bVᴴ = svd_compact!(block, block_alg)
+      U[bI] = bU
+      S[bI] = bS
+      Vᴴ[bI] = bVᴴ
     else
       copyto!(@view!(U[bI]), LinearAlgebra.I)
       copyto!(@view!(Vᴴ[bI]), LinearAlgebra.I)
@@ -189,11 +159,12 @@ function MatrixAlgebraKit.svd_full!(
   for I in 1:min(blocksize(A)...)
     bI = Block(I, I)
     if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
-      usvᴴ = (@view!(U[bI]), @view!(S[bI]), @view!(Vᴴ[bI]))
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
-      usvᴴ′ = svd_full!(block, usvᴴ, block_alg)
-      @assert usvᴴ === usvᴴ′ "svd_compact! might not be in-place"
+      bU, bS, bVᴴ = svd_full!(block, block_alg)
+      U[bI] = bU
+      S[bI] = bS
+      Vᴴ[bI] = bVᴴ
     else
       copyto!(@view!(U[bI]), LinearAlgebra.I)
       copyto!(@view!(Vᴴ[bI]), LinearAlgebra.I)
