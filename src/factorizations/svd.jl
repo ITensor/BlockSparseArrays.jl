@@ -66,7 +66,7 @@ function MatrixAlgebraKit.initialize_output(
 end
 
 function MatrixAlgebraKit.initialize_output(
-  ::typeof(svd_vals!), ::AbstractBlockSparseMatrix, ::BlockDiagonalAlgorithm
+  ::typeof(svd_vals!), ::AbstractBlockSparseMatrix, ::BlockPermutedDiagonalAlgorithm
 )
   return nothing
 end
@@ -233,7 +233,7 @@ function MatrixAlgebraKit.svd_vals!(
   MatrixAlgebraKit.check_input(svd_vals!, A, S, alg)
   for I in eachblockstoredindex(A)
     block = @view!(A[I])
-    S[Tuple(I)[1]] = $f(block, block_algorithm(alg, block))
+    S[Tuple(I)[1]] = svd_vals!(block, block_algorithm(alg, block))
   end
   return S
 end
