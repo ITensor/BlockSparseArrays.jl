@@ -88,10 +88,10 @@ function MatrixAlgebraKit.qr_compact!(
   A::AbstractBlockSparseMatrix, QR, alg::BlockPermutedDiagonalAlgorithm
 )
   check_input(qr_compact!, A, QR, alg)
-  Ad, transform_rows, transform_cols = blockdiagonalize(A)
+  Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
   Qd, Rd = qr_compact!(Ad, BlockDiagonalAlgorithm(alg))
-  Q = transform_rows(Qd)
-  R = transform_cols(Rd)
+  Q = transform_rows(Qd, invrowperm)
+  R = transform_cols(Rd, invcolperm)
   return Q, R
 end
 
@@ -121,10 +121,10 @@ function MatrixAlgebraKit.qr_full!(
   A::AbstractBlockSparseMatrix, QR, alg::BlockPermutedDiagonalAlgorithm
 )
   check_input(qr_full!, A, QR, alg)
-  Ad, transform_rows, transform_cols = blockdiagonalize(A)
+  Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
   Qd, Rd = qr_full!(Ad, BlockDiagonalAlgorithm(alg))
-  Q = transform_rows(Qd)
-  R = transform_cols(Rd)
+  Q = transform_rows(Qd, invrowperm)
+  R = transform_cols(Rd, invcolperm)
   return Q, R
 end
 

@@ -87,10 +87,10 @@ function MatrixAlgebraKit.lq_compact!(
   A::AbstractBlockSparseMatrix, LQ, alg::BlockPermutedDiagonalAlgorithm
 )
   MatrixAlgebraKit.check_input(lq_compact!, A, LQ, alg)
-  Ad, transform_rows, transform_cols = blockdiagonalize(A)
+  Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
   Ld, Qd = lq_compact!(Ad, BlockDiagonalAlgorithm(alg))
-  L = transform_rows(Ld)
-  Q = transform_cols(Qd)
+  L = transform_rows(Ld, invrowperm)
+  Q = transform_cols(Qd, invcolperm)
   return L, Q
 end
 function MatrixAlgebraKit.lq_compact!(
@@ -119,10 +119,10 @@ function MatrixAlgebraKit.lq_full!(
   A::AbstractBlockSparseMatrix, LQ, alg::BlockPermutedDiagonalAlgorithm
 )
   MatrixAlgebraKit.check_input(lq_full!, A, LQ, alg)
-  Ad, transform_rows, transform_cols = blockdiagonalize(A)
+  Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
   Ld, Qd = lq_full!(Ad, BlockDiagonalAlgorithm(alg))
-  L = transform_rows(Ld)
-  Q = transform_cols(Qd)
+  L = transform_rows(Ld, invrowperm)
+  Q = transform_cols(Qd, invcolperm)
   return L, Q
 end
 function MatrixAlgebraKit.lq_full!(
