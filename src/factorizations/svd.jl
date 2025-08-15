@@ -1,6 +1,6 @@
 using DiagonalArrays: diagonaltype
 using MatrixAlgebraKit:
-  MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!, svd_full!
+  MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!, svd_full!, svd_vals!
 using TypeParameterAccessors: realtype
 
 function MatrixAlgebraKit.default_svd_algorithm(
@@ -15,7 +15,15 @@ function output_type(
   f::Union{typeof(svd_compact!),typeof(svd_full!)}, A::Type{<:AbstractMatrix{T}}
 ) where {T}
   USVᴴ = Base.promote_op(f, A)
-  return isconcretetype(USVᴴ) ? USVᴴ : Tuple{AbstractMatrix{T},AbstractMatrix{realtype(T)},AbstractMatrix{T}}
+  return if isconcretetype(USVᴴ)
+    USVᴴ
+  else
+    Tuple{AbstractMatrix{T},AbstractMatrix{realtype(T)},AbstractMatrix{T}}
+  end
+end
+function output_type(::typeof(svd_vals!), A::Type{<:AbstractMatrix{T}}) where {T}
+  S = Base.promote_op(svd_vals!, A)
+  return isconcretetype(S) ? S : AbstractVector{real(T)}
 end
 
 function MatrixAlgebraKit.initialize_output(
@@ -46,7 +54,6 @@ function MatrixAlgebraKit.initialize_output(
 )
   return nothing
 end
-
 function MatrixAlgebraKit.initialize_output(
   ::typeof(svd_full!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
 )
@@ -58,6 +65,24 @@ function MatrixAlgebraKit.initialize_output(
   return U, S, Vᴴ
 end
 
+function MatrixAlgebraKit.initialize_output(
+  ::typeof(svd_vals!), ::AbstractBlockSparseMatrix, ::BlockDiagonalAlgorithm
+)
+  return nothing
+end
+function MatrixAlgebraKit.initialize_output(
+  ::typeof(svd_vals!), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
+)
+  brows = eachblockaxis(axes(A, 1))
+  bcols = eachblockaxis(axes(A, 2))
+  # using the property that zip stops as soon as one of the iterators is exhausted
+  s_axes = map(splat(infimum), zip(brows, bcols))
+  s_axis = mortar_axis(s_axes)
+
+  BS = output_type(svd_vals!, blocktype(A))
+  return similar(A, BlockType(BS), S_axes)
+end
+
 function MatrixAlgebraKit.check_input(
   ::typeof(svd_compact!),
   A::AbstractBlockSparseMatrix,
@@ -66,7 +91,6 @@ function MatrixAlgebraKit.check_input(
 )
   @assert isblockpermuteddiagonal(A)
 end
-
 function MatrixAlgebraKit.check_input(
   ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ), ::BlockDiagonalAlgorithm
 )
@@ -87,7 +111,6 @@ function MatrixAlgebraKit.check_input(
   @assert isblockpermuteddiagonal(A)
   return nothing
 end
-
 function MatrixAlgebraKit.check_input(
   ::typeof(svd_full!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ), ::BlockDiagonalAlgorithm
 )
@@ -102,15 +125,30 @@ function MatrixAlgebraKit.check_input(
   return nothing
 end
 
+function MatrixAlgebraKit.check_input(
+  ::typeof(svd_vals!), A::AbstractBlockSparseMatrix, S, ::BlockPermutedDiagonalAlgorithm
+)
+  @assert isblockpermuteddiagonal(A)
+  return nothing
+end
+function MatrixAlgebraKit.check_input(
+  ::typeof(svd_vals!), A::AbstractBlockSparseMatrix, S, ::BlockDiagonalAlgorithm
+)
+  @assert isa(S, AbstractBlockSparseVector)
+  @assert real(eltype(A)) == eltype(S)
+  @assert isblockdiagonal(A)
+  return nothing
+end
+
 function MatrixAlgebraKit.svd_compact!(
   A::AbstractBlockSparseMatrix, USVᴴ, alg::BlockPermutedDiagonalAlgorithm
 )
   check_input(svd_compact!, A, USVᴴ, alg)
 
-  Ad, transform_rows, transform_cols = blockdiagonalize(A)
+  Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
   Ud, S, Vᴴd = svd_compact!(Ad, BlockDiagonalAlgorithm(alg))
-  U = transform_rows(Ud)
-  Vᴴ = transform_cols(Vᴴd)
+  U = transform_rows(Ud, invrowperm)
+  Vᴴ = transform_cols(Vᴴd, invcolperm)
 
   return U, S, Vᴴ
 end
@@ -143,10 +181,10 @@ function MatrixAlgebraKit.svd_full!(
 )
   check_input(svd_full!, A, USVᴴ, alg)
 
-  Ad, transform_rows, transform_cols = blockdiagonalize(A)
+  Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
   Ud, S, Vᴴd = svd_full!(Ad, BlockDiagonalAlgorithm(alg))
-  U = transform_rows(Ud)
-  Vᴴ = transform_cols(Vᴴd)
+  U = transform_rows(Ud, invrowperm)
+  Vᴴ = transform_cols(Vᴴd, invcolperm)
 
   return U, S, Vᴴ
 end
@@ -180,4 +218,22 @@ function MatrixAlgebraKit.svd_full!(
   end
 
   return U, S, Vᴴ
+end
+
+function MatrixAlgebraKit.svd_vals!(
+  A::AbstractBlockSparseMatrix, S, alg::BlockPermutedDiagonalAlgorithm
+)
+  MatrixAlgebraKit.check_input(svd_vals!, A, S, alg)
+  Ad, _ = blockdiagonalize(A)
+  return svd_vals!(Ad, BlockDiagonalAlgorithm(alg))
+end
+function MatrixAlgebraKit.svd_vals!(
+  A::AbstractBlockSparseMatrix, S, alg::BlockDiagonalAlgorithm
+)
+  MatrixAlgebraKit.check_input(svd_vals!, A, S, alg)
+  for I in eachblockstoredindex(A)
+    block = @view!(A[I])
+    S[Tuple(I)[1]] = $f(block, block_algorithm(alg, block))
+  end
+  return S
 end

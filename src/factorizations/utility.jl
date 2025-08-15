@@ -20,6 +20,10 @@ function supremum(r1::AbstractUnitRange, r2::AbstractUnitRange)
   end
 end
 
+transform_rows(A::AbstractMatrix, invrowperm) = A[invrowperm, :]
+transform_rows(A::AbstractVector, invrowperm) = A[invrowperm]
+transform_cols(A::AbstractMatrix, invcolperm) = A[:, invcolperm]
+
 function blockdiagonalize(A::AbstractBlockSparseMatrix)
   # sort in order to avoid depending on internal details such as dictionary order
   bIs = sort!(collect(eachblockstoredindex(A)); by=Int ∘ last ∘ Tuple)
@@ -41,12 +45,9 @@ function blockdiagonalize(A::AbstractBlockSparseMatrix)
   append!(colperm, emptycols)
 
   invrowperm = Block.(invperm(Int.(rowperm)))
-  transform_rows(A) = A[invrowperm, :]
-
   invcolperm = Block.(invperm(Int.(colperm)))
-  transform_cols(A) = A[:, invcolperm]
 
-  return A[rowperm, colperm], transform_rows, transform_cols
+  return A[rowperm, colperm], (invrowperm, invcolperm)
 end
 
 function isblockdiagonal(A::AbstractBlockSparseMatrix)
