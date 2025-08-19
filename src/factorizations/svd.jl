@@ -160,7 +160,7 @@ function MatrixAlgebraKit.svd_compact!(
 
   for I in 1:min(blocksize(A)...)
     bI = Block(I, I)
-    if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
+    if isstored(A, bI)
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
       bU, bS, bVᴴ = svd_compact!(block, block_alg)
@@ -196,7 +196,7 @@ function MatrixAlgebraKit.svd_full!(
 
   for I in 1:min(blocksize(A)...)
     bI = Block(I, I)
-    if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
+    if isstored(A, bI)
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
       bU, bS, bVᴴ = svd_full!(block, block_alg)

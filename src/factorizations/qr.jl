@@ -103,7 +103,7 @@ function MatrixAlgebraKit.qr_compact!(
   # do decomposition on each block
   for I in 1:min(blocksize(A)...)
     bI = Block(I, I)
-    if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
+    if isstored(A, bI)
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
       bQ, bR = qr_compact!(block, block_alg)
@@ -135,7 +135,7 @@ function MatrixAlgebraKit.qr_full!(
 
   for I in 1:min(blocksize(A)...)
     bI = Block(I, I)
-    if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
+    if isstored(A, bI)
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
       bQ, bR = qr_full!(block, block_alg)

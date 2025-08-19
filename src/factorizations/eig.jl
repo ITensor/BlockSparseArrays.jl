@@ -100,7 +100,7 @@ for f in [:eig_full!, :eigh_full!]
       # do decomposition on each block
       for I in 1:min(blocksize(A)...)
         bI = Block(I, I)
-        if isstored(blocks(A), CartesianIndex(I, I)) # TODO: isblockstored
+        if isstored(A, bI)
           block = @view!(A[bI])
           block_alg = block_algorithm(alg, block)
           bD, bV = $f(block, block_alg)
