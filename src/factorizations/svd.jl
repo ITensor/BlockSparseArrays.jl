@@ -158,8 +158,7 @@ function MatrixAlgebraKit.svd_compact!(
 )
   check_input(svd_compact!, A, (U, S, Vᴴ), alg)
 
-  for I in 1:min(blocksize(A)...)
-    bI = Block(I, I)
+  for bI in blockdiagindices(A)
     if isstored(A, bI)
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
@@ -195,8 +194,7 @@ function MatrixAlgebraKit.svd_full!(
 )
   check_input(svd_full!, A, (U, S, Vᴴ), alg)
 
-  for I in 1:min(blocksize(A)...)
-    bI = Block(I, I)
+  for bI in blockdiagindices(A)
     if isstored(A, bI)
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)

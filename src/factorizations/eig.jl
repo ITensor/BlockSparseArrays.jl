@@ -98,8 +98,7 @@ for f in [:eig_full!, :eigh_full!]
       MatrixAlgebraKit.check_input($f, A, (D, V), alg)
 
       # do decomposition on each block
-      for I in 1:min(blocksize(A)...)
-        bI = Block(I, I)
+      for bI in blockdiagindices(A)
         if isstored(A, bI)
           block = @view!(A[bI])
           block_alg = block_algorithm(alg, block)

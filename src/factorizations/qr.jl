@@ -101,8 +101,7 @@ function MatrixAlgebraKit.qr_compact!(
   MatrixAlgebraKit.check_input(qr_compact!, A, (Q, R), alg)
 
   # do decomposition on each block
-  for I in 1:min(blocksize(A)...)
-    bI = Block(I, I)
+  for bI in blockdiagindices(A)
     if isstored(A, bI)
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
@@ -134,8 +133,7 @@ function MatrixAlgebraKit.qr_full!(
 )
   MatrixAlgebraKit.check_input(qr_full!, A, (Q, R), alg)
 
-  for I in 1:min(blocksize(A)...)
-    bI = Block(I, I)
+  for bI in blockdiagindices(A)
     if isstored(A, bI)
       block = @view!(A[bI])
       block_alg = block_algorithm(alg, block)
