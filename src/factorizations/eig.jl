@@ -8,7 +8,7 @@ using MatrixAlgebraKit: default_eigh_algorithm, eigh_full!, eigh_vals!
 for f in [:default_eig_algorithm, :default_eigh_algorithm]
   @eval begin
     function MatrixAlgebraKit.$f(::Type{<:AbstractBlockSparseMatrix}; kwargs...)
-      return BlockPermutedDiagonalAlgorithm() do block
+      return BlockDiagonalAlgorithm() do block
         return $f(block; kwargs...)
       end
     end
@@ -28,23 +28,6 @@ function output_type(::typeof(eigh_full!), A::Type{<:AbstractMatrix{T}}) where {
   return isconcretetype(DV) ? DV : Tuple{AbstractMatrix{real(T)},AbstractMatrix{T}}
 end
 
-function MatrixAlgebraKit.initialize_output(
-  ::Union{typeof(eig_full!),typeof(eigh_full!)},
-  ::AbstractBlockSparseMatrix,
-  ::BlockPermutedDiagonalAlgorithm,
-)
-  return nothing
-end
-
-function MatrixAlgebraKit.check_input(
-  ::Union{typeof(eig_full!),typeof(eigh_full!)},
-  A::AbstractBlockSparseMatrix,
-  DV,
-  ::BlockPermutedDiagonalAlgorithm,
-)
-  @assert isblockpermuteddiagonal(A)
-  return nothing
-end
 function MatrixAlgebraKit.check_input(
   ::typeof(eig_full!), A::AbstractBlockSparseMatrix, (D, V), ::BlockDiagonalAlgorithm
 )
@@ -70,27 +53,12 @@ end
 for f in [:eig_full!, :eigh_full!]
   @eval begin
     function MatrixAlgebraKit.initialize_output(
-      ::typeof($f), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
-    )
-      return nothing
-    end
-    function MatrixAlgebraKit.initialize_output(
       ::typeof($f), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
     )
       Td, Tv = fieldtypes(output_type($f, blocktype(A)))
       D = similar(A, BlockType(Td))
       V = similar(A, BlockType(Tv))
       return (D, V)
-    end
-    function MatrixAlgebraKit.$f(
-      A::AbstractBlockSparseMatrix, DV, alg::BlockPermutedDiagonalAlgorithm
-    )
-      MatrixAlgebraKit.check_input($f, A, DV, alg)
-      Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
-      Dd, Vd = $f(Ad, BlockDiagonalAlgorithm(alg))
-      D = transform_rows(Dd, invrowperm)
-      V = transform_cols(Vd, invcolperm)
-      return D, V
     end
     function MatrixAlgebraKit.$f(
       A::AbstractBlockSparseMatrix, (D, V), alg::BlockDiagonalAlgorithm
@@ -129,21 +97,10 @@ end
 for f in [:eig_vals!, :eigh_vals!]
   @eval begin
     function MatrixAlgebraKit.initialize_output(
-      ::typeof($f), A::AbstractBlockSparseMatrix, alg::BlockPermutedDiagonalAlgorithm
-    )
-      return nothing
-    end
-    function MatrixAlgebraKit.initialize_output(
       ::typeof($f), A::AbstractBlockSparseMatrix, alg::BlockDiagonalAlgorithm
     )
       T = output_type($f, blocktype(A))
       return similar(A, BlockType(T), axes(A, 1))
-    end
-    function MatrixAlgebraKit.check_input(
-      ::typeof($f), A::AbstractBlockSparseMatrix, D, ::BlockPermutedDiagonalAlgorithm
-    )
-      @assert isblockpermuteddiagonal(A)
-      return nothing
     end
     function MatrixAlgebraKit.check_input(
       ::typeof($f), A::AbstractBlockSparseMatrix, D, ::BlockDiagonalAlgorithm
@@ -156,14 +113,6 @@ for f in [:eig_vals!, :eigh_vals!]
       return nothing
     end
 
-    function MatrixAlgebraKit.$f(
-      A::AbstractBlockSparseMatrix, D, alg::BlockPermutedDiagonalAlgorithm
-    )
-      MatrixAlgebraKit.check_input($f, A, D, alg)
-      Ad, (invrowperm, _) = blockdiagonalize(A)
-      Dd = $f(Ad, BlockDiagonalAlgorithm(alg))
-      return transform_rows(Dd, invrowperm)
-    end
     function MatrixAlgebraKit.$f(
       A::AbstractBlockSparseMatrix, D, alg::BlockDiagonalAlgorithm
     )
