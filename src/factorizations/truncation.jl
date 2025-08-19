@@ -41,19 +41,12 @@ end
 
 for f in [:eig_trunc!, :eigh_trunc!]
   @eval begin
-    function MatrixAlgebraKit.$f(
-      A::AbstractBlockSparseMatrix,
-      out,
-      alg::TruncatedAlgorithm{<:BlockPermutedDiagonalAlgorithm},
+    function MatrixAlgebraKit.truncate!(
+      ::typeof($f),
+      (D, V)::NTuple{2,AbstractBlockSparseMatrix},
+      strategy::TruncationStrategy,
     )
-      Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
-      blockalg = BlockDiagonalAlgorithm(alg.alg)
-      blockstrategy = BlockDiagonalTruncationStrategy(alg.trunc)
-      Dd, Vd = $f(Ad, TruncatedAlgorithm(blockalg, blockstrategy))
-
-      D = transform_rows(Dd, invrowperm)
-      V = transform_cols(Vd, invcolperm)
-      return D, V
+      return truncate!($f, (D, V), BlockDiagonalTruncationStrategy(strategy))
     end
   end
 end
