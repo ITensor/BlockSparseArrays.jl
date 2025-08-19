@@ -108,6 +108,7 @@ function MatrixAlgebraKit.lq_compact!(
       L[bI] = bL
       Q[bI] = bQ
     else
+      # TODO: this should be `Q[bI] = LinearAlgebra.I`
       copyto!(@view!(Q[bI]), LinearAlgebra.I)
     end
   end
@@ -139,6 +140,7 @@ function MatrixAlgebraKit.lq_full!(
       L[bI] = bL
       Q[bI] = bQ
     else
+      # TODO: this should be `Q[bI] = LinearAlgebra.I`
       copyto!(@view!(Q[bI]), LinearAlgebra.I)
     end
   end

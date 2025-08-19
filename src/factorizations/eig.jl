@@ -107,6 +107,7 @@ for f in [:eig_full!, :eigh_full!]
           D[bI] = bD
           V[bI] = bV
         else
+          # TODO: this should be `V[bI] = LinearAlgebra.I`
           copyto!(@view!(V[bI]), LinearAlgebra.I)
         end
       end

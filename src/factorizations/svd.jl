@@ -168,6 +168,7 @@ function MatrixAlgebraKit.svd_compact!(
       S[bI] = bS
       Vᴴ[bI] = bVᴴ
     else
+      # TODO: this should be `U[bI] = LinearAlgebra.I` and `Vᴴ[bI] = LinearAlgebra.I`
       copyto!(@view!(U[bI]), LinearAlgebra.I)
       copyto!(@view!(Vᴴ[bI]), LinearAlgebra.I)
     end
@@ -204,15 +205,18 @@ function MatrixAlgebraKit.svd_full!(
       S[bI] = bS
       Vᴴ[bI] = bVᴴ
     else
+      # TODO: this should be `U[bI] = LinearAlgebra.I` and `Vᴴ[bI] = LinearAlgebra.I`
       copyto!(@view!(U[bI]), LinearAlgebra.I)
       copyto!(@view!(Vᴴ[bI]), LinearAlgebra.I)
     end
   end
 
   # Complete the unitaries for rectangular inputs
+  # TODO: this should be `U[Block(I, I)] = LinearAlgebra.I`
   for I in (blocksize(A, 2) + 1):blocksize(A, 1)
     copyto!(@view!(U[Block(I, I)]), LinearAlgebra.I)
   end
+  # TODO: this should be `Vᴴ[Block(I, I)] = LinearAlgebra.I`
   for I in (blocksize(A, 1) + 1):blocksize(A, 2)
     copyto!(@view!(Vᴴ[Block(I, I)]), LinearAlgebra.I)
   end
