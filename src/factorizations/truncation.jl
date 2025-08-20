@@ -1,4 +1,6 @@
 using MatrixAlgebraKit:
+  MatrixAlgebraKit,
+  TruncatedAlgorithm,
   TruncationStrategy,
   diagview,
   eig_trunc!,
@@ -8,26 +10,35 @@ using MatrixAlgebraKit:
   truncate!
 
 """
-    BlockPermutedDiagonalTruncationStrategy(strategy::TruncationStrategy)
+    BlockDiagonalTruncationStrategy(strategy::TruncationStrategy)
 
 A wrapper for `TruncationStrategy` that implements the wrapped strategy on a block-by-block
-basis, which is possible if the input matrix is a block-diagonal matrix or a block permuted
-block-diagonal matrix.
+basis, which is possible if the input matrix is a block-diagonal matrix.
 """
-struct BlockPermutedDiagonalTruncationStrategy{T<:TruncationStrategy} <: TruncationStrategy
+struct BlockDiagonalTruncationStrategy{T<:TruncationStrategy} <: TruncationStrategy
   strategy::T
 end
 
-function MatrixAlgebraKit.truncate!(
-  ::typeof(svd_trunc!),
-  (U, S, Vᴴ)::NTuple{3,AbstractBlockSparseMatrix},
-  strategy::TruncationStrategy,
-)
-  # TODO assert blockdiagonal
-  return truncate!(
-    svd_trunc!, (U, S, Vᴴ), BlockPermutedDiagonalTruncationStrategy(strategy)
-  )
+function BlockDiagonalTruncationStrategy(alg::BlockPermutedDiagonalAlgorithm)
+  return BlockDiagonalTruncationStrategy(alg.strategy)
 end
+
+function MatrixAlgebraKit.svd_trunc!(
+  A::AbstractBlockSparseMatrix,
+  out,
+  alg::TruncatedAlgorithm{<:BlockPermutedDiagonalAlgorithm},
+)
+  Ad, (invrowperm, invcolperm) = blockdiagonalize(A)
+  blockalg = BlockDiagonalAlgorithm(alg.alg)
+  blockstrategy = BlockDiagonalTruncationStrategy(alg.trunc)
+  Ud, S, Vᴴd = svd_trunc!(Ad, TruncatedAlgorithm(blockalg, blockstrategy))
+
+  U = transform_rows(Ud, invrowperm)
+  Vᴴ = transform_cols(Vᴴd, invcolperm)
+
+  return U, S, Vᴴ
+end
+
 for f in [:eig_trunc!, :eigh_trunc!]
   @eval begin
     function MatrixAlgebraKit.truncate!(
@@ -35,7 +46,7 @@ for f in [:eig_trunc!, :eigh_trunc!]
       (D, V)::NTuple{2,AbstractBlockSparseMatrix},
       strategy::TruncationStrategy,
     )
-      return truncate!($f, (D, V), BlockPermutedDiagonalTruncationStrategy(strategy))
+      return truncate!($f, (D, V), BlockDiagonalTruncationStrategy(strategy))
     end
   end
 end
@@ -43,7 +54,7 @@ end
 # cannot use regular slicing here: I want to slice without altering blockstructure
 # solution: use boolean indexing and slice the mask, effectively cheaply inverting the map
 function MatrixAlgebraKit.findtruncated(
-  values::AbstractVector, strategy::BlockPermutedDiagonalTruncationStrategy
+  values::AbstractVector, strategy::BlockDiagonalTruncationStrategy
 )
   ind = findtruncated(Vector(values), strategy.strategy)
   indexmask = falses(length(values))
@@ -66,7 +77,7 @@ end
 function MatrixAlgebraKit.truncate!(
   ::typeof(svd_trunc!),
   (U, S, Vᴴ)::NTuple{3,AbstractBlockSparseMatrix},
-  strategy::BlockPermutedDiagonalTruncationStrategy,
+  strategy::BlockDiagonalTruncationStrategy,
 )
   I = findtruncated(diag(S), strategy)
   return (U[:, I], S[I, I], Vᴴ[I, :])
@@ -76,7 +87,7 @@ for f in [:eig_trunc!, :eigh_trunc!]
     function MatrixAlgebraKit.truncate!(
       ::typeof($f),
       (D, V)::NTuple{2,AbstractBlockSparseMatrix},
-      strategy::BlockPermutedDiagonalTruncationStrategy,
+      strategy::BlockDiagonalTruncationStrategy,
     )
       I = findtruncated(diag(D), strategy)
       return (D[I, I], V[:, I])
