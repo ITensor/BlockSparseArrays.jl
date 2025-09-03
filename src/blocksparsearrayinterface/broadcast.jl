@@ -63,7 +63,8 @@ end
 # which is logic that is handled by `fill!`.
 function copyto_blocksparse!(dest::AbstractArray, bc::Broadcasted{<:AbstractArrayStyle{0}})
   # `[]` is used to unwrap zero-dimensional arrays.
-  value = @allowscalar bc.f(bc.args...)[]
+  bcf = Broadcast.flatten(bc)
+  value = @allowscalar bcf.f(map(arg -> arg[], bcf.args)...)
   return @interface BlockSparseArrayInterface() fill!(dest, value)
 end
 

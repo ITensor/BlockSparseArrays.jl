@@ -14,6 +14,7 @@ using DerivableInterfaces: zero!
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray
 using SparseArraysBase: storedlength
+using StableRNGs: StableRNG
 using Test: @test, @test_broken, @test_throws, @testset
 
 elts = (Float32, Float64, ComplexF32)
@@ -31,14 +32,7 @@ arrayts = (Array, JLArray)
   @test blockstoredlength(a) == 2
   @test storedlength(a) == 2 * 4 + 3 * 3
 
-  # TODO: Broken on GPU.
-  if arrayt ≠ Array
-    a = dev(BlockSparseArray{elt}(undef, [2, 3], [3, 4]))
-    @test_broken a[Block(1, 2)] .= 2
-  end
-
-  # TODO: Broken on GPU.
-  a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
+  a = dev(BlockSparseArray{elt}(undef, [2, 3], [3, 4]))
   a[Block(1, 2)] .= 2
   @test eltype(a) == elt
   @test all(==(2), a[Block(1, 2)])
@@ -48,14 +42,7 @@ arrayts = (Array, JLArray)
   @test blockstoredlength(a) == 1
   @test storedlength(a) == 2 * 4
 
-  # TODO: Broken on GPU.
-  if arrayt ≠ Array
-    a = dev(BlockSparseArray{elt}(undef, [2, 3], [3, 4]))
-    @test_broken a[Block(1, 2)] .= 0
-  end
-
-  # TODO: Broken on GPU.
-  a = BlockSparseArray{elt}(undef, [2, 3], [3, 4])
+  a = dev(BlockSparseArray{elt}(undef, [2, 3], [3, 4]))
   a[Block(1, 2)] .= 0
   @test eltype(a) == elt
   @test iszero(a[Block(1, 1)])
@@ -82,6 +69,16 @@ arrayts = (Array, JLArray)
   @test a′ isa BlockSparseArray{Float32}
   @test blocktype(a′) <: arrayt{Float32,3}
   @test axes(a′) == (blockedrange([2, 4]), blockedrange([2, 5]), blockedrange([2, 2]))
+
+  # Regression test for 0-dimensional in-place broadcasting.
+  rng = StableRNG(123)
+  a = dev(BlockSparseArray{elt}(undef))
+  @allowscalar a[] = randn(rng, elt)
+  b = dev(BlockSparseArray{elt}(undef))
+  @allowscalar b[] = randn(rng, elt)
+  c = similar(a)
+  c .= 2 .* a .+ 3 .* b
+  @allowscalar @test c[] == 2 * a[] + 3 * b[]
 
   a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
   @views for b in [Block(1, 2), Block(2, 1)]

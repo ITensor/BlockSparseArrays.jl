@@ -353,7 +353,7 @@ end
   # TODO: Maybe use `map` over `blocks(a)` or something
   # like that.
   for b in BlockRange(a)
-    a[b] .= value
+    fill!(@view!(a[b]), value)
   end
   return a
 end
