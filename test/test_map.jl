@@ -14,6 +14,7 @@ using DerivableInterfaces: zero!
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray
 using SparseArraysBase: storedlength
+using StableRNGs: StableRNG
 using Test: @test, @test_broken, @test_throws, @testset
 
 elts = (Float32, Float64, ComplexF32)
