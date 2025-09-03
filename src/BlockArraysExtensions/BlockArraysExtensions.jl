@@ -28,6 +28,43 @@ using SparseArraysBase:
   setunstoredindex!,
   storedlength
 
+function view!(a::AbstractArray{<:Any,N}, index::Block{N}) where {N}
+  return view!(a, Tuple(index)...)
+end
+function view!(a::AbstractArray{<:Any,N}, index::Vararg{Block{1},N}) where {N}
+  blocks(a)[Int.(index)...] = blocks(a)[Int.(index)...]
+  return blocks(a)[Int.(index)...]
+end
+# Fix ambiguity error.
+function view!(a::AbstractArray{<:Any,0})
+  blocks(a)[] = blocks(a)[]
+  return blocks(a)[]
+end
+
+function view!(a::AbstractArray{<:Any,N}, index::BlockIndexRange{N}) where {N}
+  # TODO: Is there a better code pattern for this?
+  indices = ntuple(N) do dim
+    return Tuple(Block(index))[dim][index.indices[dim]]
+  end
+  return view!(a, indices...)
+end
+function view!(a::AbstractArray{<:Any,N}, index::Vararg{BlockIndexRange{1},N}) where {N}
+  b = view!(a, Block.(index)...)
+  r = map(index -> only(index.indices), index)
+  return @view b[r...]
+end
+
+using MacroTools: @capture
+is_getindex_expr(expr::Expr) = (expr.head === :ref)
+is_getindex_expr(x) = false
+macro view!(expr)
+  if !is_getindex_expr(expr)
+    error("@view must be used with getindex syntax (as `@view! a[i,j,...]`)")
+  end
+  @capture(expr, array_[indices__])
+  return :(view!($(esc(array)), $(esc.(indices)...)))
+end
+
 # A return type for `blocks(array)` when `array` isn't blocked.
 # Represents a vector with just that single block.
 struct SingleBlockView{N,Array<:AbstractArray{<:Any,N}} <: AbstractArray{Array,N}
@@ -568,12 +605,34 @@ function Base.getindex(a::BlockView{<:Any,N}, index::Vararg{Int,N}) where {N}
   return blocks(parent(a))[Int.(a.block)...][index...]
 end
 function Base.setindex!(a::BlockView{<:Any,N}, value, index::Vararg{Int,N}) where {N}
-  I = Int.(a.block)
-  if !isstored(blocks(parent(a)), I...)
-    unstored_value = getunstoredindex(blocks(parent(a)), I...)
-    setunstoredindex!(blocks(parent(a)), unstored_value, I...)
-  end
-  blocks(parent(a))[I...][index...] = value
+  b = @view! parent(a)[a.block...]
+  b[index...] = value
+  return a
+end
+function Base.fill!(a::BlockView, value)
+  b = @view! parent(a)[a.block...]
+  fill!(b, value)
+end
+using Base.Broadcast: AbstractArrayStyle, Broadcasted, broadcasted
+materialize_blockviews(x) = x
+materialize_blockviews(a::BlockView) = blocks(parent(a))[Int.(a.block)...]
+function materialize_blockviews(bc::Broadcasted)
+  return broadcasted(bc.f, map(materialize_blockviews, bc.args)...)
+end
+function Base.copyto!(a::BlockView, bc::Broadcasted)
+  b = @view! parent(a)[a.block...]
+  bc′ = materialize_blockviews(bc)
+  copyto!(b, bc′)
+  return a
+end
+function Base.copyto!(a::BlockView, bc::Broadcasted{<:AbstractArrayStyle{0}})
+  b = @view! parent(a)[a.block...]
+  copyto!(b, bc)
+  return a
+end
+function Base.copyto!(a::BlockView, src::AbstractArray)
+  b = @view! parent(a)[a.block...]
+  copyto!(b, src)
   return a
 end
 
@@ -600,43 +659,6 @@ end
 ## end
 function ArrayLayouts.sub_materialize(a::BlockView)
   return blocks(parent(a))[Int.(a.block)...]
-end
-
-function view!(a::AbstractArray{<:Any,N}, index::Block{N}) where {N}
-  return view!(a, Tuple(index)...)
-end
-function view!(a::AbstractArray{<:Any,N}, index::Vararg{Block{1},N}) where {N}
-  blocks(a)[Int.(index)...] = blocks(a)[Int.(index)...]
-  return blocks(a)[Int.(index)...]
-end
-# Fix ambiguity error.
-function view!(a::AbstractArray{<:Any,0})
-  blocks(a)[] = blocks(a)[]
-  return blocks(a)[]
-end
-
-function view!(a::AbstractArray{<:Any,N}, index::BlockIndexRange{N}) where {N}
-  # TODO: Is there a better code pattern for this?
-  indices = ntuple(N) do dim
-    return Tuple(Block(index))[dim][index.indices[dim]]
-  end
-  return view!(a, indices...)
-end
-function view!(a::AbstractArray{<:Any,N}, index::Vararg{BlockIndexRange{1},N}) where {N}
-  b = view!(a, Block.(index)...)
-  r = map(index -> only(index.indices), index)
-  return @view b[r...]
-end
-
-using MacroTools: @capture
-is_getindex_expr(expr::Expr) = (expr.head === :ref)
-is_getindex_expr(x) = false
-macro view!(expr)
-  if !is_getindex_expr(expr)
-    error("@view must be used with getindex syntax (as `@view! a[i,j,...]`)")
-  end
-  @capture(expr, array_[indices__])
-  return :(view!($(esc(array)), $(esc.(indices)...)))
 end
 
 # SVD additions
