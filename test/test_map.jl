@@ -83,6 +83,16 @@ arrayts = (Array, JLArray)
   @test blocktype(a′) <: arrayt{Float32,3}
   @test axes(a′) == (blockedrange([2, 4]), blockedrange([2, 5]), blockedrange([2, 2]))
 
+  # Regression test for 0-dimensional in-place broadcasting.
+  rng = StableRNG(123)
+  a = dev(BlockSparseArray{elt}(undef))
+  a[] = randn(rng, elt)
+  b = dev(BlockSparseArray{elt}(undef))
+  b[] = randn(rng, elt)
+  c = similar(a)
+  c .= 2 .* a .+ 3 .* b
+  @test c[] == 2 * a[] + 3 * b[]
+
   a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
   @views for b in [Block(1, 2), Block(2, 1)]
     a[b] = dev(randn(elt, size(a[b])))
