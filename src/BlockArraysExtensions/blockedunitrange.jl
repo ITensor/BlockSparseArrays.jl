@@ -156,12 +156,7 @@ function blockedunitrange_getindices(
   # mapping `indices` outputs a `BlockVector`
   # which is harder to reason about.
   blocks = map(index -> a[index], Vector(indices))
-  # We pass `length.(blocks)` to `mortar` in order
-  # to pass block labels to the axes of the output,
-  # if they exist. This makes it so that
-  # `only(axes(a[indices])) isa `GradedUnitRange`
-  # if `a isa `GradedUnitRange`, for example.
-  return mortar(blocks, length.(blocks))
+  return mortar(blocks, (mortar_axis(map(axis, blocks)),))
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
