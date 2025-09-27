@@ -230,7 +230,7 @@ end
   @test (V1ᴴ * V1ᴴ' ≈ LinearAlgebra.I)
 
   atol = minimum(LinearAlgebra.diag(S1)) + 10 * eps(real(T))
-  trunc = trunctol(atol)
+  trunc = trunctol(; atol)
 
   U1, S1, V1ᴴ = svd_trunc(a; trunc)
   U2, S2, V2ᴴ = svd_trunc(Matrix(a); trunc)
@@ -246,7 +246,7 @@ end
   rng = StableRNG(123)
   perm = Random.randperm(rng, length(m))
   b = a[Block.(perm), Block.(1:length(n))]
-  for trunc in (truncrank(r), trunctol(atol))
+  for trunc in (truncrank(r), trunctol(; atol))
     U1, S1, V1ᴴ = svd_trunc(b; trunc)
     U2, S2, V2ᴴ = svd_trunc(Matrix(b); trunc)
     @test size(U1) == size(U2)
@@ -262,7 +262,7 @@ end
   I_removed = rand(eachblockstoredindex(b))
   c = copy(b)
   delete!(blocks(c).storage, CartesianIndex(Int.(Tuple(I_removed))))
-  for trunc in (truncrank(r), trunctol(atol))
+  for trunc in (truncrank(r), trunctol(; atol))
     U1, S1, V1ᴴ = svd_trunc(c; trunc)
     U2, S2, V2ᴴ = svd_trunc(Matrix(c); trunc)
     @test size(U1) == size(U2)
