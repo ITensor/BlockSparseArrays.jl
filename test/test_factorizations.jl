@@ -31,7 +31,7 @@ using MatrixAlgebraKit:
   trunctol
 using Random: Random
 using StableRNGs: StableRNG
-using Test: @inferred, @test, @test_broken, @test_throws, @testset
+using Test: @inferred, @test, @test_throws, @testset
 
 @testset "Matrix functions (T=$elt)" for elt in (Float32, Float64, ComplexF64)
   for matrixt in (Matrix, AbstractMatrix)
@@ -55,13 +55,10 @@ using Test: @inferred, @test, @test_broken, @test_throws, @testset
     for f in MATRIX_FUNCTIONS_LOW_ACCURACY
       @eval begin
         fa = $f($a)
-        if !Sys.isapple() && ($elt <: Real)
-          # `acoth` appears to be broken on this matrix on Windows and Ubuntu
-          # for real matrices.
-          @test_broken Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
-        else
-          @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt))
-        end
+        # `acoth` appears to be broken on this matrix on Windows and Ubuntu
+        # for real matrices.
+        skip = !Sys.isapple() && ($elt <: Real)
+        @test Matrix(fa) ≈ $f(Matrix($a)) rtol = √eps(real($elt)) skip = skip
         @test fa isa BlockSparseMatrix
         @test issetequal(eachblockstoredindex(fa), [Block(1, 1), Block(2, 2)])
       end
