@@ -15,7 +15,7 @@ makedocs(;
     authors = "ITensor developers <support@itensor.org> and contributors",
     sitename = "BlockSparseArrays.jl",
     format = Documenter.HTML(;
-        canonical = "https://ITensor.github.io/BlockSparseArrays.jl",
+        canonical = "https://itensor.github.io/BlockSparseArrays.jl",
         edit_link = "main",
         assets = ["assets/favicon.ico", "assets/extras.css"],
     ),
