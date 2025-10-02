@@ -147,7 +147,7 @@ function MatrixAlgebraKit.left_null_svd!(
 )
   return left_null_svd!(A, N, alg, null_truncation_strategy(; atol=0, rtol=0))
 end
-function MatrixAlgebraKit.truncate!(
+function MatrixAlgebraKit.truncate(
   ::typeof(left_null!),
   (U, S)::Tuple{AbstractBlockSparseMatrix,AbstractBlockSparseMatrix},
   strategy::TruncationStrategy,
@@ -166,9 +166,9 @@ function MatrixAlgebraKit.check_input(
   return nothing
 end
 function MatrixAlgebraKit.right_null_lq!(A::AbstractBlockSparseMatrix, N, alg)
-  return error("Not implement.")
+  return error("Not implemented.")
 end
-function MatrixAlgebraKit.truncate!(
+function MatrixAlgebraKit.truncate(
   ::typeof(right_null!),
   (S, Vᴴ)::Tuple{AbstractBlockSparseMatrix,AbstractBlockSparseMatrix},
   strategy::TruncationStrategy,

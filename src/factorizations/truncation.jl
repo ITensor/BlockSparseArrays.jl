@@ -7,7 +7,7 @@ using MatrixAlgebraKit:
   eigh_trunc!,
   findtruncated,
   svd_trunc!,
-  truncate!
+  truncate
 
 """
     BlockDiagonalTruncationStrategy(strategy::TruncationStrategy)
@@ -41,12 +41,12 @@ end
 
 for f in [:eig_trunc!, :eigh_trunc!]
   @eval begin
-    function MatrixAlgebraKit.truncate!(
+    function MatrixAlgebraKit.truncate(
       ::typeof($f),
       (D, V)::NTuple{2,AbstractBlockSparseMatrix},
       strategy::TruncationStrategy,
     )
-      return truncate!($f, (D, V), BlockDiagonalTruncationStrategy(strategy))
+      return truncate($f, (D, V), BlockDiagonalTruncationStrategy(strategy))
     end
   end
 end
@@ -74,23 +74,23 @@ function to_truncated_indices(values::AbstractBlockVector, I::AbstractVector{Boo
   return blocks
 end
 
-function MatrixAlgebraKit.truncate!(
+function MatrixAlgebraKit.truncate(
   ::typeof(svd_trunc!),
   (U, S, Vᴴ)::NTuple{3,AbstractBlockSparseMatrix},
   strategy::BlockDiagonalTruncationStrategy,
 )
   I = findtruncated(diag(S), strategy)
-  return (U[:, I], S[I, I], Vᴴ[I, :])
+  return (U[:, I], S[I, I], Vᴴ[I, :]), I
 end
 for f in [:eig_trunc!, :eigh_trunc!]
   @eval begin
-    function MatrixAlgebraKit.truncate!(
+    function MatrixAlgebraKit.truncate(
       ::typeof($f),
       (D, V)::NTuple{2,AbstractBlockSparseMatrix},
       strategy::BlockDiagonalTruncationStrategy,
     )
       I = findtruncated(diag(D), strategy)
-      return (D[I, I], V[:, I])
+      return (D[I, I], V[:, I]), I
     end
   end
 end
