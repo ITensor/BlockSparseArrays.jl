@@ -168,7 +168,7 @@ end
 function MatrixAlgebraKit.right_null_lq!(A::AbstractBlockSparseMatrix, N, alg)
     return error("Not implement.")
 end
-function MatrixAlgebraKit.truncate!(
+function MatrixAlgebraKit.truncate(
         ::typeof(right_null!),
         (S, Vᴴ)::Tuple{AbstractBlockSparseMatrix, AbstractBlockSparseMatrix},
         strategy::TruncationStrategy,
