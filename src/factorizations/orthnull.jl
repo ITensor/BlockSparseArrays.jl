@@ -149,7 +149,7 @@ function MatrixAlgebraKit.left_null_svd!(
 end
 function MatrixAlgebraKit.truncate(
         ::typeof(left_null!),
-        (U, S)::Tuple{AbstractBlockSparseMatrix,AbstractBlockSparseMatrix},
+        (U, S)::Tuple{AbstractBlockSparseMatrix, AbstractBlockSparseMatrix},
         strategy::TruncationStrategy,
     )
     return error("Not implemented.")
