@@ -1,1 +1,1 @@
-const AbstractBlockSparseVector{T} = AbstractBlockSparseArray{T,1}
+const AbstractBlockSparseVector{T} = AbstractBlockSparseArray{T, 1}
