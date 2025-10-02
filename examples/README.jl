@@ -1,5 +1,5 @@
 # # BlockSparseArrays.jl
-# 
+#
 # [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/BlockSparseArrays.jl/stable/)
 # [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/BlockSparseArrays.jl/dev/)
 # [![Build Status](https://github.com/ITensor/BlockSparseArrays.jl/actions/workflows/Tests.yml/badge.svg?branch=main)](https://github.com/ITensor/BlockSparseArrays.jl/actions/workflows/Tests.yml?query=branch%3Amain)
@@ -24,13 +24,13 @@
 ```julia
 julia> using Pkg: Pkg
 
-julia> Pkg.Registry.add(url="https://github.com/ITensor/ITensorRegistry")
+julia> Pkg.Registry.add(url = "https://github.com/ITensor/ITensorRegistry")
 ```
 =#
 # or:
 #=
 ```julia
-julia> Pkg.Registry.add(url="git@github.com:ITensor/ITensorRegistry.git")
+julia> Pkg.Registry.add(url = "git@github.com:ITensor/ITensorRegistry.git")
 ```
 =#
 # if you want to use SSH credentials, which can make it so you don't have to enter your Github ursername and password when registering packages.

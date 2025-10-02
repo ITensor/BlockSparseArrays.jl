@@ -1,12 +1,12 @@
 module BlockSparseArrays
 
 export BlockSparseArray,
-  BlockSparseMatrix,
-  BlockSparseVector,
-  blockstoredlength,
-  eachblockstoredindex,
-  eachstoredblock,
-  sparsemortar
+    BlockSparseMatrix,
+    BlockSparseVector,
+    blockstoredlength,
+    eachblockstoredindex,
+    eachstoredblock,
+    sparsemortar
 
 # possible upstream contributions
 include("BlockArraysExtensions/blockedunitrange.jl")
