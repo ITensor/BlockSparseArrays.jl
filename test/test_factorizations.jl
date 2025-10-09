@@ -86,7 +86,8 @@ using Test: @inferred, @test, @test_throws, @testset
         MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
         # These functions involve inverses so they break when there are zeros on the diagonal.
         MATRIX_FUNCTIONS_SINGULAR = [
-            :log, :acsc, :asec, :acot, :acsch, :asech, :acoth, :csc, :cot, :csch, :coth,
+            :log, :acsc, :asec, :acosh, :acot, :acsch, :asech, :acoth, :csc, :cot, :csch,
+            :coth,
         ]
         MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_SINGULAR)
         # Dense version is broken for some reason, investigate.
