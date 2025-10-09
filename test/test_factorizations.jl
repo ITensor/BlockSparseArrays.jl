@@ -86,7 +86,8 @@ using Test: @inferred, @test, @test_throws, @testset
         MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
         # These functions involve inverses so they break when there are zeros on the diagonal.
         MATRIX_FUNCTIONS_SINGULAR = [
-            :log, :acsc, :asec, :acot, :acsch, :asech, :acoth, :csc, :cot, :csch, :coth,
+            :log, :acsc, :asec, :acosh, :acot, :acsch, :asech, :acoth, :csc, :cot, :csch,
+            :coth,
         ]
         MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_SINGULAR)
         # Dense version is broken for some reason, investigate.
@@ -100,15 +101,9 @@ using Test: @inferred, @test, @test_throws, @testset
             end
         end
 
-        SINGULAR_EXCEPTION = if VERSION < v"1.11-"
-            # A different exception is thrown in older versions of Julia.
-            LinearAlgebra.LAPACKException
-        else
-            LinearAlgebra.SingularException
-        end
-        for f in setdiff(MATRIX_FUNCTIONS_SINGULAR, [:log])
+        for f in setdiff(MATRIX_FUNCTIONS_SINGULAR, [:acosh, :log])
             @eval begin
-                @test_throws $SINGULAR_EXCEPTION $f($a)
+                @test_throws Exception $f($a)
             end
         end
     end

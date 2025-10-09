@@ -286,7 +286,9 @@ arrayts = (Array, JLArray)
         for p in 1:3
             @test norm(a, p) ≈ norm(Array(a), p)
         end
-        @test tr(a) ≈ tr(Array(a))
+        # We use `@allowscalar` here since there seems to be a regression
+        # in `tr` of GPU arrays for that operation.
+        @test @allowscalar(tr(a)) ≈ tr(Array(a))
 
         # Empty constructor
         for a in (dev(BlockSparseArray{elt}(undef)),)
