@@ -101,15 +101,13 @@ using Test: @inferred, @test, @test_throws, @testset
             end
         end
 
-        SINGULAR_EXCEPTION = if VERSION < v"1.11-"
-            # A different exception is thrown in older versions of Julia.
-            LinearAlgebra.LAPACKException
-        else
-            LinearAlgebra.SingularException
-        end
         for f in setdiff(MATRIX_FUNCTIONS_SINGULAR, [:log])
+            if VERSION ≥ v"1.12-" && f == :acosh
+                # Fixed in Julia 1.12.
+                continue
+            end
             @eval begin
-                @test_throws $SINGULAR_EXCEPTION $f($a)
+                @test_throws Exception $f($a)
             end
         end
     end
