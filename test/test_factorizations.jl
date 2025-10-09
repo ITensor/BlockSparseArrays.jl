@@ -101,11 +101,7 @@ using Test: @inferred, @test, @test_throws, @testset
             end
         end
 
-        for f in setdiff(MATRIX_FUNCTIONS_SINGULAR, [:log])
-            if VERSION ≥ v"1.12-" && f == :acosh
-                # Fixed in Julia 1.12.
-                continue
-            end
+        for f in setdiff(MATRIX_FUNCTIONS_SINGULAR, [:acosh, :log])
             @eval begin
                 @test_throws Exception $f($a)
             end
