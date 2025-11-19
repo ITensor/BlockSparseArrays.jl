@@ -181,10 +181,10 @@ arrayts = (Array, JLArray)
     end
     @testset "blockstype, blocktype" begin
         a = arrayt(randn(elt, 2, 2))
-        @test (@constinferred blockstype(a)) <: BlockArrays.BlocksView{elt, 2}
+        @test (@constinferred blockstype(a)) <: BlockArrays.BlockView{elt, 2}
         # TODO: This is difficult to determine just from type information.
-        @test_broken blockstype(typeof(a)) <: BlockArrays.BlocksView{elt, 2}
-        @test (@constinferred blocktype(a)) <: SubArray{elt, 2, arrayt{elt, 2}}
+        @test_broken blockstype(typeof(a)) <: BlockArrays.BlockView{elt, 2}
+        @test (@constinferred blocktype(a)) <: arrayt{elt, 2}
         # TODO: This is difficult to determine just from type information.
         @test_broken blocktype(typeof(a)) <: SubArray{elt, 2, arrayt{elt, 2}}
 
