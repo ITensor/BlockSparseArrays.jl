@@ -6,10 +6,14 @@ using MatrixAlgebraKit: MatrixAlgebraKit
 # https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/blob/v0.6.0/src/common/matrixproperties.jl#L40-L64
 # which isn't well supported right now for block sparse matrices.
 # TODO: Improve `diagview` for block sparse matrices and remove these definitions.
-function MatrixAlgebraKit.is_left_isometric(A::AbstractBlockSparseMatrix; isapprox_kwargs...)
+function MatrixAlgebraKit.is_left_isometric(
+        A::AnyAbstractBlockSparseMatrix; isapprox_kwargs...
+    )
     return isapprox(A' * A, LinearAlgebra.I; isapprox_kwargs...)
 end
-function MatrixAlgebraKit.is_right_isometric(A::AbstractBlockSparseMatrix; isapprox_kwargs...)
+function MatrixAlgebraKit.is_right_isometric(
+        A::AnyAbstractBlockSparseMatrix; isapprox_kwargs...
+    )
     return MatrixAlgebraKit.is_left_isometric(A'; isapprox_kwargs...)
 end
 
