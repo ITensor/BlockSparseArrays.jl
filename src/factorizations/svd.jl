@@ -1,6 +1,6 @@
 using DiagonalArrays: diagonaltype
-using MatrixAlgebraKit:
-    MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!, svd_full!, svd_vals!
+using MatrixAlgebraKit: MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!,
+    svd_full!, svd_vals!
 using TypeParameterAccessors: realtype
 
 function MatrixAlgebraKit.default_svd_algorithm(
@@ -239,3 +239,14 @@ function MatrixAlgebraKit.svd_vals!(
     end
     return S
 end
+
+# Computing truncation errors. Currently not supported for block sparse matrices,
+# needs to be implemented.
+struct BlockSparseDiagView{T, A <: AbstractBlockSparseMatrix{T}} <:
+    AbstractBlockSparseVector{T}
+    a::A
+end
+MatrixAlgebraKit.diagview(a::AbstractBlockSparseMatrix) = BlockSparseDiagView(a)
+# TODO: Implement this, and/or develop `BlockSparseDiagView` so that the generic
+# version in MatrixAlgebraKit works.
+MatrixAlgebraKit.truncation_error!(a::BlockSparseDiagView, ind) = nothing

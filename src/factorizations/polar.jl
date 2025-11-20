@@ -27,7 +27,7 @@ end
 function MatrixAlgebraKit.left_polar!(A::AbstractBlockSparseMatrix, alg::PolarViaSVD)
     check_input(left_polar!, A)
     # TODO: Use more in-place operations here, avoid `copy`.
-    U, S, Vᴴ = svd_compact!(A, alg.svdalg)
+    U, S, Vᴴ = svd_compact!(A, alg.svd_alg)
     W = U * Vᴴ
     # TODO: `copy` is required for now because of:
     # https://github.com/ITensor/BlockSparseArrays.jl/issues/24
@@ -38,7 +38,7 @@ end
 function MatrixAlgebraKit.right_polar!(A::AbstractBlockSparseMatrix, alg::PolarViaSVD)
     check_input(right_polar!, A)
     # TODO: Use more in-place operations here, avoid `copy`.
-    U, S, Vᴴ = svd_compact!(A, alg.svdalg)
+    U, S, Vᴴ = svd_compact!(A, alg.svd_alg)
     Wᴴ = U * Vᴴ
     # TODO: `copy` is required for now because of:
     # https://github.com/ITensor/BlockSparseArrays.jl/issues/24

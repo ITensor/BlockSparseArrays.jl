@@ -351,8 +351,8 @@ end
     A[Block(1, 1)] = randn(rng, T, 3, 2)
     A[Block(2, 2)] = randn(rng, T, 4, 3)
 
-    for kind in (:polar, :qr, :svd)
-        U, C = left_orth(A; kind)
+    for alg in (:polar, :qr, :svd)
+        U, C = left_orth(A; alg)
         @test U * C ≈ A
         @test Matrix(U'U) ≈ LinearAlgebra.I
     end
@@ -369,8 +369,8 @@ end
     A[Block(1, 1)] = randn(rng, T, 2, 3)
     A[Block(2, 2)] = randn(rng, T, 3, 4)
 
-    for kind in (:lq, :polar, :svd)
-        C, U = right_orth(A; kind)
+    for alg in (:lq, :polar, :svd)
+        C, U = right_orth(A; alg)
         @test C * U ≈ A
         @test Matrix(U * U') ≈ LinearAlgebra.I
     end
