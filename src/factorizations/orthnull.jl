@@ -1,26 +1,21 @@
-using MatrixAlgebraKit:
-    MatrixAlgebraKit,
-    default_svd_algorithm,
-    left_null!,
-    left_null_svd!,
-    left_orth!,
-    left_polar!,
-    lq_compact!,
-    null_truncation_strategy,
-    qr_compact!,
-    right_null!,
-    right_null_svd!,
-    right_orth!,
-    right_polar!,
-    select_algorithm,
-    svd_compact!
+using MatrixAlgebraKit: MatrixAlgebraKit, AbstractAlgorithm, default_svd_algorithm,
+    left_null!, left_orth!, left_polar!, lq_compact!, null_truncation_strategy, qr_compact!,
+    right_null!, right_orth!, right_polar!, select_algorithm, svd_compact!
 
-function MatrixAlgebraKit.initialize_output(
-        ::typeof(left_orth!), A::AbstractBlockSparseMatrix
-    )
-    return nothing
+using MatrixAlgebraKit: LeftOrthAlgorithm
+for kind in ("polar", "qr", "svd")
+    @eval begin
+        function MatrixAlgebraKit.initialize_output(
+                ::typeof(left_orth!), A::AbstractBlockSparseMatrix,
+                alg::LeftOrthAlgorithm{Symbol($kind)},
+            )
+            return nothing
+        end
+    end
 end
-function MatrixAlgebraKit.check_input(::typeof(left_orth!), A::AbstractBlockSparseMatrix, F)
+function MatrixAlgebraKit.check_input(
+        ::typeof(left_orth!), A::AbstractBlockSparseMatrix, F, alg::AbstractAlgorithm
+    )
     !isnothing(F) && throw(
         ArgumentError(
             "`left_orth!` on block sparse matrices does not support specifying the output"
@@ -29,55 +24,60 @@ function MatrixAlgebraKit.check_input(::typeof(left_orth!), A::AbstractBlockSpar
     return nothing
 end
 
-function MatrixAlgebraKit.left_orth_qr!(A::AbstractBlockSparseMatrix, F, alg)
+using MatrixAlgebraKit: LeftOrthViaQR
+function MatrixAlgebraKit.left_orth!(A::AbstractBlockSparseMatrix, F, alg::LeftOrthViaQR)
     !isnothing(F) && throw(
         ArgumentError(
             "`left_orth!` on block sparse matrices does not support specifying the output"
         ),
     )
-    alg′ = select_algorithm(qr_compact!, A, alg)
+    alg′ = select_algorithm(qr_compact!, A, alg.alg)
     return qr_compact!(A, alg′)
 end
-function MatrixAlgebraKit.left_orth_polar!(A::AbstractBlockSparseMatrix, F, alg)
+using MatrixAlgebraKit: LeftOrthViaPolar
+function MatrixAlgebraKit.left_orth!(A::AbstractBlockSparseMatrix, F, alg::LeftOrthViaPolar)
     !isnothing(F) && throw(
         ArgumentError(
             "`left_orth!` on block sparse matrices does not support specifying the output"
         ),
     )
-    alg′ = select_algorithm(left_polar!, A, alg)
+    alg′ = select_algorithm(left_polar!, A, alg.alg)
     return left_polar!(A, alg′)
 end
-function MatrixAlgebraKit.left_orth_svd!(
-        A::AbstractBlockSparseMatrix, F, alg, trunc::Nothing = nothing
+using MatrixAlgebraKit: LeftOrthViaSVD, does_truncate
+function MatrixAlgebraKit.left_orth!(
+        A::AbstractBlockSparseMatrix, F, alg::LeftOrthViaSVD
     )
     !isnothing(F) && throw(
         ArgumentError(
             "`left_orth!` on block sparse matrices does not support specifying the output"
         ),
     )
-    alg′ = select_algorithm(svd_compact!, A, alg)
-    U, S, Vᴴ = svd_compact!(A, alg′)
-    return U, S * Vᴴ
-end
-function MatrixAlgebraKit.left_orth_svd!(A::AbstractBlockSparseMatrix, F, alg, trunc)
-    !isnothing(F) && throw(
-        ArgumentError(
-            "`left_orth!` on block sparse matrices does not support specifying the output"
-        ),
-    )
-    alg′ = select_algorithm(svd_compact!, A, alg)
-    alg_trunc = select_algorithm(svd_trunc!, A, alg′; trunc)
-    U, S, Vᴴ = svd_trunc!(A, alg_trunc)
+    U, S, Vᴴ = if !does_truncate(alg.alg)
+        alg′ = select_algorithm(svd_compact!, A, alg.alg)
+        svd_compact!(A, alg′)
+    else
+        alg′ = select_algorithm(svd_compact!, A, alg.alg)
+        alg_trunc = select_algorithm(svd_trunc!, A, alg′)
+        svd_trunc!(A, alg_trunc)
+    end
     return U, S * Vᴴ
 end
 
-function MatrixAlgebraKit.initialize_output(
-        ::typeof(right_orth!), A::AbstractBlockSparseMatrix
-    )
-    return nothing
+using MatrixAlgebraKit: RightOrthAlgorithm
+for kind in ("lq", "polar", "svd")
+    @eval begin
+        function MatrixAlgebraKit.initialize_output(
+                ::typeof(right_orth!), A::AbstractBlockSparseMatrix,
+                alg::RightOrthAlgorithm{Symbol($kind)},
+            )
+            return nothing
+        end
+    end
 end
 function MatrixAlgebraKit.check_input(
-        ::typeof(right_orth!), A::AbstractBlockSparseMatrix, F::Nothing
+        ::typeof(right_orth!), A::AbstractBlockSparseMatrix, F::Nothing,
+        alg::AbstractAlgorithm,
     )
     !isnothing(F) && throw(
         ArgumentError(
@@ -87,65 +87,63 @@ function MatrixAlgebraKit.check_input(
     return nothing
 end
 
-function MatrixAlgebraKit.right_orth_lq!(A::AbstractBlockSparseMatrix, F, alg)
+using MatrixAlgebraKit: RightOrthViaLQ
+function MatrixAlgebraKit.right_orth!(A::AbstractBlockSparseMatrix, F, alg::RightOrthViaLQ)
     !isnothing(F) && throw(
         ArgumentError(
             "`right_orth!` on block sparse matrices does not support specifying the output"
         ),
     )
-    alg′ = select_algorithm(lq_compact!, A, alg)
+    alg′ = select_algorithm(lq_compact!, A, alg.alg)
     return lq_compact!(A, alg′)
 end
-function MatrixAlgebraKit.right_orth_polar!(A::AbstractBlockSparseMatrix, F, alg)
+using MatrixAlgebraKit: RightOrthViaPolar
+function MatrixAlgebraKit.right_orth!(
+        A::AbstractBlockSparseMatrix, F, alg::RightOrthViaPolar
+    )
     !isnothing(F) && throw(
         ArgumentError(
             "`right_orth!` on block sparse matrices does not support specifying the output"
         ),
     )
-    alg′ = select_algorithm(right_polar!, A, alg)
+    alg′ = select_algorithm(right_polar!, A, alg.alg)
     return right_polar!(A, alg′)
 end
-function MatrixAlgebraKit.right_orth_svd!(
-        A::AbstractBlockSparseMatrix, F, alg, trunc::Nothing = nothing
+using MatrixAlgebraKit: RightOrthViaSVD
+function MatrixAlgebraKit.right_orth!(
+        A::AbstractBlockSparseMatrix, F, alg::RightOrthViaSVD
     )
     !isnothing(F) && throw(
         ArgumentError(
             "`right_orth!` on block sparse matrices does not support specifying the output"
         ),
     )
-    alg′ = select_algorithm(svd_compact!, A, alg)
-    U, S, Vᴴ = svd_compact!(A, alg′)
-    return U * S, Vᴴ
-end
-function MatrixAlgebraKit.right_orth_svd!(A::AbstractBlockSparseMatrix, F, alg, trunc)
-    !isnothing(F) && throw(
-        ArgumentError(
-            "`right_orth!` on block sparse matrices does not support specifying the output"
-        ),
-    )
-    alg′ = select_algorithm(svd_compact!, A, alg)
-    alg_trunc = select_algorithm(svd_trunc!, A, alg′; trunc)
-    U, S, Vᴴ = svd_trunc!(A, alg_trunc)
+    U, S, Vᴴ = if !does_truncate(alg.alg)
+        alg′ = select_algorithm(svd_compact!, A, alg.alg)
+        svd_compact!(A, alg′)
+    else
+        alg′ = select_algorithm(svd_compact!, A, alg.alg)
+        alg_trunc = select_algorithm(svd_trunc!, A, alg′)
+        svd_trunc!(A, alg_trunc)
+    end
     return U * S, Vᴴ
 end
 
 function MatrixAlgebraKit.initialize_output(
-        ::typeof(left_null!), A::AbstractBlockSparseMatrix
+        ::typeof(left_null!), A::AbstractBlockSparseMatrix, alg::AbstractAlgorithm
     )
     return nothing
 end
 function MatrixAlgebraKit.check_input(
-        ::typeof(left_null!), A::AbstractBlockSparseMatrix, N::Nothing
+        ::typeof(left_null!), A::AbstractBlockSparseMatrix, N::Nothing,
+        alg::AbstractAlgorithm,
     )
     return nothing
 end
-function MatrixAlgebraKit.left_null_qr!(A::AbstractBlockSparseMatrix, N, alg)
-    return left_null_svd!(A, N, default_svd_algorithm(A))
-end
-function MatrixAlgebraKit.left_null_svd!(
-        A::AbstractBlockSparseMatrix, N, alg, trunc::Nothing
+function MatrixAlgebraKit.left_null!(
+        A::AbstractBlockSparseMatrix, N, alg::AbstractAlgorithm
     )
-    return left_null_svd!(A, N, alg, null_truncation_strategy(; atol = 0, rtol = 0))
+    return error("Not implemented.")
 end
 function MatrixAlgebraKit.truncate(
         ::typeof(left_null!),
@@ -156,16 +154,19 @@ function MatrixAlgebraKit.truncate(
 end
 
 function MatrixAlgebraKit.initialize_output(
-        ::typeof(right_null!), A::AbstractBlockSparseMatrix
+        ::typeof(right_null!), A::AbstractBlockSparseMatrix, alg::AbstractAlgorithm
     )
     return nothing
 end
 function MatrixAlgebraKit.check_input(
-        ::typeof(right_null!), A::AbstractBlockSparseMatrix, N::Nothing
+        ::typeof(right_null!), A::AbstractBlockSparseMatrix, N::Nothing,
+        alg::AbstractAlgorithm,
     )
     return nothing
 end
-function MatrixAlgebraKit.right_null_lq!(A::AbstractBlockSparseMatrix, N, alg)
+function MatrixAlgebraKit.right_null!(
+        A::AbstractBlockSparseMatrix, N, alg::AbstractAlgorithm
+    )
     return error("Not implement.")
 end
 function MatrixAlgebraKit.truncate(
