@@ -3,25 +3,9 @@ using BlockArrays: Block
 using BlockSparseArrays: BlockSparseMatrix, blockstoredlength
 using JLArrays: JLArray
 using LinearAlgebra: hermitianpart, norm
-using MatrixAlgebraKit:
-    eig_full,
-    eig_trunc,
-    eig_vals,
-    eigh_full,
-    eigh_trunc,
-    eigh_vals,
-    isisometry,
-    left_orth,
-    left_polar,
-    lq_compact,
-    lq_full,
-    qr_compact,
-    qr_full,
-    right_orth,
-    right_polar,
-    svd_compact,
-    svd_full,
-    svd_trunc
+using MatrixAlgebraKit: eig_full, eig_trunc, eig_vals, eigh_full, eigh_trunc, eigh_vals,
+    isisometric, left_orth, left_polar, lq_compact, lq_full, qr_compact, qr_full,
+    right_orth, right_polar, svd_compact, svd_full, svd_trunc
 using SparseArraysBase: storedlength
 using Test: @test, @test_broken, @testset
 
@@ -106,32 +90,32 @@ arrayts = (Array, JLArray)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     for f in (left_orth, left_polar, qr_compact, qr_full)
-        if arrayt ≢ Array && f ≡ left_orth
-            @test_broken f(a)
+        ## if arrayt ≢ Array && f ≡ left_orth
+        ##     @test_broken f(a)
+        ## else
+        u, c = f(a)
+        @test u * c ≈ a
+        if arrayt ≡ Array
+            @test isisometric(u; side = :left)
         else
-            u, c = f(a)
-            @test u * c ≈ a
-            if arrayt ≡ Array
-                @test isisometry(u; side = :left)
-            else
-                # TODO: Fix comparison with UniformScaling on GPU.
-                @test_broken isisometry(u; side = :left)
-            end
+            # TODO: Fix comparison with UniformScaling on GPU.
+            @test_broken isisometric(u; side = :left)
         end
+        ## end
     end
     for f in (right_orth, right_polar, lq_compact, lq_full)
-        if arrayt ≢ Array && f ≡ right_orth
-            @test_broken f(a)
+        ## if arrayt ≢ Array && f ≡ right_orth
+        ##     @test_broken f(a)
+        ## else
+        c, u = f(a)
+        @test c * u ≈ a
+        if arrayt ≡ Array
+            @test isisometric(u; side = :right)
         else
-            c, u = f(a)
-            @test c * u ≈ a
-            if arrayt ≡ Array
-                @test isisometry(u; side = :right)
-            else
-                # TODO: Fix comparison with UniformScaling on GPU.
-                @test_broken isisometry(u; side = :right)
-            end
+            # TODO: Fix comparison with UniformScaling on GPU.
+            @test_broken isisometric(u; side = :right)
         end
+        ## end
     end
     for f in (svd_compact, svd_full, svd_trunc)
         if arrayt ≢ Array && (f ≡ svd_full || f ≡ svd_trunc)
