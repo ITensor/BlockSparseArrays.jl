@@ -90,9 +90,6 @@ arrayts = (Array, JLArray)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     for f in (left_orth, left_polar, qr_compact, qr_full)
-        ## if arrayt ≢ Array && f ≡ left_orth
-        ##     @test_broken f(a)
-        ## else
         u, c = f(a)
         @test u * c ≈ a
         if arrayt ≡ Array
@@ -101,12 +98,8 @@ arrayts = (Array, JLArray)
             # TODO: Fix comparison with UniformScaling on GPU.
             @test_broken isisometric(u; side = :left)
         end
-        ## end
     end
     for f in (right_orth, right_polar, lq_compact, lq_full)
-        ## if arrayt ≢ Array && f ≡ right_orth
-        ##     @test_broken f(a)
-        ## else
         c, u = f(a)
         @test c * u ≈ a
         if arrayt ≡ Array
@@ -115,7 +108,6 @@ arrayts = (Array, JLArray)
             # TODO: Fix comparison with UniformScaling on GPU.
             @test_broken isisometric(u; side = :right)
         end
-        ## end
     end
     for f in (svd_compact, svd_full, svd_trunc)
         if arrayt ≢ Array && (f ≡ svd_full || f ≡ svd_trunc)
