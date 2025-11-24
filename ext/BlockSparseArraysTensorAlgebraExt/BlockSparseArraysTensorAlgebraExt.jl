@@ -1,13 +1,7 @@
 module BlockSparseArraysTensorAlgebraExt
 
 using BlockSparseArrays: AbstractBlockSparseArray, blockreshape
-using TensorAlgebra:
-    TensorAlgebra,
-    BlockedTrivialPermutation,
-    BlockedTuple,
-    FusionStyle,
-    ReshapeFusion,
-    fuseaxes
+using TensorAlgebra: TensorAlgebra, BlockedTuple, FusionStyle, fuseaxes
 
 struct BlockReshapeFusion <: FusionStyle end
 
@@ -20,12 +14,12 @@ using BlockSparseArrays: blocksparse
 using SparseArraysBase: eachstoredindex
 using TensorAlgebra: TensorAlgebra, matricize, unmatricize
 function TensorAlgebra.matricize(
-        ::BlockReshapeFusion, a::AbstractArray, biperm::BlockedTrivialPermutation{2}
+        ::BlockReshapeFusion, a::AbstractArray, length1::Val, length2::Val
     )
-    ax = fuseaxes(axes(a), biperm)
+    ax = fuseaxes(axes(a), length1, length2)
     reshaped_blocks_a = reshape(blocks(a), map(blocklength, ax))
     key(I) = Block(Tuple(I))
-    value(I) = matricize(reshaped_blocks_a[I], biperm)
+    value(I) = matricize(reshaped_blocks_a[I], length1, length2)
     Is = eachstoredindex(reshaped_blocks_a)
     bs = if isempty(Is)
         # Catch empty case and make sure the type is constrained properly.
@@ -45,16 +39,17 @@ using BlockArrays: blocklengths
 function TensorAlgebra.unmatricize(
         ::BlockReshapeFusion,
         m::AbstractMatrix,
-        blocked_ax::BlockedTuple{2, <:Any, <:Tuple{Vararg{AbstractUnitRange}}},
+        codomain_axes::Tuple{Vararg{AbstractUnitRange}},
+        domain_axes::Tuple{Vararg{AbstractUnitRange}},
     )
-    ax = Tuple(blocked_ax)
+    ax = (codomain_axes..., domain_axes...)
     reshaped_blocks_m = reshape(blocks(m), map(blocklength, ax))
     function f(I)
         block_axes_I = BlockedTuple(
             map(ntuple(identity, length(ax))) do i
                 return Base.axes1(ax[i][Block(I[i])])
             end,
-            blocklengths(blocked_ax),
+            (length(codomain_axes), length(domain_axes)),
         )
         return unmatricize(reshaped_blocks_m[I], block_axes_I)
     end
