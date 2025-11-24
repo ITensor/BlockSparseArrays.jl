@@ -1,6 +1,6 @@
 name = "BlockSparseArrays"
 uuid = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
-version = "0.10.11"
+version = "0.10.12"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
 
 [deps]
@@ -44,7 +44,7 @@ MapBroadcast = "0.1.5"
 MatrixAlgebraKit = "0.6"
 SparseArraysBase = "0.7.1"
 SplitApplyCombine = "1.2.3"
-TensorAlgebra = "0.3, 0.4"
+TensorAlgebra = "0.3, 0.4, 0.5"
 TensorProducts = "0.1.7"
 Test = "1.10"
 TypeParameterAccessors = "0.4.1"
