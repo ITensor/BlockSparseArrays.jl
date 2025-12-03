@@ -20,8 +20,8 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 
-[sources]
-BlockSparseArrays = {path = ".."}
+[sources.BlockSparseArrays]
+path = ".."
 
 [compat]
 Adapt = "4"
@@ -40,7 +40,7 @@ SafeTestsets = "0.1"
 SparseArraysBase = "0.7"
 StableRNGs = "1"
 Suppressor = "0.2"
-TensorAlgebra = "0.5"
+TensorAlgebra = "0.5, 0.6"
 Test = "1"
 TestExtras = "0.3"
 TypeParameterAccessors = "0.4"
