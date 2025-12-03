@@ -1,7 +1,7 @@
 name = "BlockSparseArrays"
 uuid = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
-version = "0.10.12"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
+version = "0.10.13"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -22,11 +22,9 @@ TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 
 [weakdeps]
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
-TensorProducts = "decf83d6-1968-43f4-96dc-fdb3fe15fc6d"
 
 [extensions]
 BlockSparseArraysTensorAlgebraExt = "TensorAlgebra"
-BlockSparseArraysTensorProductsExt = "TensorProducts"
 
 [compat]
 Adapt = "4.1.1"
@@ -44,8 +42,7 @@ MapBroadcast = "0.1.5"
 MatrixAlgebraKit = "0.6"
 SparseArraysBase = "0.7.1"
 SplitApplyCombine = "1.2.3"
-TensorAlgebra = "0.5"
-TensorProducts = "0.1.7"
+TensorAlgebra = "0.6"
 Test = "1.10"
 TypeParameterAccessors = "0.4.1"
 julia = "1.10"
