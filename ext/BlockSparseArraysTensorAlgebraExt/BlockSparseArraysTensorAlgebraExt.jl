@@ -10,7 +10,7 @@ using TensorAlgebra: TensorAlgebra, BlockReshapeFusion, BlockedTuple, matricize,
 function TensorAlgebra.tensor_product_axis(
         ::BlockReshapeFusion, r1::BlockUnitRange, r2::BlockUnitRange
     )
-    isone(first(r1)) || isone(first(r2)) ||
+    (isone(first(r1)) && isone(first(r2))) ||
         throw(ArgumentError("Only one-based axes are supported"))
     blockaxpairs = Iterators.product(eachblockaxes1(r1), eachblockaxes1(r2))
     blockaxs = vec(splat(tensor_product_axis).(blockaxpairs))
