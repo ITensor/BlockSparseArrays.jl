@@ -8,13 +8,27 @@ using TensorAlgebra: TensorAlgebra, BlockReshapeFusion, BlockedTuple, matricize,
     matricize_axes, tensor_product_axis, unmatricize
 
 function TensorAlgebra.tensor_product_axis(
-        ::BlockReshapeFusion, r1::BlockUnitRange, r2::BlockUnitRange
+        style::BlockReshapeFusion, side::Val{:codomain}, r1::BlockUnitRange, r2::BlockUnitRange
+    )
+    return tensor_product_blockrange(style, side, r1, r2)
+end
+function TensorAlgebra.tensor_product_axis(
+        style::BlockReshapeFusion, side::Val{:domain}, r1::BlockUnitRange, r2::BlockUnitRange
+    )
+    return tensor_product_blockrange(style, side, r1, r2)
+end
+function tensor_product_blockrange(
+        ::BlockReshapeFusion, side::Val, r1::BlockUnitRange, r2::BlockUnitRange
     )
     (isone(first(r1)) && isone(first(r2))) ||
         throw(ArgumentError("Only one-based axes are supported"))
     blockaxpairs = Iterators.product(eachblockaxes1(r1), eachblockaxes1(r2))
-    blockaxs = vec(splat(tensor_product_axis).(blockaxpairs))
-    return blockrange(blockaxs)
+    blockaxs = map(blockaxpairs) do (b1, b2)
+        # TODO: Store a FusionStyle for the blocks in `BlockReshapeFusion`
+        # and use that here.
+        return tensor_product_axis(side, b1, b2)
+    end
+    return blockrange(vec(blockaxs))
 end
 
 function TensorAlgebra.matricize(
