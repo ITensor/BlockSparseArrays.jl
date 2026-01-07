@@ -1,5 +1,5 @@
 using ArrayLayouts: ArrayLayouts, MemoryLayout
-using Base.Broadcast: Broadcast, BroadcastStyle
+using Base.Broadcast: BroadcastStyle
 using BlockArrays: BlockArrays, Block, BlockIndexRange, BlockSlice
 using TypeParameterAccessors: TypeParameterAccessors, parenttype, similartype
 
@@ -27,7 +27,7 @@ function ArrayLayouts.MemoryLayout(arraytype::Type{<:UnblockedSubArray})
     return MemoryLayout(blocktype(parenttype(arraytype)))
 end
 
-function Broadcast.BroadcastStyle(arraytype::Type{<:UnblockedSubArray})
+function Base.Broadcast.BroadcastStyle(arraytype::Type{<:UnblockedSubArray})
     return BroadcastStyle(blocktype(parenttype(arraytype)))
 end
 

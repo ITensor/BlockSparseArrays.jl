@@ -70,7 +70,7 @@ end
 
 function copyto!_blocksparse(
         dest::AbstractArray, bc::Broadcasted
-    ) where {N}
+    )
     # convert to map
     # flatten and only keep the AbstractArray arguments
     m = Mapped(bc)

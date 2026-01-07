@@ -1,12 +1,12 @@
 using BlockArrays: AbstractBlockedUnitRange, BlockSlice
-using Base.Broadcast: Broadcast, BroadcastStyle
+using Base.Broadcast: BroadcastStyle
 
-function Broadcast.BroadcastStyle(arraytype::Type{<:AnyAbstractBlockSparseArray})
+function Base.Broadcast.BroadcastStyle(arraytype::Type{<:AnyAbstractBlockSparseArray})
     return BlockSparseArrayStyle(BroadcastStyle(blocktype(arraytype)))
 end
 
 # Fix ambiguity error with `BlockArrays`.
-function Broadcast.BroadcastStyle(
+function Base.Broadcast.BroadcastStyle(
         arraytype::Type{
             <:SubArray{
                 <:Any,
@@ -18,7 +18,7 @@ function Broadcast.BroadcastStyle(
     )
     return BlockSparseArrayStyle{ndims(arraytype)}()
 end
-function Broadcast.BroadcastStyle(
+function Base.Broadcast.BroadcastStyle(
         arraytype::Type{
             <:SubArray{
                 <:Any,
@@ -34,7 +34,7 @@ function Broadcast.BroadcastStyle(
     )
     return BlockSparseArrayStyle{ndims(arraytype)}()
 end
-function Broadcast.BroadcastStyle(
+function Base.Broadcast.BroadcastStyle(
         arraytype::Type{
             <:SubArray{
                 <:Any,
@@ -61,7 +61,7 @@ function Base.copyto!(
     return dest
 end
 function Base.copyto!(
-        dest::AnyAbstractBlockSparseArray{<:Any, N}, bc::Broadcasted{BlockSparseArrayStyle{N}}
+        dest::AnyAbstractBlockSparseArray{<:Any, N}, bc::Broadcasted{<:Broadcast.BlockSparseArrayStyle{N}}
     ) where {N}
     copyto_blocksparse!(dest, bc)
     return dest

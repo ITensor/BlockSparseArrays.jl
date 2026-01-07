@@ -16,6 +16,7 @@ using BlockArrays:
     blocklength,
     blocks,
     findblockindex
+using FunctionImplementations: FunctionImplementations
 ## using DerivableInterfaces:
 ##     DerivableInterfaces,
 ##     @interface,
@@ -131,6 +132,7 @@ abstract type AbstractBlockSparseArrayStyle <: AbstractSparseArrayStyle end
 ## end
 
 struct BlockSparseArrayStyle <: AbstractBlockSparseArrayStyle end
+const blocksparse_style = BlockSparseArrayStyle()
 
 function FunctionImplementations.Style(
         style1::AbstractBlockSparseArrayStyle,
@@ -349,6 +351,7 @@ function fill!_blocksparse(a::AbstractArray, value)
     return a
 end
 
+using FunctionImplementations: zero!
 const zero!_blocksparse = blocksparse_style(zero!)
 function zero!_blocksparse(a::AbstractArray)
     # This will try to empty the storage if possible.
