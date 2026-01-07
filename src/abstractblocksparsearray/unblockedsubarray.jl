@@ -18,8 +18,9 @@ function BlockArrays.blocks(a::UnblockedSubArray)
     return SingleBlockView(a)
 end
 
-function DerivableInterfaces.interface(arraytype::Type{<:UnblockedSubArray})
-    return interface(blocktype(parenttype(arraytype)))
+using FunctionImplementations: FunctionImplementations, Style
+function FunctionImplementations.Style(arraytype::Type{<:UnblockedSubArray})
+    return Style(blocktype(parenttype(arraytype)))
 end
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:UnblockedSubArray})

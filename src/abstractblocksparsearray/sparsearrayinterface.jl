@@ -36,7 +36,6 @@ end
 ##   return BlockSparseStorage(a)
 ## end
 
-# TODO: Turn this into an `@interface ::AbstractBlockSparseArrayInterface` function.
 function SparseArraysBase.storedlength(a::AnyAbstractBlockSparseArray)
     return sum(storedlength, storedvalues(blocks(a)); init = zero(Int))
 end

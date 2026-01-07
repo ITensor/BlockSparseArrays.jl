@@ -7,6 +7,7 @@ using BlockArrays:
     blocklength,
     blocksize,
     viewblock
+using FunctionImplementations: style
 
 # This splits `BlockIndexRange{N}` into
 # `NTuple{N,BlockIndexRange{1}}`.
@@ -39,7 +40,7 @@ function Base.view(
         },
         I::Block{N},
     ) where {N}
-    return @interface interface(a) view(a, I)
+    return style(a)(view)(a, I)
 end
 function Base.view(
         a::SubArray{
@@ -47,13 +48,13 @@ function Base.view(
         },
         I::Vararg{Block{1}, N},
     ) where {N}
-    return @interface interface(a) view(a, I...)
+    return style(a)(view)(a, I...)
 end
 function Base.view(
         V::SubArray{<:Any, 1, <:AnyAbstractBlockSparseArray, <:Tuple{BlockSlice{<:BlockRange{1}}}},
         I::Block{1},
     )
-    return @interface interface(a) view(a, I)
+    return style(a)(view)(a, I)
 end
 
 # Specialized code for getting the view of a block.
@@ -63,7 +64,7 @@ function BlockArrays.viewblock(
     return viewblock(a, Tuple(block)...)
 end
 
-# TODO: Define `@interface interface(a) viewblock`.
+# TODO: Define `style(a)(viewblock)`.
 function BlockArrays.viewblock(
         a::AbstractBlockSparseArray{<:Any, N}, block::Vararg{Block{1}, N}
     ) where {N}
@@ -212,9 +213,9 @@ end
 
 # XXX: TODO: Distinguish if a sub-view of the block needs to be taken!
 # Define a new `SubBlockSlice` which is used in:
-# `@interface interface(a) to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})`
+# `style(a)(to_indices)(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})`
 # in `blocksparsearrayinterface/blocksparsearrayinterface.jl`.
-# TODO: Define `@interface interface(a) viewblock`.
+# TODO: Define `style(a)(viewblock)`.
 function BlockArrays.viewblock(
         a::SubArray{T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{BlockSliceCollection, N}}},
         block::Vararg{Block{1}, N},
@@ -281,7 +282,7 @@ function BlockArrays.viewblock(
     return @view parent(a)[brs...]
 end
 
-# TODO: Define `@interface interface() viewblock`.
+# TODO: Define `style(a)(viewblock)`.
 function BlockArrays.viewblock(
         a::SubArray{
             T,
@@ -345,7 +346,7 @@ function blockedslice_blocks(x::Base.Slice)
     )
 end
 
-# TODO: Define `@interface interface(a) viewblock`.
+# TODO: Define `style(a)(viewblock)`.
 function BlockArrays.viewblock(
         a::SubArray{
             T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{SubBlockSliceCollection, N}},
@@ -362,7 +363,7 @@ function BlockArrays.viewblock(
     return @view parent(a)[brs...]
 end
 
-# TODO: Define `@interface interface(a) viewblock`.
+# TODO: Define `style(a)(viewblock)`.
 function BlockArrays.viewblock(
         a::SubArray{
             T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{SubBlockSliceCollection, N}},

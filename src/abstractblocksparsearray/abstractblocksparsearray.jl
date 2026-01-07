@@ -1,5 +1,6 @@
 using BlockArrays:
     BlockArrays, AbstractBlockArray, Block, BlockIndex, BlockedUnitRange, blocks
+using FunctionImplementations: style
 
 abstract type AbstractBlockSparseArray{T, N} <: AbstractBlockArray{T, N} end
 
@@ -19,12 +20,12 @@ end
 
 # Specialized in order to fix ambiguity error with `BlockArrays`.
 function Base.getindex(a::AbstractBlockSparseArray{<:Any, N}, I::Vararg{Int, N}) where {N}
-    return @interface interface(a) getindex(a, I...)
+    return style(a)(getindex)(a, I...)
 end
 
 # Specialized in order to fix ambiguity error with `BlockArrays`.
 function Base.getindex(a::AbstractBlockSparseArray{<:Any, 0})
-    return @interface interface(a) getindex(a)
+    return style(a)(getindex)(a)
 end
 
 ## # Fix ambiguity error with `BlockArrays`.
@@ -39,7 +40,7 @@ end
 ##
 ## # Fix ambiguity error with `BlockArrays`.
 ## function Base.getindex(a::AbstractBlockSparseArray, I::Vararg{AbstractVector})
-##   ## return @interface interface(a) getindex(a, I...)
+##   ## return style(a)(getindex)(a, I...)
 ##   return ArrayLayouts.layout_getindex(a, I...)
 ## end
 
@@ -47,13 +48,13 @@ end
 function Base.setindex!(
         a::AbstractBlockSparseArray{<:Any, N}, value, I::Vararg{Int, N}
     ) where {N}
-    @interface interface(a) setindex!(a, value, I...)
+    style(a)(setindex!)(a, value, I...)
     return a
 end
 
 # Fix ambiguity error.
 function Base.setindex!(a::AbstractBlockSparseArray{<:Any, 0}, value)
-    @interface interface(a) setindex!(a, value)
+    style(a)(setindex!)(a, value)
     return a
 end
 
