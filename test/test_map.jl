@@ -10,7 +10,7 @@ using BlockSparseArrays:
     blockstoredlength,
     blocktype,
     eachblockstoredindex
-using DerivableInterfaces: zero!
+using FunctionImplementations: zero!
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray
 using SparseArraysBase: storedlength
