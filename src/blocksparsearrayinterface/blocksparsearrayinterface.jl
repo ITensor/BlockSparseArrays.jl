@@ -16,15 +16,7 @@ using BlockArrays:
     blocklength,
     blocks,
     findblockindex
-using FunctionImplementations: FunctionImplementations, permuteddims
-## using DerivableInterfaces:
-##     DerivableInterfaces,
-##     @interface,
-##     AbstractArrayInterface,
-##     DefaultArrayInterface,
-##     interface,
-##     permuteddims,
-##     zero!
+using FunctionImplementations: FunctionImplementations, permuteddims, zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
     AbstractSparseArrayStyle,
