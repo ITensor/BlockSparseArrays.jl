@@ -16,7 +16,9 @@ module Broadcast
     function BlockSparseArrayStyle{N, B}() where {N, B <: AbstractArrayStyle{N}}
         return BlockSparseArrayStyle{N, B}(B())
     end
-    BlockSparseArrayStyle{N}() where {N} = BlockSparseArrayStyle{N}(DefaultArrayStyle{N}())
+    function BlockSparseArrayStyle{N}() where {N}
+        return BlockSparseArrayStyle{N}(Base.Broadcast.DefaultArrayStyle{N}())
+    end
     BlockSparseArrayStyle(::Val{N}) where {N} = BlockSparseArrayStyle{N}()
     BlockSparseArrayStyle{M}(::Val{N}) where {M, N} = BlockSparseArrayStyle{N}()
     function BlockSparseArrayStyle{M, B}(::Val{N}) where {M, B <: AbstractArrayStyle{M}, N}

@@ -44,7 +44,7 @@ function Base.Broadcast.BroadcastStyle(
             },
         },
     )
-    return BlockSparseArrayStyle{ndims(arraytype)}()
+    return Broadcast.BlockSparseArrayStyle{ndims(arraytype)}()
 end
 
 # These catch cases that aren't caught by the standard
