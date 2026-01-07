@@ -80,6 +80,18 @@ function Base.copyto!(
     return style(a_src)(copyto!)(a_dest, a_src)
 end
 
+const copyto!_blocksparse = blocksparse_style(copyto!)
+function copyto!_blocksparse(dst::AbstractArray, src::AbstractArray)
+    # return sparse_style(copyto!)(dst, src)
+    return map!(identity, dst, src)
+end
+
+const copy!_blocksparse = blocksparse_style(copy!)
+function copy!_blocksparse(dst::AbstractArray, src::AbstractArray)
+    # return sparse_style(copy!)(dst, src)
+    return copyto!(dst, src)
+end
+
 # This avoids going through the generic version that calls `Base.permutedims!`,
 # which eventually calls block sparse `map!`, which involves slicing operations
 # that are not friendly to GPU (since they involve `SubArray` wrapping

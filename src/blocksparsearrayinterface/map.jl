@@ -45,7 +45,7 @@ function map_block!(f, a_dest::AbstractArray, I::Block, a_srcs::AbstractArray...
     if isstored(a_dest, I)
         a_dest[I] .= f.(a_srcs_I...)
     else
-        a_dest[I] = Broadcast.broadcast_preserving_zero_d(f, a_srcs_I...)
+        a_dest[I] = Base.Broadcast.broadcast_preserving_zero_d(f, a_srcs_I...)
     end
     return a_dest
 end

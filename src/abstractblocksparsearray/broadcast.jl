@@ -2,7 +2,7 @@ using BlockArrays: AbstractBlockedUnitRange, BlockSlice
 using Base.Broadcast: BroadcastStyle
 
 function Base.Broadcast.BroadcastStyle(arraytype::Type{<:AnyAbstractBlockSparseArray})
-    return BlockSparseArrayStyle(BroadcastStyle(blocktype(arraytype)))
+    return Broadcast.BlockSparseArrayStyle(BroadcastStyle(blocktype(arraytype)))
 end
 
 # Fix ambiguity error with `BlockArrays`.
@@ -51,18 +51,15 @@ end
 # `BlockSparseArrayStyle` definition, and also fix
 # ambiguity issues.
 function Base.copyto!(dest::AnyAbstractBlockSparseArray, bc::Broadcasted)
-    copyto_blocksparse!(dest, bc)
-    return dest
+    return copyto!_blocksparse(dest, bc)
 end
 function Base.copyto!(
         dest::AnyAbstractBlockSparseArray, bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}}
     )
-    copyto_blocksparse!(dest, bc)
-    return dest
+    return copyto!_blocksparse(dest, bc)
 end
 function Base.copyto!(
         dest::AnyAbstractBlockSparseArray{<:Any, N}, bc::Broadcasted{<:Broadcast.BlockSparseArrayStyle{N}}
     ) where {N}
-    copyto_blocksparse!(dest, bc)
-    return dest
+    return copyto!_blocksparse(dest, bc)
 end
