@@ -1,5 +1,4 @@
 using Adapt: adapt
-using ArrayLayouts: zero!
 using BlockArrays:
     BlockArrays,
     Block,
