@@ -16,7 +16,7 @@ function Base.Broadcast.BroadcastStyle(
             },
         },
     )
-    return BlockSparseArrayStyle{ndims(arraytype)}()
+    return Broadcast.BlockSparseArrayStyle{ndims(arraytype)}()
 end
 function Base.Broadcast.BroadcastStyle(
         arraytype::Type{
@@ -32,7 +32,7 @@ function Base.Broadcast.BroadcastStyle(
             },
         },
     )
-    return BlockSparseArrayStyle{ndims(arraytype)}()
+    return Broadcast.BlockSparseArrayStyle{ndims(arraytype)}()
 end
 function Base.Broadcast.BroadcastStyle(
         arraytype::Type{

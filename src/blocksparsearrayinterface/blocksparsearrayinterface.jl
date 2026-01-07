@@ -16,7 +16,7 @@ using BlockArrays:
     blocklength,
     blocks,
     findblockindex
-using FunctionImplementations: FunctionImplementations
+using FunctionImplementations: FunctionImplementations, permuteddims
 ## using DerivableInterfaces:
 ##     DerivableInterfaces,
 ##     @interface,

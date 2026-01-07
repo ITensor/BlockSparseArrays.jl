@@ -65,7 +65,7 @@ const copyto!_blocksparse = blocksparse_style(copyto!)
 const fill!_blocksparse = blocksparse_style(fill!)
 function copyto!_blocksparse(dest::AbstractArray, bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}})
     # `[]` is used to unwrap zero-dimensional arrays.
-    bcf = Broadcast.flatten(bc)
+    bcf = Base.Broadcast.flatten(bc)
     value = @allowscalar bcf.f(map(arg -> arg[], bcf.args)...)
     return fill!_blocksparse(dest, value)
 end
