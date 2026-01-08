@@ -1,5 +1,5 @@
 using BlockArrays: BlockRange, blockisequal
-using DerivableInterfaces: @interface, AbstractArrayInterface, interface
+using FunctionImplementations: style
 using GPUArraysCore: @allowscalar
 
 # Check if the block structures are the same.
@@ -45,7 +45,7 @@ function map_block!(f, a_dest::AbstractArray, I::Block, a_srcs::AbstractArray...
     if isstored(a_dest, I)
         a_dest[I] .= f.(a_srcs_I...)
     else
-        a_dest[I] = Broadcast.broadcast_preserving_zero_d(f, a_srcs_I...)
+        a_dest[I] = Base.Broadcast.broadcast_preserving_zero_d(f, a_srcs_I...)
     end
     return a_dest
 end
@@ -68,15 +68,15 @@ end
 # made by combining the blocking of the axes (i.e. the blocking that
 # is used to determine `union_stored_blocked_cartesianindices(...)`).
 # `reblock` is a partial solution to that, but a bit ad-hoc.
-## TODO: Make this an `@interface AbstractBlockSparseArrayInterface` function.
-@interface interface::AbstractBlockSparseArrayInterface function Base.map!(
+const map!_blocksparse = blocksparse_style(map!)
+function map!_blocksparse(
         f, a_dest::AbstractArray, a_srcs::AbstractArray...
     )
     if isempty(a_srcs)
         error("Can't call `map!` with zero source terms.")
     end
     if iszero(ndims(a_dest))
-        @interface interface map_zero_dim!(f, a_dest, a_srcs...)
+        map_zero_dim!(f, a_dest, a_srcs...)
         return a_dest
     end
     if same_block_structure(a_dest, a_srcs...)
@@ -115,23 +115,26 @@ end
     return a_dest
 end
 
-@interface ::AbstractBlockSparseArrayInterface function Base.mapreduce(
+const mapreduce_blocksparse = blocksparse_style(mapreduce)
+function mapreduce_blocksparse(
         f, op, as::AbstractArray...; kwargs...
     )
     # TODO: Define an `init` value based on the element type.
-    return @interface interface(blocks.(as)...) mapreduce(
+    return style(blocks.(as)...)(mapreduce)(
         block -> mapreduce(f, op, block), op, blocks.(as)...; kwargs...
     )
 end
 
-@interface ::AbstractBlockSparseArrayInterface function Base.iszero(a::AbstractArray)
+const iszero_blocksparse = blocksparse_style(iszero)
+function iszero_blocksparse(a::AbstractArray)
     # TODO: Just call `iszero(blocks(a))`?
-    return @interface interface(blocks(a)) iszero(blocks(a))
+    return style(blocks(a))(iszero)(blocks(a))
 end
 
-@interface ::AbstractBlockSparseArrayInterface function Base.isreal(a::AbstractArray)
+const isreal_blocksparse = blocksparse_style(isreal)
+function isreal_blocksparse(a::AbstractArray)
     # TODO: Just call `isreal(blocks(a))`?
-    return @interface interface(blocks(a)) isreal(blocks(a))
+    return style(blocks(a))(isreal)(blocks(a))
 end
 
 # Helper functions for block sparse map.
@@ -152,9 +155,7 @@ end
 reblock(a) = a
 
 # `map!` specialized to zero-dimensional inputs.
-function map_zero_dim! end
-
-@interface ::AbstractArrayInterface function map_zero_dim!(
+function map_zero_dim!(
         f, a_dest::AbstractArray, a_srcs::AbstractArray...
     )
     @allowscalar a_dest[] = f.(map(a_src -> a_src[], a_srcs)...)

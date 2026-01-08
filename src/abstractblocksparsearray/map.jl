@@ -1,5 +1,6 @@
 using ArrayLayouts: LayoutArray
 using BlockArrays: AbstractBlockVector, Block
+using FunctionImplementations: style
 using LinearAlgebra: Adjoint, Transpose
 
 # TODO: Make this more general, independent of `AbstractBlockSparseArray`.
@@ -36,17 +37,17 @@ function reblock(
 end
 
 function Base.map!(f, a_dest::AbstractArray, a_srcs::AnyAbstractBlockSparseArray...)
-    @interface interface(a_dest, a_srcs...) map!(f, a_dest, a_srcs...)
+    style(a_dest, a_srcs...)(map!)(f, a_dest, a_srcs...)
     return a_dest
 end
 function Base.map!(f, a_dest::AnyAbstractBlockSparseArray, a_srcs::AbstractArray...)
-    @interface interface(a_dest, a_srcs...) map!(f, a_dest, a_srcs...)
+    style(a_dest, a_srcs...)(map!)(f, a_dest, a_srcs...)
     return a_dest
 end
 function Base.map!(
         f, a_dest::AnyAbstractBlockSparseArray, a_srcs::AnyAbstractBlockSparseArray...
     )
-    @interface interface(a_dest, a_srcs...) map!(f, a_dest, a_srcs...)
+    style(a_dest, a_srcs...)(map!)(f, a_dest, a_srcs...)
     return a_dest
 end
 
@@ -55,28 +56,40 @@ function Base.map(f, as::Vararg{AnyAbstractBlockSparseArray})
 end
 
 function Base.copy!(a_dest::AbstractArray, a_src::AnyAbstractBlockSparseArray)
-    return @interface interface(a_src) copy!(a_dest, a_src)
+    return style(a_src)(copy!)(a_dest, a_src)
 end
 
 function Base.copyto!(a_dest::AbstractArray, a_src::AnyAbstractBlockSparseArray)
-    return @interface interface(a_src) copyto!(a_dest, a_src)
+    return style(a_src)(copyto!)(a_dest, a_src)
 end
 
 # Fix ambiguity error
 function Base.copyto!(a_dest::LayoutArray, a_src::AnyAbstractBlockSparseArray)
-    return @interface interface(a_src) copyto!(a_dest, a_src)
+    return style(a_src)(copyto!)(a_dest, a_src)
 end
 
 function Base.copyto!(
         a_dest::AbstractMatrix, a_src::Transpose{T, <:AbstractBlockSparseMatrix{T}}
     ) where {T}
-    return @interface interface(a_src) copyto!(a_dest, a_src)
+    return style(a_src)(copyto!)(a_dest, a_src)
 end
 
 function Base.copyto!(
         a_dest::AbstractMatrix, a_src::Adjoint{T, <:AbstractBlockSparseMatrix{T}}
     ) where {T}
-    return @interface interface(a_src) copyto!(a_dest, a_src)
+    return style(a_src)(copyto!)(a_dest, a_src)
+end
+
+const copyto!_blocksparse = blocksparse_style(copyto!)
+function copyto!_blocksparse(dst::AbstractArray, src::AbstractArray)
+    # return sparse_style(copyto!)(dst, src)
+    return map!(identity, dst, src)
+end
+
+const copy!_blocksparse = blocksparse_style(copy!)
+function copy!_blocksparse(dst::AbstractArray, src::AbstractArray)
+    # return sparse_style(copy!)(dst, src)
+    return copyto!(dst, src)
 end
 
 # This avoids going through the generic version that calls `Base.permutedims!`,
@@ -85,7 +98,7 @@ end
 # `PermutedDimsArray`).
 # TODO: Handle slicing better in `map!` so that this can be removed.
 function Base.permutedims(a::AnyAbstractBlockSparseArray, perm)
-    return @interface interface(a) permutedims(a, perm)
+    return style(a)(permutedims)(a, perm)
 end
 
 # The `::AbstractBlockSparseArrayInterface` version
@@ -96,19 +109,19 @@ end
 # ```
 # TODO: Handle slicing better in `map!` so that this can be removed.
 function Base.permutedims!(a_dest, a_src::AnyAbstractBlockSparseArray, perm)
-    return @interface interface(a_src) permutedims!(a_dest, a_src, perm)
+    return style(a_src)(permutedims!)(a_dest, a_src, perm)
 end
 
 function Base.mapreduce(f, op, as::AnyAbstractBlockSparseArray...; kwargs...)
-    return @interface interface(as...) mapreduce(f, op, as...; kwargs...)
+    return style(as...)(mapreduce)(f, op, as...; kwargs...)
 end
 
 function Base.iszero(a::AnyAbstractBlockSparseArray)
-    return @interface interface(a) iszero(a)
+    return style(a)(iszero)(a)
 end
 
 function Base.isreal(a::AnyAbstractBlockSparseArray)
-    return @interface interface(a) isreal(a)
+    return style(a)(isreal)(a)
 end
 
 # Helps with specialization of block operations by avoiding

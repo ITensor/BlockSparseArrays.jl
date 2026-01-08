@@ -1,6 +1,7 @@
 using LinearAlgebra: LinearAlgebra, mul!
 
-@interface ::AbstractBlockSparseArrayInterface function LinearAlgebra.mul!(
+const mul!_blocksparse = blocksparse_style(mul!)
+function mul!_blocksparse(
         a_dest::AbstractMatrix,
         a1::AbstractMatrix,
         a2::AbstractMatrix,

@@ -21,8 +21,8 @@ end
     @test contract((-1, -2, -3, -4), a, (1, -1, 2, -2), a, (2, -3, 1, -4)) isa BlockArray
 end
 
-const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
-@testset "`contract` `BlockSparseArray` (eltype=$elt)" for elt in elts
+@testset "`contract` `BlockSparseArray` (eltype=$elt)" for elt in
+    (Float32, Float64, Complex{Float32}, Complex{Float64})
     @testset "BlockedOneTo" begin
         d = blockedrange([2, 3])
         a1 = randn_blockdiagonal(elt, (d, d, d, d))

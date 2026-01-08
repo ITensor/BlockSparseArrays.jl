@@ -6,7 +6,6 @@ using BlockArrays:
     blockedrange,
     blocklength,
     undef_blocks
-using DerivableInterfaces: @interface
 using Dictionaries: Dictionary
 using SparseArraysBase: SparseArrayDOK, Unstored
 using TypeParameterAccessors: similartype
@@ -280,8 +279,9 @@ Base.axes(a::BlockSparseArray) = a.axes
 
 # BlockArrays `AbstractBlockArray` interface.
 # This is used by `blocks(::AnyAbstractBlockSparseArray)`.
-@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::BlockSparseArray) =
-    a.blocks
+using BlockArrays: blocks
+const blocks_blocksparse = blocksparse_style(blocks)
+blocks_blocksparse(a::BlockSparseArray) = a.blocks
 
 function blocktype(
         arraytype::Type{<:BlockSparseArray{T, N, A}}

@@ -1,12 +1,12 @@
 using BlockArrays: AbstractBlockedUnitRange, BlockSlice
-using Base.Broadcast: Broadcast, BroadcastStyle
+using Base.Broadcast: BroadcastStyle
 
-function Broadcast.BroadcastStyle(arraytype::Type{<:AnyAbstractBlockSparseArray})
-    return BlockSparseArrayStyle(BroadcastStyle(blocktype(arraytype)))
+function Base.Broadcast.BroadcastStyle(arraytype::Type{<:AnyAbstractBlockSparseArray})
+    return Broadcast.BlockSparseArrayStyle(BroadcastStyle(blocktype(arraytype)))
 end
 
 # Fix ambiguity error with `BlockArrays`.
-function Broadcast.BroadcastStyle(
+function Base.Broadcast.BroadcastStyle(
         arraytype::Type{
             <:SubArray{
                 <:Any,
@@ -16,9 +16,9 @@ function Broadcast.BroadcastStyle(
             },
         },
     )
-    return BlockSparseArrayStyle{ndims(arraytype)}()
+    return Broadcast.BlockSparseArrayStyle{ndims(arraytype)}()
 end
-function Broadcast.BroadcastStyle(
+function Base.Broadcast.BroadcastStyle(
         arraytype::Type{
             <:SubArray{
                 <:Any,
@@ -32,9 +32,9 @@ function Broadcast.BroadcastStyle(
             },
         },
     )
-    return BlockSparseArrayStyle{ndims(arraytype)}()
+    return Broadcast.BlockSparseArrayStyle{ndims(arraytype)}()
 end
-function Broadcast.BroadcastStyle(
+function Base.Broadcast.BroadcastStyle(
         arraytype::Type{
             <:SubArray{
                 <:Any,
@@ -44,25 +44,22 @@ function Broadcast.BroadcastStyle(
             },
         },
     )
-    return BlockSparseArrayStyle{ndims(arraytype)}()
+    return Broadcast.BlockSparseArrayStyle{ndims(arraytype)}()
 end
 
 # These catch cases that aren't caught by the standard
 # `BlockSparseArrayStyle` definition, and also fix
 # ambiguity issues.
 function Base.copyto!(dest::AnyAbstractBlockSparseArray, bc::Broadcasted)
-    copyto_blocksparse!(dest, bc)
-    return dest
+    return copyto!_blocksparse(dest, bc)
 end
 function Base.copyto!(
         dest::AnyAbstractBlockSparseArray, bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}}
     )
-    copyto_blocksparse!(dest, bc)
-    return dest
+    return copyto!_blocksparse(dest, bc)
 end
 function Base.copyto!(
-        dest::AnyAbstractBlockSparseArray{<:Any, N}, bc::Broadcasted{BlockSparseArrayStyle{N}}
+        dest::AnyAbstractBlockSparseArray{<:Any, N}, bc::Broadcasted{<:Broadcast.BlockSparseArrayStyle{N}}
     ) where {N}
-    copyto_blocksparse!(dest, bc)
-    return dest
+    return copyto!_blocksparse(dest, bc)
 end

@@ -16,17 +16,10 @@ using BlockArrays:
     blocklength,
     blocks,
     findblockindex
-using DerivableInterfaces:
-    DerivableInterfaces,
-    @interface,
-    AbstractArrayInterface,
-    DefaultArrayInterface,
-    interface,
-    permuteddims,
-    zero!
+using FunctionImplementations: FunctionImplementations, permuteddims, zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
-    AbstractSparseArrayInterface,
+    AbstractSparseArrayStyle,
     getstoredindex,
     getunstoredindex,
     eachstoredindex,
@@ -116,59 +109,35 @@ blockstype(a::BlockArray) = blockstype(typeof(a))
 blocktype(arraytype::Type{<:BlockArray}) = eltype(blockstype(arraytype))
 blocktype(a::BlockArray) = eltype(blocks(a))
 
-abstract type AbstractBlockSparseArrayInterface{N, B <: AbstractArrayInterface{N}} <:
-AbstractSparseArrayInterface{N} end
+abstract type AbstractBlockSparseArrayStyle <: AbstractSparseArrayStyle end
 
-function blockinterface(interface::AbstractBlockSparseArrayInterface{<:Any, B}) where {B}
-    return B()
-end
+struct BlockSparseArrayStyle <: AbstractBlockSparseArrayStyle end
+const blocksparse_style = BlockSparseArrayStyle()
 
-# TODO: Also support specifying the `blocktype` along with the `eltype`.
-function Base.similar(interface::AbstractBlockSparseArrayInterface, T::Type, ax::Tuple)
-    # TODO: Generalize by storing the block interface in the block sparse array interface.
-    N = length(ax)
-    B = similartype(typeof(blockinterface(interface)), Type{T}, Tuple{blockaxistype.(ax)...})
-    return similar(BlockSparseArray{T, N, B}, ax)
-end
-
-struct BlockSparseArrayInterface{N, B <: AbstractArrayInterface{N}} <:
-    AbstractBlockSparseArrayInterface{N, B}
-    blockinterface::B
-end
-function BlockSparseArrayInterface{N}(blockinterface::AbstractArrayInterface{N}) where {N}
-    return BlockSparseArrayInterface{N, typeof(blockinterface)}(blockinterface)
-end
-function BlockSparseArrayInterface{M, B}(::Val{N}) where {M, B <: AbstractArrayInterface{M}, N}
-    B′ = B(Val(N))
-    return BlockSparseArrayInterface(B′)
-end
-function BlockSparseArrayInterface{N}() where {N}
-    return BlockSparseArrayInterface{N}(DefaultArrayInterface{N}())
-end
-BlockSparseArrayInterface(::Val{N}) where {N} = BlockSparseArrayInterface{N}()
-BlockSparseArrayInterface{M}(::Val{N}) where {M, N} = BlockSparseArrayInterface{N}()
-BlockSparseArrayInterface() = BlockSparseArrayInterface{Any}()
-
-function DerivableInterfaces.combine_interface_rule(
-        interface1::AbstractBlockSparseArrayInterface,
-        interface2::AbstractBlockSparseArrayInterface,
+function FunctionImplementations.Style(
+        style1::AbstractBlockSparseArrayStyle,
+        style2::AbstractBlockSparseArrayStyle,
     )
-    B = interface(blockinterface(interface1), blockinterface(interface2))
-    return BlockSparseArrayInterface(B)
+    return BlockSparseArrayStyle()
 end
 
-@interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(a::AbstractArray)
+const blocks_blocksparse = blocksparse_style(blocks)
+function blocks_blocksparse(a::AbstractArray)
     return error("Not implemented")
 end
 
-@interface ::AbstractBlockSparseArrayInterface function SparseArraysBase.isstored(
-        a::AbstractArray{<:Any, N}, I::Vararg{Int, N}
-    ) where {N}
+const isstored_blocksparse = blocksparse_style(isstored)
+function isstored_blocksparse(a::AbstractArray{<:Any, N}, I::Vararg{Int, N}) where {N}
     bI = BlockIndex(findblockindex.(axes(a), I))
     return isstored(blocks(a), bI.I...) && isstored(blocks(a)[bI.I...], bI.α...)
 end
+function isstored_blocksparse(a::AbstractArray, I::Int...)
+    # Handle cases like linear indexing and trailing 1 indices.
+    return isstored_blocksparse(a, Tuple(CartesianIndices(a)[I...])...)
+end
 
-@interface ::AbstractBlockSparseArrayInterface function Base.getindex(
+const getindex_blocksparse = blocksparse_style(getindex)
+function getindex_blocksparse(
         a::AbstractArray{<:Any, N}, I::Vararg{Int, N}
     ) where {N}
     @boundscheck checkbounds(a, I...)
@@ -176,7 +145,7 @@ end
 end
 
 # Fix ambiguity error.
-@interface ::AbstractBlockSparseArrayInterface function Base.getindex(
+function getindex_blocksparse(
         a::AbstractArray{<:Any, 0}
     )
     return a[Block()[]]
@@ -188,7 +157,8 @@ end
 # and make that explicit with `@blocked a[1:2, 1:2]`. See the discussion in
 # https://github.com/JuliaArrays/BlockArrays.jl/issues/347 and also
 # https://github.com/ITensor/ITensors.jl/issues/1336.
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+const to_indices_blocksparse = blocksparse_style(to_indices)
+function to_indices_blocksparse(
         a, inds, I::Tuple{UnitRange{<:Integer}, Vararg{Any}}
     )
     bs1 = to_blockindices(inds[1], I[1])
@@ -196,7 +166,7 @@ end
     return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+function to_indices_blocksparse(
         a, inds, I::Tuple{AbstractArray{Bool}, Vararg{Any}}
     )
     bs1 = to_blockindices(inds[1], I[1])
@@ -205,7 +175,7 @@ end
 end
 
 # Special case when there is no blocking.
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+function to_indices_blocksparse(
         a,
         inds::Tuple{Base.OneTo{<:Integer}, Vararg{Any}},
         I::Tuple{UnitRange{<:Integer}, Vararg{Any}},
@@ -214,7 +184,7 @@ end
 end
 
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+function to_indices_blocksparse(
         a, inds, I::Tuple{Vector{<:Block{1}}, Vararg{Any}}
     )
     I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
@@ -223,7 +193,7 @@ end
 
 # a[mortar([Block(1)[1:2], Block(2)[1:3]]), mortar([Block(1)[1:2], Block(2)[1:3]])]
 # a[[Block(1)[1:2], Block(2)[1:3]], [Block(1)[1:2], Block(2)[1:3]]]
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+function to_indices_blocksparse(
         a,
         inds,
         I::Tuple{
@@ -244,7 +214,7 @@ end
     I1 = BlockIndices(bs, blockedunitrange_getindices(inds[1], I[1]))
     return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+function to_indices_blocksparse(
         a,
         inds,
         I::Tuple{BlockVector{<:GenericBlockIndex{1}, <:Vector{<:BlockIndexVector{1}}}, Vararg{Any}},
@@ -256,7 +226,7 @@ end
 # a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
 # Permute and merge blocks.
 # TODO: This isn't merging blocks yet, that needs to be implemented that.
-@interface ::AbstractBlockSparseArrayInterface function Base.to_indices(
+function to_indices_blocksparse(
         a, inds, I::Tuple{AbstractBlockVector{<:Block{1}}, Vararg{Any}}
     )
     I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
@@ -266,7 +236,8 @@ end
 # TODO: Need to implement this!
 function block_merge end
 
-@interface ::AbstractBlockSparseArrayInterface function Base.setindex!(
+const setindex!_blocksparse = blocksparse_style(setindex!)
+function setindex!_blocksparse(
         a::AbstractArray{<:Any, N}, value, I::Vararg{Int, N}
     ) where {N}
     @boundscheck checkbounds(a, I...)
@@ -275,7 +246,7 @@ function block_merge end
 end
 
 # Fix ambiguity error.
-@interface ::AbstractBlockSparseArrayInterface function Base.setindex!(
+function setindex!_blocksparse(
         a::AbstractArray{<:Any, 0}, value
     )
     # TODO: Use `Block()[]` once https://github.com/JuliaArrays/BlockArrays.jl/issues/430
@@ -284,7 +255,7 @@ end
     return a
 end
 
-@interface ::AbstractBlockSparseArrayInterface function Base.setindex!(
+function setindex!_blocksparse(
         a::AbstractArray{<:Any, N}, value, I::BlockIndex{N}
     ) where {N}
     i = Int.(Tuple(block(I)))
@@ -296,7 +267,7 @@ end
 end
 
 # Fix ambiguity error.
-@interface ::AbstractBlockSparseArrayInterface function Base.setindex!(
+function setindex!_blocksparse(
         a::AbstractArray{<:Any, 0}, value, I::BlockIndex{0}
     )
     a_b = blocks(a)[]
@@ -320,11 +291,12 @@ end
 # We overload `permutedims` here so that we can assume the destination and source
 # have the same blocking and avoid non-GPU friendly slicing operations in block sparse `map!`.
 # TODO: Delete this and handle this logic in block sparse `map!`.
-@interface ::AbstractBlockSparseArrayInterface function Base.permutedims(
+const permutedims_blocksparse = blocksparse_style(permutedims)
+function permutedims_blocksparse(
         a::AbstractArray, perm
     )
     a_dest = similar(permuteddims(a, perm))
-    # TODO: Maybe define this as `@interface BlockIsEqualInterface() permutedims!(...)`.
+    # TODO: Rename `permutedims!_blockisequal`.
     blockisequal_permutedims!(a_dest, a, perm)
     return a_dest
 end
@@ -332,19 +304,22 @@ end
 # We overload `permutedims!` here so that we can special case when the destination and source
 # have the same blocking and avoid non-GPU friendly slicing operations in block sparse `map!`.
 # TODO: Delete this and handle this logic in block sparse `map!`.
-@interface ::AbstractBlockSparseArrayInterface function Base.permutedims!(
+const permutedims!_blocksparse = blocksparse_style(permutedims!)
+function permutedims!_blocksparse(
         a_dest::AbstractArray, a_src::AbstractArray, perm
     )
     if all(blockisequal.(axes(a_dest), axes(permuteddims(a_src, perm))))
-        # TODO: Maybe define this as `@interface BlockIsEqualInterface() permutedims!(...)`.
+        # TODO: Rename `permutedims!_blockisequal`.
         blockisequal_permutedims!(a_dest, a_src, perm)
         return a_dest
     end
-    @interface DefaultArrayInterface() permutedims!(a_dest, a_src, perm)
+    # TODO: Is this defined?
+    DefaultArrayInterface()(permutedims!)(a_dest, a_src, perm)
     return a_dest
 end
 
-@interface ::AbstractBlockSparseArrayInterface function Base.fill!(a::AbstractArray, value)
+const fill!_blocksparse = blocksparse_style(fill!)
+function fill!_blocksparse(a::AbstractArray, value)
     # TODO: Only do this check if `value isa Number`?
     if iszero(value)
         zero!(a)
@@ -358,9 +333,9 @@ end
     return a
 end
 
-@interface ::AbstractBlockSparseArrayInterface function DerivableInterfaces.zero!(
-        a::AbstractArray
-    )
+using FunctionImplementations: zero!
+const zero!_blocksparse = blocksparse_style(zero!)
+function zero!_blocksparse(a::AbstractArray)
     # This will try to empty the storage if possible.
     zero!(blocks(a))
     return a
@@ -388,9 +363,7 @@ struct SparsePermutedDimsArrayBlocks{
     } <: AbstractSparseArray{BlockType, N}
     array::Array
 end
-@interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(
-        a::PermutedDimsArray
-    )
+function blocks_blocksparse(a::PermutedDimsArray)
     return SparsePermutedDimsArrayBlocks{eltype(a), ndims(a), blocktype(parent(a)), typeof(a)}(a)
 end
 function Base.size(a::SparsePermutedDimsArrayBlocks)
@@ -430,12 +403,8 @@ end
 reverse_index(index) = reverse(index)
 reverse_index(index::CartesianIndex) = CartesianIndex(reverse(Tuple(index)))
 
-@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::Transpose) = transpose(
-    blocks(parent(a))
-)
-@interface ::AbstractBlockSparseArrayInterface BlockArrays.blocks(a::Adjoint) = adjoint(
-    blocks(parent(a))
-)
+blocks_blocksparse(a::Transpose) = transpose(blocks(parent(a)))
+blocks_blocksparse(a::Adjoint) = adjoint(blocks(parent(a)))
 
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
@@ -443,7 +412,7 @@ struct SparseSubArrayBlocks{T, N, BlockType <: AbstractArray{T, N}, Array <: Sub
     AbstractSparseArray{BlockType, N}
     array::Array
 end
-@interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(a::SubArray)
+function blocks_blocksparse(a::SubArray)
     return SparseSubArrayBlocks{eltype(a), ndims(a), blocktype(parent(a)), typeof(a)}(a)
 end
 # TODO: Define this as `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
@@ -546,7 +515,7 @@ to_blocks_indices(I::BlockSlice{<:Block{1}}) = Int(I.block):Int(I.block)
 to_blocks_indices(I::BlockIndices{<:Vector{<:Block{1}}}) = Int.(I.blocks)
 to_blocks_indices(I::Base.Slice) = Base.OneTo(blocklength(I.indices))
 
-@interface ::AbstractBlockSparseArrayInterface function BlockArrays.blocks(
+function blocks_blocksparse(
         a::SubArray{<:Any, <:Any, <:Any, <:Tuple{Vararg{BlockSliceCollection}}}
     )
     return @view blocks(parent(a))[map(to_blocks_indices, parentindices(a))...]

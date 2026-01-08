@@ -1,8 +1,8 @@
 using BlockArrays: blocks
-using DerivableInterfaces.Concatenate: Concatenated, cat!
+using FunctionImplementations.Concatenate: Concatenated, cat!
 
 function Base.copyto!(
-        dest::AbstractArray, concat::Concatenated{<:BlockSparseArrayInterface}
+        dest::AbstractArray, concat::Concatenated{<:Broadcast.BlockSparseArrayStyle}
     )
     # TODO: This assumes the destination blocking is commensurate with
     # the blocking of the sources, for example because it was constructed

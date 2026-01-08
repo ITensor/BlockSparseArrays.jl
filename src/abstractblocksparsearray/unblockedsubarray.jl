@@ -1,5 +1,5 @@
 using ArrayLayouts: ArrayLayouts, MemoryLayout
-using Base.Broadcast: Broadcast, BroadcastStyle
+using Base.Broadcast: BroadcastStyle
 using BlockArrays: BlockArrays, Block, BlockIndexRange, BlockSlice
 using TypeParameterAccessors: TypeParameterAccessors, parenttype, similartype
 
@@ -18,18 +18,25 @@ function BlockArrays.blocks(a::UnblockedSubArray)
     return SingleBlockView(a)
 end
 
-function DerivableInterfaces.interface(arraytype::Type{<:UnblockedSubArray})
-    return interface(blocktype(parenttype(arraytype)))
+using FunctionImplementations: FunctionImplementations, Style
+function FunctionImplementations.Style(arraytype::Type{<:UnblockedSubArray})
+    return Style(blocktype(parenttype(arraytype)))
 end
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:UnblockedSubArray})
     return MemoryLayout(blocktype(parenttype(arraytype)))
 end
 
-function Broadcast.BroadcastStyle(arraytype::Type{<:UnblockedSubArray})
+function Base.Broadcast.BroadcastStyle(arraytype::Type{<:UnblockedSubArray})
     return BroadcastStyle(blocktype(parenttype(arraytype)))
 end
 
+function Base.similar(a::UnblockedSubArray)
+    return similar(a, eltype(a))
+end
+function Base.similar(a::UnblockedSubArray, elt::Type)
+    return similar(a, elt, axes(a))
+end
 function Base.similar(
         a::UnblockedSubArray, elt::Type, axes::Tuple{Base.OneTo, Vararg{Base.OneTo}}
     )
@@ -37,6 +44,10 @@ function Base.similar(
 end
 function Base.similar(a::UnblockedSubArray, elt::Type, size::Tuple{Int, Vararg{Int}})
     return similar(a, elt, Base.OneTo.(size))
+end
+
+function Base.copyto!(dst::AbstractArray, src::UnblockedSubArray)
+    return @invoke copyto!(dst::AbstractArray, src::AbstractArray)
 end
 
 function ArrayLayouts.sub_materialize(a::UnblockedSubArray)

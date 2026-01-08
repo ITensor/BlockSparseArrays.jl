@@ -8,7 +8,7 @@ const BlockDiagonal{T, A, Axes, V <: AbstractVector{A}} = BlockSparseMatrix{
 }
 const BlockSparseDiagonal{T, A <: AbstractBlockSparseVector{T}} = Diagonal{T, A}
 
-@interface interface::BlockSparseArrayInterface function blocks(a::BlockSparseDiagonal)
+function blocks_blocksparse(a::BlockSparseDiagonal)
     return Diagonal(Diagonal.(blocks(a.diag)))
 end
 
