@@ -31,6 +31,12 @@ function Base.Broadcast.BroadcastStyle(arraytype::Type{<:UnblockedSubArray})
     return BroadcastStyle(blocktype(parenttype(arraytype)))
 end
 
+function Base.similar(a::UnblockedSubArray)
+    return similar(a, eltype(a))
+end
+function Base.similar(a::UnblockedSubArray, elt::Type)
+    return similar(a, elt, axes(a))
+end
 function Base.similar(
         a::UnblockedSubArray, elt::Type, axes::Tuple{Base.OneTo, Vararg{Base.OneTo}}
     )
@@ -38,6 +44,10 @@ function Base.similar(
 end
 function Base.similar(a::UnblockedSubArray, elt::Type, size::Tuple{Int, Vararg{Int}})
     return similar(a, elt, Base.OneTo.(size))
+end
+
+function Base.copyto!(dst::AbstractArray, src::UnblockedSubArray)
+    return @invoke copyto!(dst::AbstractArray, src::AbstractArray)
 end
 
 function ArrayLayouts.sub_materialize(a::UnblockedSubArray)
