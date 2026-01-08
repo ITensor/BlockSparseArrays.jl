@@ -111,18 +111,6 @@ blocktype(a::BlockArray) = eltype(blocks(a))
 
 abstract type AbstractBlockSparseArrayStyle <: AbstractSparseArrayStyle end
 
-## function blockinterface(interface::AbstractBlockSparseArrayInterface{<:Any, B}) where {B}
-##     return B()
-## end
-
-## # TODO: Also support specifying the `blocktype` along with the `eltype`.
-## function Base.similar(interface::AbstractBlockSparseArrayInterface, T::Type, ax::Tuple)
-##     # TODO: Generalize by storing the block interface in the block sparse array interface.
-##     N = length(ax)
-##     B = similartype(typeof(blockinterface(interface)), Type{T}, Tuple{blockaxistype.(ax)...})
-##     return similar(BlockSparseArray{T, N, B}, ax)
-## end
-
 struct BlockSparseArrayStyle <: AbstractBlockSparseArrayStyle end
 const blocksparse_style = BlockSparseArrayStyle()
 
