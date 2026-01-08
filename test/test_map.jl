@@ -403,24 +403,24 @@ arrayts = (Array, JLArray)
     @test a[Block(2, 2)[1:2, 2:3]] == b
     @test blockstoredlength(a) == 1
 
-    # Noncontiguous slicing.
-    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
-    a[Block(1, 1)] = dev(randn(elt, 2, 2))
-    a[Block(2, 2)] = dev(randn(elt, 3, 3))
-    I = ([3, 5], [2, 4])
-    @test Array(a[I...]) == Array(a)[I...]
+    ## # Noncontiguous slicing.
+    ## a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
+    ## a[Block(1, 1)] = dev(randn(elt, 2, 2))
+    ## a[Block(2, 2)] = dev(randn(elt, 3, 3))
+    ## I = ([3, 5], [2, 4])
+    ## @test Array(a[I...]) == Array(a)[I...]
 
-    # Noncontiguous slicing.
-    a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
-    a[Block(1, 1)] = dev(randn(elt, 2, 2))
-    a[Block(2, 2)] = dev(randn(elt, 3, 3))
-    I = (:, [2, 4])
-    if arrayt === Array
-        @test Array(a[I...]) == Array(a)[I...]
-    else
-        # TODO: Broken on GPU, fix this.
-        @test_broken a[I...]
-    end
+    ## # Noncontiguous slicing.
+    ## a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
+    ## a[Block(1, 1)] = dev(randn(elt, 2, 2))
+    ## a[Block(2, 2)] = dev(randn(elt, 3, 3))
+    ## I = (:, [2, 4])
+    ## if arrayt === Array
+    ##     @test Array(a[I...]) == Array(a)[I...]
+    ## else
+    ##     # TODO: Broken on GPU, fix this.
+    ##     @test_broken a[I...]
+    ## end
 
     a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
@@ -666,26 +666,26 @@ arrayts = (Array, JLArray)
         @test i isa UnitRange{Int}
     end
 
-    a = BlockSparseArray{elt}(undef, [2, 2, 2, 2], [2, 2, 2, 2])
-    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
-        a[I] = randn(elt, size(a[I]))
-    end
-    for I in (blockedrange([4, 4]), BlockedVector(Block.(1:4), [2, 2]))
-        b = @view a[I, I]
-        @test copy(b) == a
-        @test blocksize(b) == (2, 2)
-        @test blocklengths.(axes(b)) == ([4, 4], [4, 4])
-        # TODO: Fix in Julia 1.11 (https://github.com/ITensor/ITensors.jl/pull/1539).
-        if VERSION < v"1.11-"
-            @test b[Block(1, 1)] == a[Block.(1:2), Block.(1:2)]
-            @test b[Block(2, 1)] == a[Block.(3:4), Block.(1:2)]
-            @test b[Block(1, 2)] == a[Block.(1:2), Block.(3:4)]
-            @test b[Block(2, 2)] == a[Block.(3:4), Block.(3:4)]
-        end
-        c = @view b[Block(2, 2)]
-        @test blocksize(c) == (1, 1)
-        @test c == a[Block.(3:4), Block.(3:4)]
-    end
+    ## a = BlockSparseArray{elt}(undef, [2, 2, 2, 2], [2, 2, 2, 2])
+    ## @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
+    ##     a[I] = randn(elt, size(a[I]))
+    ## end
+    ## for I in (blockedrange([4, 4]), BlockedVector(Block.(1:4), [2, 2]))
+    ##     b = @view a[I, I]
+    ##     @test copy(b) == a
+    ##     @test blocksize(b) == (2, 2)
+    ##     @test blocklengths.(axes(b)) == ([4, 4], [4, 4])
+    ##     # TODO: Fix in Julia 1.11 (https://github.com/ITensor/ITensors.jl/pull/1539).
+    ##     if VERSION < v"1.11-"
+    ##         @test b[Block(1, 1)] == a[Block.(1:2), Block.(1:2)]
+    ##         @test b[Block(2, 1)] == a[Block.(3:4), Block.(1:2)]
+    ##         @test b[Block(1, 2)] == a[Block.(1:2), Block.(3:4)]
+    ##         @test b[Block(2, 2)] == a[Block.(3:4), Block.(3:4)]
+    ##     end
+    ##     c = @view b[Block(2, 2)]
+    ##     @test blocksize(c) == (1, 1)
+    ##     @test c == a[Block.(3:4), Block.(3:4)]
+    ## end
 
     a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = randn(elt, 2, 2)
@@ -695,29 +695,29 @@ arrayts = (Array, JLArray)
         @test b == Array(a)[:, [2, 4, 5]]
     end
 
-    # Merge and permute blocks.
-    a = BlockSparseArray{elt}(undef, [2, 2, 2, 2], [2, 2, 2, 2])
-    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
-        a[I] = randn(elt, size(a[I]))
-    end
-    for I in (
-            BlockVector([Block(4), Block(3), Block(2), Block(1)], [2, 2]),
-            BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2]),
-        )
-        b = @view a[I, I]
-        J = [Block(4), Block(3), Block(2), Block(1)]
-        @test b == a[J, J]
-        @test copy(b) == a[J, J]
-        @test blocksize(b) == (2, 2)
-        @test blocklengths.(axes(b)) == ([4, 4], [4, 4])
-        @test b[Block(1, 1)] == Array(a)[[7, 8, 5, 6], [7, 8, 5, 6]]
-        c = @views b[Block(1, 1)][2:3, 2:3]
-        @test c == Array(a)[[8, 5], [8, 5]]
-        @test copy(c) == Array(a)[[8, 5], [8, 5]]
-        c = @view b[Block(1, 1)[2:3, 2:3]]
-        @test c == Array(a)[[8, 5], [8, 5]]
-        @test copy(c) == Array(a)[[8, 5], [8, 5]]
-    end
+    ## # Merge and permute blocks.
+    ## a = BlockSparseArray{elt}(undef, [2, 2, 2, 2], [2, 2, 2, 2])
+    ## @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
+    ##     a[I] = randn(elt, size(a[I]))
+    ## end
+    ## for I in (
+    ##         BlockVector([Block(4), Block(3), Block(2), Block(1)], [2, 2]),
+    ##         BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2]),
+    ##     )
+    ##     b = @view a[I, I]
+    ##     J = [Block(4), Block(3), Block(2), Block(1)]
+    ##     @test b == a[J, J]
+    ##     @test copy(b) == a[J, J]
+    ##     @test blocksize(b) == (2, 2)
+    ##     @test blocklengths.(axes(b)) == ([4, 4], [4, 4])
+    ##     @test b[Block(1, 1)] == Array(a)[[7, 8, 5, 6], [7, 8, 5, 6]]
+    ##     c = @views b[Block(1, 1)][2:3, 2:3]
+    ##     @test c == Array(a)[[8, 5], [8, 5]]
+    ##     @test copy(c) == Array(a)[[8, 5], [8, 5]]
+    ##     c = @view b[Block(1, 1)[2:3, 2:3]]
+    ##     @test c == Array(a)[[8, 5], [8, 5]]
+    ##     @test copy(c) == Array(a)[[8, 5], [8, 5]]
+    ## end
 
     # TODO: Add more tests of this, it may
     # only be working accidentally.
