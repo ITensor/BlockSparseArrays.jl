@@ -473,7 +473,7 @@ arrayts = (Array, JLArray)
         @test blockstoredlength(b) == 1
         @test storedlength(b) == 1
     end
-    false && @testset "show" begin
+    @testset "show" begin
         vectort_elt = arrayt{elt, 1}
         matrixt_elt = arrayt{elt, 2}
         arrayt_elt = arrayt{elt, 3}
