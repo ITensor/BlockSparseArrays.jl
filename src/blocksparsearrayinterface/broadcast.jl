@@ -53,9 +53,11 @@ function Base.Broadcast.BroadcastStyle(
 end
 
 function Base.similar(bc::Broadcasted{<:Broadcast.BlockSparseArrayStyle}, elt::Type, ax)
+    # Find the first array in the broadcast expression.
     # TODO: Make this more generic, base it off sure this handles GPU arrays properly.
-    m = Mapped(bc)
-    return similar(first(m.args), elt, ax)
+    bc′ = Base.Broadcast.flatten(bc)
+    arg = bc′.args[findfirst(arg -> arg isa AbstractArray, bc′.args)]
+    return similar(arg, elt, ax)
 end
 
 # Catches cases like `dest .= value` or `dest .= value1 .+ value2`.

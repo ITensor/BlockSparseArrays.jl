@@ -426,7 +426,7 @@ arrayts = (Array, JLArray)
         @test a1' * a2 ≈ Array(a1)' * Array(a2)
         @test dot(a1, a2) ≈ a1' * a2
     end
-    false && @testset "cat" begin
+    @testset "cat" begin
         a1 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
         a1[Block(2, 1)] = dev(randn(elt, size(@view(a1[Block(2, 1)]))))
         a2 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
