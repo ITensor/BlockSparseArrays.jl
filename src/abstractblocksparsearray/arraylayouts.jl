@@ -1,4 +1,4 @@
-using ArrayLayouts: ArrayLayouts, DualLayout, MemoryLayout, MulAdd
+using ArrayLayouts: ArrayLayouts, DenseColumnMajor, DualLayout, MemoryLayout, MulAdd
 using BlockArrays: BlockLayout
 using SparseArraysBase: SparseLayout
 using TypeParameterAccessors: parenttype, similartype
@@ -54,6 +54,20 @@ function Base.similar(
     output_blocktype′ =
         !isconcretetype(output_blocktype) ? AbstractMatrix{elt} : output_blocktype
     return similar(BlockSparseArray{elt, length(axes), output_blocktype′}, axes)
+end
+
+# BlockSparseMatrix * dense Vector → dense Vector
+# Returns a plain Vector instead of a BlockedVector
+function Base.similar(
+        mul::MulAdd{
+            <:BlockLayout{<:SparseLayout},
+            <:DenseColumnMajor,
+            <:Any,
+        },
+        elt::Type,
+        axes::Tuple{<:AbstractUnitRange},
+    )
+    return Vector{elt}(undef, length(only(axes)))
 end
 
 # Materialize a SubArray view.

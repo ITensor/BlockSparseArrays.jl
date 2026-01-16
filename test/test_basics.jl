@@ -432,16 +432,15 @@ arrayts = (Array, JLArray)
         a[Block(2, 1)] = dev(randn(elt, size(@view(a[Block(2, 1)]))))
         v = dev(randn(elt, 5))  # Dense vector matching column dimension
 
-        # Matrix-vector multiplication uses scalar indexing for block iteration
-        c = @allowscalar a * v
-        @allowscalar @test Array(c) ≈ Array(a) * Array(v)
-        @test eltype(c) == elt
+        c = a * v
+        @test Array(c) ≈ Array(a) * Array(v)
+        @test c isa Vector{elt}  # Result should be a plain Vector
         @test length(c) == size(a, 1)
 
         # Test with adjoint/transpose
         v2 = dev(randn(elt, 5))  # Vector matching row dimension for transposed multiplication
-        @allowscalar @test Array(a' * v2) ≈ Array(a)' * Array(v2)
-        @allowscalar @test Array(transpose(a) * v2) ≈ transpose(Array(a)) * Array(v2)
+        @test Array(a' * v2) ≈ Array(a)' * Array(v2)
+        @test Array(transpose(a) * v2) ≈ transpose(Array(a)) * Array(v2)
     end
     @testset "cat" begin
         a1 = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
