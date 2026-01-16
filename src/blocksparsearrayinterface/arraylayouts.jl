@@ -1,13 +1,22 @@
-using ArrayLayouts: ArrayLayouts, Dot, MatMulMatAdd, MatMulVecAdd, MulAdd
+using ArrayLayouts: ArrayLayouts, DenseColumnMajor, Dot, MatMulMatAdd, MatMulVecAdd, MulAdd
 using BlockArrays: BlockArrays, BlockLayout, muladd!
 using SparseArraysBase: SparseLayout
 using LinearAlgebra: LinearAlgebra, dot, mul!
 
 const muladd!_blocksparse = blocksparse_style(muladd!)
+# Matrix-matrix case
 function muladd!_blocksparse(
-        α::Number, a1::AbstractArray, a2::AbstractArray, β::Number, a_dest::AbstractArray
+        α::Number, a1::AbstractMatrix, a2::AbstractMatrix, β::Number, a_dest::AbstractMatrix
     )
     mul!(blocks(a_dest), blocks(a1), blocks(a2), α, β)
+    return a_dest
+end
+
+# Matrix-vector case: BlockSparseMatrix * dense Vector
+function muladd!_blocksparse(
+        α::Number, a1::AbstractMatrix, a2::AbstractVector, β::Number, a_dest::AbstractVector
+    )
+    mul!_blocksparse(a_dest, a1, a2, α, β)
     return a_dest
 end
 
@@ -21,6 +30,20 @@ function ArrayLayouts.materialize!(
     muladd!_blocksparse(m.α, m.A, m.B, m.β, m.C)
     return m.C
 end
+
+# BlockSparseMatrix * dense Vector → dense Vector
+function ArrayLayouts.materialize!(
+        m::MatMulVecAdd{
+            <:BlockLayout{<:SparseLayout},
+            <:DenseColumnMajor,
+            <:DenseColumnMajor,
+        },
+    )
+    muladd!_blocksparse(m.α, m.A, m.B, m.β, m.C)
+    return m.C
+end
+
+# BlockSparseMatrix * BlockSparseVector (not yet implemented)
 function ArrayLayouts.materialize!(
         m::MatMulVecAdd{
             <:BlockLayout{<:SparseLayout},
@@ -28,8 +51,7 @@ function ArrayLayouts.materialize!(
             <:BlockLayout{<:SparseLayout},
         },
     )
-    error("Not implemented.")
-    matmul!(m)
+    error("BlockSparseMatrix * BlockSparseVector not implemented.")
     return m.C
 end
 
