@@ -434,7 +434,7 @@ arrayts = (Array, JLArray)
 
         c = a * v
         @test Array(c) ≈ Array(a) * Array(v)
-        @test c isa Vector{elt}  # Result should be a plain Vector
+        @test c isa typeof(v)  # Result should match input vector type
         @test length(c) == size(a, 1)
 
         # Test with adjoint/transpose

@@ -67,7 +67,9 @@ function Base.similar(
         elt::Type,
         axes::Tuple{<:AbstractUnitRange},
     )
-    return Vector{elt}(undef, length(only(axes)))
+    # Convert blocked axes to plain axes to avoid creating BlockedVector
+    plain_axes = map(ax -> Base.OneTo(length(ax)), axes)
+    return similar(mul.B, elt, plain_axes)
 end
 
 # Materialize a SubArray view.
