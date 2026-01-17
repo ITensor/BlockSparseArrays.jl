@@ -20,8 +20,8 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 
-[sources]
-BlockSparseArrays = {path = ".."}
+[sources.BlockSparseArrays]
+path = ".."
 
 [compat]
 Adapt = "4"
@@ -30,7 +30,7 @@ ArrayLayouts = "1"
 BlockArrays = "1.8"
 BlockSparseArrays = "0.10"
 DiagonalArrays = "0.3"
-FunctionImplementations = "0.3"
+FunctionImplementations = "0.3, 0.4"
 GPUArraysCore = "0.2"
 JLArrays = "0.2, 0.3"
 LinearAlgebra = "1"
