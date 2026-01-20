@@ -2,7 +2,7 @@ using BlockArrays: blocks
 using FunctionImplementations.Concatenate: Concatenated, cat!
 
 function Base.copyto!(
-        dest::AbstractArray, concat::Concatenated{<:Broadcast.BlockSparseArrayStyle}
+        dest::AbstractArray, concat::Concatenated{<:BlockSparseArrayStyle}
     )
     # TODO: This assumes the destination blocking is commensurate with
     # the blocking of the sources, for example because it was constructed
