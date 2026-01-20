@@ -9,7 +9,7 @@ using BlockArrays:
     blockedrange,
     mortar,
     unblock
-using FunctionImplementations: FunctionImplementations, Style, style, zero!
+using FunctionImplementations: FunctionImplementations, ImplementationStyle, style, zero!
 using GPUArraysCore: @allowscalar
 using SplitApplyCombine: groupcount
 using TypeParameterAccessors: similartype
@@ -28,8 +28,8 @@ const AnyAbstractBlockSparseVecOrMat{T, N} = Union{
     AnyAbstractBlockSparseVector{T}, AnyAbstractBlockSparseMatrix{T},
 }
 
-function FunctionImplementations.Style(arrayt::Type{<:AnyAbstractBlockSparseArray})
-    return BlockSparseArrayStyle()
+function FunctionImplementations.ImplementationStyle(arrayt::Type{<:AnyAbstractBlockSparseArray})
+    return BlockSparseArrayImplementationStyle()
 end
 
 # a[1:2, 1:2]
@@ -303,7 +303,7 @@ function Base.similar(
         elt::Type,
         axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
     )
-    return Style(arraytype)(similar)(arraytype, elt, axes)
+    return ImplementationStyle(arraytype)(similar)(arraytype, elt, axes)
 end
 
 function Base.similar(

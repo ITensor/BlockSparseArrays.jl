@@ -19,7 +19,7 @@ using BlockArrays:
 using FunctionImplementations: FunctionImplementations, permuteddims, zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase:
-    AbstractSparseArrayStyle,
+    AbstractSparseArrayImplementationStyle,
     getstoredindex,
     getunstoredindex,
     eachstoredindex,
@@ -109,16 +109,16 @@ blockstype(a::BlockArray) = blockstype(typeof(a))
 blocktype(arraytype::Type{<:BlockArray}) = eltype(blockstype(arraytype))
 blocktype(a::BlockArray) = eltype(blocks(a))
 
-abstract type AbstractBlockSparseArrayStyle <: AbstractSparseArrayStyle end
+abstract type AbstractBlockSparseArrayImplementationStyle <: AbstractSparseArrayImplementationStyle end
 
-struct BlockSparseArrayStyle <: AbstractBlockSparseArrayStyle end
-const blocksparse_style = BlockSparseArrayStyle()
+struct BlockSparseArrayImplementationStyle <: AbstractBlockSparseArrayImplementationStyle end
+const blocksparse_style = BlockSparseArrayImplementationStyle()
 
-function FunctionImplementations.Style(
-        style1::AbstractBlockSparseArrayStyle,
-        style2::AbstractBlockSparseArrayStyle,
+function FunctionImplementations.ImplementationStyle(
+        style1::AbstractBlockSparseArrayImplementationStyle,
+        style2::AbstractBlockSparseArrayImplementationStyle,
     )
-    return BlockSparseArrayStyle()
+    return BlockSparseArrayImplementationStyle()
 end
 
 const blocks_blocksparse = blocksparse_style(blocks)

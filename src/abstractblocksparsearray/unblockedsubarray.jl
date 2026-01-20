@@ -18,9 +18,9 @@ function BlockArrays.blocks(a::UnblockedSubArray)
     return SingleBlockView(a)
 end
 
-using FunctionImplementations: FunctionImplementations, Style
-function FunctionImplementations.Style(arraytype::Type{<:UnblockedSubArray})
-    return Style(blocktype(parenttype(arraytype)))
+using FunctionImplementations: FunctionImplementations, ImplementationStyle
+function FunctionImplementations.ImplementationStyle(arraytype::Type{<:UnblockedSubArray})
+    return ImplementationStyle(blocktype(parenttype(arraytype)))
 end
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:UnblockedSubArray})
