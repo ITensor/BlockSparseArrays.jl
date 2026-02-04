@@ -1,11 +1,13 @@
 module BlockSparseArraysTensorAlgebraExt
 
-using BlockArrays: Block, blocklength, blocks, eachblockaxes1
+using BlockArrays: AbstractBlockArray, Block, blocklength, blocks, eachblockaxes1
 using BlockSparseArrays: AbstractBlockSparseArray, AbstractBlockSparseMatrix,
     BlockUnitRange, blockrange, blocksparse
 using SparseArraysBase: eachstoredindex
-using TensorAlgebra: TensorAlgebra, BlockReshapeFusion, BlockedTuple, matricize,
-    matricize_axes, tensor_product_axis, unmatricize
+using TensorAlgebra: TensorAlgebra, BlockedTuple, FusionStyle, matricize, matricize_axes,
+    tensor_product_axis, unmatricize
+
+const BlockReshapeFusion = typeof(FusionStyle(AbstractBlockArray))
 
 function TensorAlgebra.tensor_product_axis(
         style::BlockReshapeFusion, side::Val{:codomain}, r1::BlockUnitRange, r2::BlockUnitRange
