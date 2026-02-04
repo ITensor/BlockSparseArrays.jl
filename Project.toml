@@ -24,7 +24,7 @@ TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 
 [extensions]
-BlockSparseArraysTensorAlgebraExt = "TensorAlgebra"
+BlockSparseArraysTensorAlgebraExt = ["TensorAlgebra", "BlockArrays", "SparseArraysBase"]
 
 [compat]
 Adapt = "4.1.1"

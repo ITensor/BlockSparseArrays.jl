@@ -4,18 +4,10 @@ using BlockArrays: AbstractBlockArray, Block, blocklength, blocks, eachblockaxes
 using BlockSparseArrays: AbstractBlockSparseArray, AbstractBlockSparseMatrix,
     BlockUnitRange, blockrange, blocksparse
 using SparseArraysBase: eachstoredindex
-using TensorAlgebra: TensorAlgebra, BlockedTuple, matricize, matricize_axes,
+using TensorAlgebra: TensorAlgebra, BlockedTuple, FusionStyle, matricize, matricize_axes,
     tensor_product_axis, unmatricize
 
-# TODO: Ideally we would use:
-# ```julia
-# const BlockReshapeFusion = typeof(TensorAlgebra.FusionStyle(AbstractBlockArray))
-# ```
-# but that doesn't seem to work, i.e. it sometimes returns `ReshapeFusion`. Maybe it is
-# a world age issue, though note that `@invokelatest` doesn't seem to fix it.
-# For now we just use `Base.get_extension`.
-const BlockReshapeFusion =
-    Base.get_extension(TensorAlgebra, :TensorAlgebraBlockArraysExt).BlockReshapeFusion
+const BlockReshapeFusion = typeof(FusionStyle(AbstractBlockArray))
 
 function TensorAlgebra.tensor_product_axis(
         style::BlockReshapeFusion, side::Val{:codomain}, r1::BlockUnitRange, r2::BlockUnitRange,
