@@ -10,7 +10,7 @@ using TensorAlgebra: TensorAlgebra, BlockedTuple, FusionStyle, matricize, matric
 const BlockReshapeFusion = typeof(FusionStyle(AbstractBlockArray))
 
 function TensorAlgebra.tensor_product_axis(
-        style::BlockReshapeFusion, side::Val{:codomain}, r1::BlockUnitRange, r2::BlockUnitRange,
+        style::BlockReshapeFusion, side::Val{:codomain}, r1::BlockUnitRange, r2::BlockUnitRange
     )
     return tensor_product_blockrange(style, side, r1, r2)
 end
