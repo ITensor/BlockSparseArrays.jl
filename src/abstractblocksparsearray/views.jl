@@ -1,12 +1,5 @@
-using BlockArrays:
-    AbstractBlockedUnitRange,
-    BlockArrays,
-    Block,
-    BlockIndexRange,
-    BlockedVector,
-    blocklength,
-    blocksize,
-    viewblock
+using BlockArrays: BlockArrays, AbstractBlockedUnitRange, Block, BlockIndexRange,
+    BlockedVector, blocklength, blocksize, viewblock
 using FunctionImplementations: style
 
 # This splits `BlockIndexRange{N}` into
@@ -36,23 +29,30 @@ end
 # which don't handle subslices of blocks properly.
 function Base.view(
         a::SubArray{
-            <:Any, N, <:AnyAbstractBlockSparseArray, <:Tuple{Vararg{BlockSlice{<:BlockRange{1}}, N}},
+            <:Any, N, <:AnyAbstractBlockSparseArray,
+            <:Tuple{Vararg{BlockSlice{<:BlockRange{1}}, N}},
         },
-        I::Block{N},
+        I::Block{N}
     ) where {N}
     return style(a)(view)(a, I)
 end
 function Base.view(
         a::SubArray{
-            <:Any, N, <:AnyAbstractBlockSparseArray, <:Tuple{Vararg{BlockSlice{<:BlockRange{1}}, N}},
+            <:Any, N, <:AnyAbstractBlockSparseArray,
+            <:Tuple{Vararg{BlockSlice{<:BlockRange{1}}, N}},
         },
-        I::Vararg{Block{1}, N},
+        I::Vararg{Block{1}, N}
     ) where {N}
     return style(a)(view)(a, I...)
 end
 function Base.view(
-        V::SubArray{<:Any, 1, <:AnyAbstractBlockSparseArray, <:Tuple{BlockSlice{<:BlockRange{1}}}},
-        I::Block{1},
+        V::SubArray{
+            <:Any,
+            1,
+            <:AnyAbstractBlockSparseArray,
+            <:Tuple{BlockSlice{<:BlockRange{1}}},
+        },
+        I::Block{1}
     )
     return style(a)(view)(a, I)
 end
@@ -100,7 +100,7 @@ to_block_indices(I::BlockIndexVector{1}) = only(I.indices)
 
 function Base.view(
         a::AbstractBlockSparseArray{<:Any, N},
-        I::Vararg{Union{Block{1}, BlockIndexRange{1}, BlockIndexVector}, N},
+        I::Vararg{Union{Block{1}, BlockIndexRange{1}, BlockIndexVector}, N}
     ) where {N}
     return @views a[to_block.(I)...][to_block_indices.(I)...]
 end
@@ -112,7 +112,7 @@ function Base.view(
 end
 function Base.view(
         a::SubArray{T, N, <:AbstractBlockSparseArray{T, N}},
-        I::Vararg{Union{Block{1}, BlockIndexRange{1}, BlockIndexVector}, N},
+        I::Vararg{Union{Block{1}, BlockIndexRange{1}, BlockIndexVector}, N}
     ) where {T, N}
     return @views a[to_block.(I)...][to_block_indices.(I)...]
 end
@@ -130,7 +130,7 @@ function Base.view(
             <:AbstractBlockSparseArray{T, N},
             <:Tuple{Vararg{Union{BlockSliceCollection, SubBlockSliceCollection}, N}},
         },
-        block::Union{Block{N}, BlockIndexRange{N}},
+        block::Union{Block{N}, BlockIndexRange{N}}
     ) where {T, N}
     return viewblock(a, block)
 end
@@ -144,7 +144,7 @@ function Base.view(
             <:AbstractBlockSparseArray{T, N},
             <:Tuple{Vararg{Union{Base.Slice, BlockSlice{<:BlockRange{1}}}, N}},
         },
-        block::Block{N},
+        block::Block{N}
     ) where {T, N}
     return viewblock(a, block)
 end
@@ -156,7 +156,7 @@ function Base.view(
             <:AbstractBlockSparseArray{T, N},
             <:Tuple{Vararg{Union{BlockSliceCollection, SubBlockSliceCollection}, N}},
         },
-        block::Vararg{Union{Block{1}, BlockIndexRange{1}}, N},
+        block::Vararg{Union{Block{1}, BlockIndexRange{1}}, N}
     ) where {T, N}
     return viewblock(a, block...)
 end
@@ -167,7 +167,7 @@ function BlockArrays.viewblock(
             <:AbstractBlockSparseArray{T, N},
             <:Tuple{Vararg{Union{BlockSliceCollection, SubBlockSliceCollection}, N}},
         },
-        block::Union{Block{N}, BlockIndexRange{N}, BlockIndexVector{N}},
+        block::Union{Block{N}, BlockIndexRange{N}, BlockIndexVector{N}}
     ) where {T, N}
     return viewblock(a, to_tuple(block)...)
 end
@@ -175,18 +175,20 @@ end
 # Fixes ambiguity error with `AnyAbstractBlockSparseArray` definition.
 function Base.view(
         a::SubArray{
-            T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{BlockSlice{<:BlockRange{1}}, N}},
+            T, N, <:AbstractBlockSparseArray{T, N},
+            <:Tuple{Vararg{BlockSlice{<:BlockRange{1}}, N}},
         },
-        block::Block{N},
+        block::Block{N}
     ) where {T, N}
     return viewblock(a, block)
 end
 # Fixes ambiguity error with `AnyAbstractBlockSparseArray` definition.
 function Base.view(
         a::SubArray{
-            T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{BlockSlice{<:BlockRange{1}}, N}},
+            T, N, <:AbstractBlockSparseArray{T, N},
+            <:Tuple{Vararg{BlockSlice{<:BlockRange{1}}, N}},
         },
-        block::Vararg{Block{1}, N},
+        block::Vararg{Block{1}, N}
     ) where {T, N}
     return viewblock(a, block...)
 end
@@ -196,7 +198,7 @@ end
 # which both include `Base.Slice`.
 function Base.view(
         a::SubArray{T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{Base.Slice, N}}},
-        block::Block{N},
+        block::Block{N}
     ) where {T, N}
     return viewblock(a, block)
 end
@@ -217,8 +219,13 @@ end
 # in `blocksparsearrayinterface/blocksparsearrayinterface.jl`.
 # TODO: Define `style(a)(viewblock)`.
 function BlockArrays.viewblock(
-        a::SubArray{T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{BlockSliceCollection, N}}},
-        block::Vararg{Block{1}, N},
+        a::SubArray{
+            T,
+            N,
+            <:AbstractBlockSparseArray{T, N},
+            <:Tuple{Vararg{BlockSliceCollection, N}},
+        },
+        block::Vararg{Block{1}, N}
     ) where {T, N}
     return viewblock_blockslice(a, block...)
 end
@@ -228,27 +235,30 @@ end
 # which both include `Base.Slice`.
 function BlockArrays.viewblock(
         a::SubArray{T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{Base.Slice, N}}},
-        block::Vararg{Block{1}, N},
+        block::Vararg{Block{1}, N}
     ) where {T, N}
     return viewblock_blockslice(a, block...)
 end
 
 function to_blockindexrange(
-        a::BlockSlice{<:BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexRange{1}}}}, I::Block{1}
+        a::BlockSlice{<:BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexRange{1}}}},
+        I::Block{1}
     )
     # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
     # work right now.
     return blocks(a.block)[Int(I)]
 end
 function to_blockindexrange(
-        a::BlockIndices{<:BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexRange}}}, I::Block{1}
+        a::BlockIndices{<:BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexRange}}},
+        I::Block{1}
     )
     # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
     # work right now.
     return blocks(a.blocks)[Int(I)]
 end
 function to_blockindexrange(
-        a::BlockIndices{<:BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexVector}}}, I::Block{1}
+        a::BlockIndices{<:BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexVector}}},
+        I::Block{1}
     )
     # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
     # work right now.
@@ -256,7 +266,7 @@ function to_blockindexrange(
 end
 function to_blockindexrange(
         a::BlockIndices{<:BlockVector{<:GenericBlockIndex{1}, <:Vector{<:BlockIndexVector}}},
-        I::Block{1},
+        I::Block{1}
     )
     # TODO: Ideally we would just use `a.blocks[I]` but that doesn't
     # work right now.
@@ -276,7 +286,7 @@ function BlockArrays.viewblock(
             <:AbstractBlockSparseArray{T, N},
             <:Tuple{Vararg{Union{BlockSliceCollection, SubBlockSliceCollection}, N}},
         },
-        block::Vararg{Block{1}, N},
+        block::Vararg{Block{1}, N}
     ) where {T, N}
     brs = ntuple(dim -> to_blockindexrange(parentindices(a)[dim], block[dim]), ndims(a))
     return @view parent(a)[brs...]
@@ -290,7 +300,7 @@ function BlockArrays.viewblock(
             <:AbstractBlockSparseArray{T, N},
             <:Tuple{Vararg{Union{BlockSliceCollection, SubBlockSliceCollection}, N}},
         },
-        block::Vararg{BlockIndexRange{1}, N},
+        block::Vararg{BlockIndexRange{1}, N}
     ) where {T, N}
     return view(viewblock(a, Block.(block)...), map(b -> only(b.indices), block)...)
 end
@@ -299,13 +309,18 @@ function Base.view(
         a::SubArray{
             T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{SubBlockSliceCollection, N}},
         },
-        block::Union{Block{N}, BlockIndexRange{N}},
+        block::Union{Block{N}, BlockIndexRange{N}}
     ) where {T, N}
     return viewblock(a, block)
 end
 function Base.view(
-        a::SubArray{T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{BlockIndexRangeSlice, N}}},
-        block::Union{Block{N}, BlockIndexRange{N}},
+        a::SubArray{
+            T,
+            N,
+            <:AbstractBlockSparseArray{T, N},
+            <:Tuple{Vararg{BlockIndexRangeSlice, N}},
+        },
+        block::Union{Block{N}, BlockIndexRange{N}}
     ) where {T, N}
     return viewblock(a, block)
 end
@@ -313,7 +328,7 @@ function Base.view(
         a::SubArray{
             T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{SubBlockSliceCollection, N}},
         },
-        block::Vararg{Union{Block{1}, BlockIndexRange{1}, BlockIndexVector}, N},
+        block::Vararg{Union{Block{1}, BlockIndexRange{1}, BlockIndexVector}, N}
     ) where {T, N}
     return viewblock(a, block...)
 end
@@ -322,7 +337,7 @@ function Base.view(
         a::SubArray{
             T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{SubBlockSliceCollection, N}},
         },
-        block::Vararg{Block{1}, N},
+        block::Vararg{Block{1}, N}
     ) where {T, N}
     return viewblock(a, block...)
 end
@@ -330,7 +345,7 @@ function BlockArrays.viewblock(
         a::SubArray{
             T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{SubBlockSliceCollection, N}},
         },
-        block::Union{Block{N}, BlockIndexRange{N}},
+        block::Union{Block{N}, BlockIndexRange{N}}
     ) where {T, N}
     return viewblock(a, to_tuple(block)...)
 end
@@ -342,7 +357,7 @@ function blockedslice_blocks(x::Base.Slice)
     return mortar(
         map(BlockRange(x.indices)) do b
             return BlockIndexRange(b, Base.Slice(Base.axes1(x.indices[b])))
-        end,
+        end
     )
 end
 
@@ -351,7 +366,7 @@ function BlockArrays.viewblock(
         a::SubArray{
             T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{SubBlockSliceCollection, N}},
         },
-        I::Vararg{Block{1}, N},
+        I::Vararg{Block{1}, N}
     ) where {T, N}
     # TODO: Use `reindex`, `to_indices`, etc.
     brs = ntuple(ndims(a)) do dim
@@ -368,7 +383,7 @@ function BlockArrays.viewblock(
         a::SubArray{
             T, N, <:AbstractBlockSparseArray{T, N}, <:Tuple{Vararg{SubBlockSliceCollection, N}},
         },
-        block::Vararg{BlockIndexRange{1}, N},
+        block::Vararg{BlockIndexRange{1}, N}
     ) where {T, N}
     return view(viewblock(a, Block.(block)...), map(b -> only(b.indices), block)...)
 end
@@ -380,8 +395,13 @@ for (f, F) in ((:adjoint, :Adjoint), (:transpose, :Transpose))
             return $f(view(parent(A), b))
         end
 
-        Base.view(A::$F{<:Any, <:AbstractBlockSparseMatrix}, b::Block{2}) = view(A, Tuple(b)...)
-        function Base.view(A::$F{<:Any, <:AbstractBlockSparseMatrix}, b1::Block{1}, b2::Block{1})
+        Base.view(A::$F{<:Any, <:AbstractBlockSparseMatrix}, b::Block{2}) =
+            view(A, Tuple(b)...)
+        function Base.view(
+                A::$F{<:Any, <:AbstractBlockSparseMatrix},
+                b1::Block{1},
+                b2::Block{1}
+            )
             return $f(view(parent(A), b2, b1))
         end
     end

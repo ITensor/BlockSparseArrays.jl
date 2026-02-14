@@ -1,7 +1,7 @@
 using Adapt: adapt
 using BlockArrays: Block
 using BlockSparseArrays:
-    BlockSparseArray, @view!, blockstoredlength, eachblockstoredindex, view!
+    @view!, BlockSparseArray, blockstoredlength, eachblockstoredindex, view!
 using JLArrays: JLArray
 using SparseArraysBase: isstored
 using Test: @test, @testset

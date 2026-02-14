@@ -1,9 +1,8 @@
 using BlockArrays: blocksizes
 using DiagonalArrays: diagonal
 using LinearAlgebra: LinearAlgebra, Diagonal
-using MatrixAlgebraKit: MatrixAlgebraKit, diagview
-using MatrixAlgebraKit: default_eig_algorithm, eig_full!, eig_vals!
-using MatrixAlgebraKit: default_eigh_algorithm, eigh_full!, eigh_vals!
+using MatrixAlgebraKit: MatrixAlgebraKit, default_eig_algorithm, default_eigh_algorithm,
+    diagview, eig_full!, eig_vals!, eigh_full!, eigh_vals!
 
 for f in [:default_eig_algorithm, :default_eigh_algorithm]
     @eval begin

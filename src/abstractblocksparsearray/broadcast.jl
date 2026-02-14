@@ -1,5 +1,5 @@
-using BlockArrays: AbstractBlockedUnitRange, BlockSlice
 using Base.Broadcast: BroadcastStyle
+using BlockArrays: AbstractBlockedUnitRange, BlockSlice
 
 function Base.Broadcast.BroadcastStyle(arraytype::Type{<:AnyAbstractBlockSparseArray})
     return BlockSparseArrayStyle(BroadcastStyle(blocktype(arraytype)))
@@ -14,7 +14,7 @@ function Base.Broadcast.BroadcastStyle(
                 <:AbstractBlockSparseArray,
                 <:Tuple{BlockSlice{<:Any, <:Any, <:AbstractBlockedUnitRange}, Vararg{Any}},
             },
-        },
+        }
     )
     return BlockSparseArrayStyle{ndims(arraytype)}()
 end
@@ -30,7 +30,7 @@ function Base.Broadcast.BroadcastStyle(
                     Vararg{Any},
                 },
             },
-        },
+        }
     )
     return BlockSparseArrayStyle{ndims(arraytype)}()
 end
@@ -42,7 +42,7 @@ function Base.Broadcast.BroadcastStyle(
                 <:AbstractBlockSparseArray,
                 <:Tuple{Any, BlockSlice{<:Any, <:Any, <:AbstractBlockedUnitRange}, Vararg{Any}},
             },
-        },
+        }
     )
     return BlockSparseArrayStyle{ndims(arraytype)}()
 end
@@ -54,12 +54,15 @@ function Base.copyto!(dest::AnyAbstractBlockSparseArray, bc::Broadcasted)
     return copyto!_blocksparse(dest, bc)
 end
 function Base.copyto!(
-        dest::AnyAbstractBlockSparseArray, bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}}
+        dest::AnyAbstractBlockSparseArray,
+        bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}}
     )
     return copyto!_blocksparse(dest, bc)
 end
 function Base.copyto!(
-        dest::AnyAbstractBlockSparseArray{<:Any, N}, bc::Broadcasted{<:BlockSparseArrayStyle{N}}
+        dest::AnyAbstractBlockSparseArray{<:Any, N}, bc::Broadcasted{
+            <:BlockSparseArrayStyle{N},
+        }
     ) where {N}
     return copyto!_blocksparse(dest, bc)
 end

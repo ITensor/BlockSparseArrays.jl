@@ -1,7 +1,7 @@
 using ArrayLayouts: ArrayLayouts, Dot, MatMulMatAdd, MatMulVecAdd, MulAdd
 using BlockArrays: BlockArrays, BlockLayout, muladd!
-using SparseArraysBase: SparseLayout
 using LinearAlgebra: LinearAlgebra, dot, mul!
+using SparseArraysBase: SparseLayout
 
 const muladd!_blocksparse = blocksparse_style(muladd!)
 function muladd!_blocksparse(
@@ -16,7 +16,7 @@ function ArrayLayouts.materialize!(
             <:BlockLayout{<:SparseLayout},
             <:BlockLayout{<:SparseLayout},
             <:BlockLayout{<:SparseLayout},
-        },
+        }
     )
     muladd!_blocksparse(m.α, m.A, m.B, m.β, m.C)
     return m.C
@@ -26,7 +26,7 @@ function ArrayLayouts.materialize!(
             <:BlockLayout{<:SparseLayout},
             <:BlockLayout{<:SparseLayout},
             <:BlockLayout{<:SparseLayout},
-        },
+        }
     )
     error("Not implemented.")
     matmul!(m)

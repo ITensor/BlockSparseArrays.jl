@@ -1,5 +1,5 @@
-using Literate: Literate
 using BlockSparseArrays: BlockSparseArrays
+using Literate: Literate
 
 function ccq_logo(content)
     include_ccq_logo = """
@@ -17,5 +17,5 @@ Literate.markdown(
     joinpath(pkgdir(BlockSparseArrays));
     flavor = Literate.CommonMarkFlavor(),
     name = "README",
-    postprocess = ccq_logo,
+    postprocess = ccq_logo
 )
