@@ -71,7 +71,7 @@ function Base.map!(
         f,
         a_dest,
         a_src1,
-        a_src_rest...,
+        a_src_rest...
     )
 end
 
@@ -82,7 +82,7 @@ function Base.map!(
         f,
         a_dest::GPUArraysCore.AnyGPUArray,
         a_src1::UnblockedSubArray,
-        a_src_rest::UnblockedSubArray...,
+        a_src_rest::UnblockedSubArray...
     )
     a_dest_cpu = adapt(Array, a_dest)
     a_srcs_cpu = map(adapt(Array), (a_src1, a_src_rest...))

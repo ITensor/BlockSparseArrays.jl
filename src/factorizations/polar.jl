@@ -1,17 +1,15 @@
-using MatrixAlgebraKit:
-    MatrixAlgebraKit,
-    PolarViaSVD,
-    check_input,
-    default_algorithm,
-    left_polar!,
-    right_polar!,
-    svd_compact!
+using MatrixAlgebraKit: MatrixAlgebraKit, PolarViaSVD, check_input, default_algorithm,
+    left_polar!, right_polar!, svd_compact!
 
 function MatrixAlgebraKit.check_input(::typeof(left_polar!), A::AbstractBlockSparseMatrix)
     @views for I in eachblockstoredindex(A)
         m, n = size(A[I])
         m >= n ||
-            throw(ArgumentError("each input matrix block needs at least as many rows as columns"))
+            throw(
+            ArgumentError(
+                "each input matrix block needs at least as many rows as columns"
+            )
+        )
     end
     return nothing
 end
@@ -19,7 +17,11 @@ function MatrixAlgebraKit.check_input(::typeof(right_polar!), A::AbstractBlockSp
     @views for I in eachblockstoredindex(A)
         m, n = size(A[I])
         m <= n ||
-            throw(ArgumentError("each input matrix block needs at least as many columns as rows"))
+            throw(
+            ArgumentError(
+                "each input matrix block needs at least as many columns as rows"
+            )
+        )
     end
     return nothing
 end

@@ -1,23 +1,8 @@
-using BlockArrays:
-    Block,
-    BlockIndex,
-    BlockSlice,
-    BlockedArray,
-    BlockedVector,
-    block,
-    blockedrange,
-    blockindex,
-    mortar
-using BlockSparseArrays:
-    BlockSparseArrays,
-    BlockIndexVector,
-    BlockIndices,
-    GenericBlockIndex,
-    blocksparsezeros,
-    blockedunitrange_getindices,
-    to_block,
-    to_block_indices,
-    to_blockindexrange
+using BlockArrays: Block, BlockIndex, BlockSlice, BlockedArray, BlockedVector, block,
+    blockedrange, blockindex, mortar
+using BlockSparseArrays: BlockSparseArrays, BlockIndexVector, BlockIndices,
+    GenericBlockIndex, blockedunitrange_getindices, blocksparsezeros, to_block,
+    to_block_indices, to_blockindexrange
 using Test: @test, @test_broken, @testset
 
 # blockrange
@@ -116,7 +101,10 @@ using Test: @test, @test_broken, @testset
     @test v[i] == ["d", "c"]
 
     v = BlockedVector(["a", "b", "c", "d"], [2, 2])
-    i = BlockIndexVector{1, GenericBlockIndex{1, Tuple{Int}, Tuple{String}}}(Block(1), [2, 1])
+    i = BlockIndexVector{1, GenericBlockIndex{1, Tuple{Int}, Tuple{String}}}(
+        Block(1),
+        [2, 1]
+    )
     @test v[i] == ["b", "a"]
     i = BlockIndexVector(Block(2), [2, 1])
     @test v[i] == ["d", "c"]
@@ -132,8 +120,14 @@ using Test: @test, @test_broken, @testset
     @test a[i2, i2] == [("c", "c") ("c", "d"); ("d", "c") ("d", "d")]
 
     a = collect(Iterators.product(v, v))
-    i1 = BlockIndexVector{1, GenericBlockIndex{1, Tuple{Int}, Tuple{String}}}(Block(1), [2, 1])
-    i2 = BlockIndexVector{1, GenericBlockIndex{1, Tuple{Int}, Tuple{String}}}(Block(2), [1, 2])
+    i1 = BlockIndexVector{1, GenericBlockIndex{1, Tuple{Int}, Tuple{String}}}(
+        Block(1),
+        [2, 1]
+    )
+    i2 = BlockIndexVector{1, GenericBlockIndex{1, Tuple{Int}, Tuple{String}}}(
+        Block(2),
+        [1, 2]
+    )
     i = BlockIndexVector{2, GenericBlockIndex{2, Tuple{Int, Int}, Tuple{String, String}}}(
         Block(1, 2), ([2, 1], [1, 2])
     )

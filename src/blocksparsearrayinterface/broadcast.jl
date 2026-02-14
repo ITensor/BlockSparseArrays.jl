@@ -1,8 +1,6 @@
-using Base.Broadcast: BroadcastStyle, Broadcasted
+using Base.Broadcast: AbstractArrayStyle, BroadcastStyle, Broadcasted
 using GPUArraysCore: @allowscalar
 using MapBroadcast: Mapped
-
-using Base.Broadcast: AbstractArrayStyle
 abstract type AbstractBlockSparseArrayStyle{N, B <: AbstractArrayStyle{N}} <:
 AbstractArrayStyle{N} end
 struct BlockSparseArrayStyle{N, B <: AbstractArrayStyle{N}} <:
@@ -25,20 +23,25 @@ function BlockSparseArrayStyle{M, B}(::Val{N}) where {M, B <: AbstractArrayStyle
 end
 
 function blockstyle(
-        ::AbstractBlockSparseArrayStyle{N, B},
+        ::AbstractBlockSparseArrayStyle{N, B}
     ) where {N, B <: Base.Broadcast.AbstractArrayStyle{N}}
     return B()
 end
 
 function Base.Broadcast.BroadcastStyle(
         style1::AbstractBlockSparseArrayStyle,
-        style2::AbstractBlockSparseArrayStyle,
+        style2::AbstractBlockSparseArrayStyle
     )
     style = Base.Broadcast.result_style(blockstyle(style1), blockstyle(style2))
     return BlockSparseArrayStyle(style)
 end
 
-Base.Broadcast.BroadcastStyle(a::BlockSparseArrayStyle, ::Base.Broadcast.DefaultArrayStyle{0}) = a
+function Base.Broadcast.BroadcastStyle(
+        a::BlockSparseArrayStyle,
+        ::Base.Broadcast.DefaultArrayStyle{0}
+    )
+    return a
+end
 function Base.Broadcast.BroadcastStyle(
         ::BlockSparseArrayStyle{N}, a::Base.Broadcast.DefaultArrayStyle
     ) where {N}
@@ -63,7 +66,10 @@ end
 # which is logic that is handled by `fill!`.
 const copyto!_blocksparse = blocksparse_style(copyto!)
 const fill!_blocksparse = blocksparse_style(fill!)
-function copyto!_blocksparse(dest::AbstractArray, bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}})
+function copyto!_blocksparse(
+        dest::AbstractArray,
+        bc::Broadcasted{<:Base.Broadcast.AbstractArrayStyle{0}}
+    )
     # `[]` is used to unwrap zero-dimensional arrays.
     bcf = Base.Broadcast.flatten(bc)
     value = @allowscalar bcf.f(map(arg -> arg[], bcf.args)...)

@@ -1,15 +1,7 @@
 using Adapt: adapt
 using BlockArrays: Block, BlockRange, blockedrange, blocksize, blocksizes, mortar
-using BlockSparseArrays:
-    BlockSparseArray,
-    BlockSparseVector,
-    BlockVector,
-    BlockView,
-    BlockedVector,
-    blocklengths,
-    blockstoredlength,
-    blocktype,
-    eachblockstoredindex
+using BlockSparseArrays: BlockSparseArray, BlockSparseVector, BlockVector, BlockView,
+    BlockedVector, blocklengths, blockstoredlength, blocktype, eachblockstoredindex
 using FunctionImplementations: zero!
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray

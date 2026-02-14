@@ -33,7 +33,7 @@ function Base.similar(
             C,
         },
         elt::Type,
-        axes,
+        axes
     ) where {BlockLayoutA, BlockLayoutB, LayoutC, T, A, B, C}
 
     # TODO: Consider using this instead:
