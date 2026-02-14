@@ -1,5 +1,5 @@
-using BlockSparseArrays
 using BenchmarkTools
+using BlockSparseArrays
 
 SUITE = BenchmarkGroup()
 SUITE["rand"] = @benchmarkable rand(10)

@@ -1,21 +1,6 @@
-using BlockArrays:
-    BlockArrays,
-    AbstractBlockedUnitRange,
-    AbstractBlockVector,
-    Block,
-    BlockIndex,
-    BlockIndexRange,
-    BlockRange,
-    BlockSlice,
-    BlockVector,
-    block,
-    blockedrange,
-    blockfirsts,
-    blockindex,
-    blocklengths,
-    findblock,
-    findblockindex,
-    mortar
+using BlockArrays: BlockArrays, AbstractBlockVector, AbstractBlockedUnitRange, Block,
+    BlockIndex, BlockIndexRange, BlockRange, BlockSlice, BlockVector, block, blockedrange,
+    blockfirsts, blockindex, blocklengths, findblock, findblockindex, mortar
 
 # Get the axes of each block of a block array.
 function eachblockaxes(a::AbstractArray)
@@ -150,7 +135,8 @@ end
 # TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
 # to merge blocks.
 function blockedunitrange_getindices(
-        a::AbstractBlockedUnitRange, indices::AbstractVector{<:Union{Block{1}, BlockIndexRange{1}}}
+        a::AbstractBlockedUnitRange,
+        indices::AbstractVector{<:Union{Block{1}, BlockIndexRange{1}}}
     )
     # Without converting `indices` to `Vector`,
     # mapping `indices` outputs a `BlockVector`
@@ -166,7 +152,7 @@ end
 
 function blockedunitrange_getindices(
         a::AbstractBlockedUnitRange,
-        indices::BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexRange{1}}},
+        indices::BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexRange{1}}}
     )
     return mortar(map(b -> a[b], blocks(indices)))
 end
@@ -207,7 +193,7 @@ function to_blockindices(a::AbstractBlockedUnitRange{<:Integer}, I::UnitRange{<:
             bi_last = findblockindex(a, last(r))
             @assert block(bi_first) == block(bi_last)
             return block(bi_first)[blockindex(bi_first):blockindex(bi_last)]
-        end,
+        end
     )
 end
 
@@ -314,7 +300,8 @@ _getindex(a::Block{N}, b::Vararg{AbstractVector, N}) where {N} = BlockIndexVecto
 # Fix ambiguity.
 _getindex(a::Block{0}) = a[]
 
-struct BlockIndexVector{N, BT, I <: NTuple{N, AbstractVector}, TB <: Integer} <: AbstractArray{BT, N}
+struct BlockIndexVector{N, BT, I <: NTuple{N, AbstractVector}, TB <: Integer} <:
+    AbstractArray{BT, N}
     block::Block{N, TB}
     indices::I
     function BlockIndexVector{N, BT}(
@@ -358,17 +345,24 @@ function Base.getindex(b::AbstractBlockedUnitRange, Kkr::BlockIndexVector{1})
 end
 
 using ArrayLayouts: LayoutArray
-@propagate_inbounds Base.getindex(b::AbstractArray{T, N}, K::BlockIndexVector{N}) where {T, N} = b[
+@propagate_inbounds Base.getindex(
+    b::AbstractArray{T, N},
+    K::BlockIndexVector{N}
+) where {T, N} = b[
     block(
         K
     ),
 ][K.indices...]
-@propagate_inbounds Base.getindex(b::LayoutArray{T, N}, K::BlockIndexVector{N}) where {T, N} = b[
+@propagate_inbounds Base.getindex(
+    b::LayoutArray{T, N},
+    K::BlockIndexVector{N}
+) where {T, N} = b[
     block(
         K
     ),
 ][K.indices...]
-@propagate_inbounds Base.getindex(b::LayoutArray{T, 1}, K::BlockIndexVector{1}) where {T} = b[
+@propagate_inbounds Base.getindex(b::LayoutArray{T, 1}, K::BlockIndexVector{1}) where {T} =
+    b[
     block(
         K
     ),
@@ -376,7 +370,7 @@ using ArrayLayouts: LayoutArray
 
 function blockedunitrange_getindices(
         a::AbstractBlockedUnitRange,
-        indices::BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexVector{1}}},
+        indices::BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexVector{1}}}
     )
     blks = map(b -> a[b], blocks(indices))
     # Preserve any extra structure in the axes, like a
@@ -386,7 +380,7 @@ function blockedunitrange_getindices(
 end
 function blockedunitrange_getindices(
         a::AbstractBlockedUnitRange,
-        indices::BlockVector{<:GenericBlockIndex{1}, <:Vector{<:BlockIndexVector{1}}},
+        indices::BlockVector{<:GenericBlockIndex{1}, <:Vector{<:BlockIndexVector{1}}}
     )
     blks = map(b -> a[b], blocks(indices))
     # Preserve any extra structure in the axes, like a

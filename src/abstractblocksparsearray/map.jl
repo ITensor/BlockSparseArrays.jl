@@ -7,7 +7,12 @@ using LinearAlgebra: Adjoint, Transpose
 # If the blocking of the slice doesn't match the blocking of the
 # parent array, reblock according to the blocking of the parent array.
 function reblock(
-        a::SubArray{<:Any, <:Any, <:AbstractBlockSparseArray, <:Tuple{Vararg{AbstractUnitRange}}}
+        a::SubArray{
+            <:Any,
+            <:Any,
+            <:AbstractBlockSparseArray,
+            <:Tuple{Vararg{AbstractUnitRange}},
+        }
     )
     # TODO: This relies on the behavior that slicing a block sparse
     # array with a UnitRange inherits the blocking of the underlying
@@ -30,7 +35,7 @@ function reblock(
             <:Any,
             <:AbstractBlockSparseArray,
             <:Tuple{Vararg{BlockIndices{<:AbstractBlockVector{<:Block{1}}}}},
-        },
+        }
     )
     # Remove the blocking.
     return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]

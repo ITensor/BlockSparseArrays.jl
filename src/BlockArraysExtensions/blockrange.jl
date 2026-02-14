@@ -25,7 +25,8 @@ Base.axes(r::BlockUnitRange) = (blockrange(eachblockaxis(r)),)
 Base.axes1(r::BlockUnitRange) = blockrange(eachblockaxis(r))
 
 using BlockArrays: BlockedOneTo
-const BlockOneTo{T <: Integer, B, CS, R <: BlockedOneTo{T, CS}} = BlockUnitRange{T, B, CS, R}
+const BlockOneTo{T <: Integer, B, CS, R <: BlockedOneTo{T, CS}} =
+    BlockUnitRange{T, B, CS, R}
 Base.axes(S::Base.Slice{<:BlockOneTo}) = (S.indices,)
 Base.axes1(S::Base.Slice{<:BlockOneTo}) = S.indices
 Base.unsafe_indices(S::Base.Slice{<:BlockOneTo}) = (S.indices,)
