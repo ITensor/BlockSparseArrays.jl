@@ -9,7 +9,7 @@ function same_block_structure(as::AbstractArray...)
         ntuple(ndims(first(as))) do dim
             ax = map(Base.Fix2(axes, dim), as)
             return blockisequal(ax...)
-        end,
+        end
     )
 end
 
@@ -98,12 +98,14 @@ function map!_blocksparse(
             return blocks_maybe_single(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
         end
         subblock_dest = @view block_dest[BI_dest.indices...]
-        subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
+        subblock_srcs =
+            ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
         I_dest = CartesianIndex(Int.(Tuple(_block(BI_dest))))
         # If the function preserves zero values and all of the source blocks are zero,
         # the output block will be zero. In that case, if the block isn't stored yet,
         # don't do anything.
-        if f_preserves_zeros && all(iszero, subblock_srcs) && !isstored(blocks(a_dest), I_dest)
+        if f_preserves_zeros && all(iszero, subblock_srcs) &&
+                !isstored(blocks(a_dest), I_dest)
             continue
         end
         # TODO: Use `map!!` to handle immutable blocks.
@@ -173,7 +175,11 @@ function map_stored_blocks(f, a::AbstractArray)
         blocktype_a′ = Base.promote_op(f, blocktype(a))
         eltype_a′′ = !isconcretetype(eltype_a′) ? Any : eltype_a′
         blocktype_a′′ =
-            !isconcretetype(blocktype_a′) ? AbstractArray{eltype_a′′, ndims(a)} : blocktype_a′
+        if !isconcretetype(blocktype_a′)
+            AbstractArray{eltype_a′′, ndims(a)}
+        else
+            blocktype_a′
+        end
         return BlockSparseArray{eltype_a′′, ndims(a), blocktype_a′′}(undef, axes(a))
     end
     stored_blocks = map(B -> f(@view!(a[B])), block_stored_indices)

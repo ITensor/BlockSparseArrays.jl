@@ -1,34 +1,11 @@
 using Adapt: adapt
 using BlockArrays: Block, BlockedMatrix, BlockedVector, blocks, mortar
-using BlockSparseArrays:
-    BlockSparseArrays,
-    BlockDiagonal,
-    BlockSparseArray,
-    BlockSparseMatrix,
-    blockstoredlength,
-    eachblockstoredindex
+using BlockSparseArrays: BlockSparseArrays, BlockDiagonal, BlockSparseArray,
+    BlockSparseMatrix, blockstoredlength, eachblockstoredindex
 using LinearAlgebra: LinearAlgebra, Diagonal, hermitianpart, pinv
-using MatrixAlgebraKit:
-    diagview,
-    eig_full,
-    eig_trunc,
-    eig_vals,
-    eigh_full,
-    eigh_trunc,
-    eigh_vals,
-    left_orth,
-    left_polar,
-    lq_compact,
-    lq_full,
-    qr_compact,
-    qr_full,
-    right_orth,
-    right_polar,
-    svd_compact,
-    svd_full,
-    svd_trunc,
-    truncrank,
-    trunctol
+using MatrixAlgebraKit: diagview, eig_full, eig_trunc, eig_vals, eigh_full, eigh_trunc,
+    eigh_vals, left_orth, left_polar, lq_compact, lq_full, qr_compact, qr_full, right_orth,
+    right_polar, svd_compact, svd_full, svd_trunc, truncrank, trunctol
 using Random: Random
 using StableRNGs: StableRNG
 using Test: @inferred, @test, @test_throws, @testset
@@ -86,7 +63,8 @@ using Test: @inferred, @test, @test_throws, @testset
         MATRIX_FUNCTIONS = BlockSparseArrays.MATRIX_FUNCTIONS
         # These functions involve inverses so they break when there are zeros on the diagonal.
         MATRIX_FUNCTIONS_SINGULAR = [
-            :log, :acsc, :asec, :acosh, :acot, :acsch, :asech, :acoth, :csc, :cot, :csch,
+            :log, :acsc, :asec, :acosh, :acot, :acsch, :asech, :acoth, :csc, :cot,
+            :csch,
             :coth,
         ]
         MATRIX_FUNCTIONS = setdiff(MATRIX_FUNCTIONS, MATRIX_FUNCTIONS_SINGULAR)
@@ -123,7 +101,8 @@ function test_svd(a, (U, S, Vᴴ); full = false)
 end
 
 blockszs = (
-    ([2, 2], [2, 2]), ([2, 2], [2, 3]), ([2, 2, 1], [2, 3]), ([2, 3], [2]), ([2], [2, 3]),
+    ([2, 2], [2, 2]), ([2, 2], [2, 3]), ([2, 2, 1], [2, 3]), ([2, 3], [2]),
+    ([2], [2, 3]),
 )
 eltypes = (Float32, Float64, ComplexF64)
 test_params = Iterators.product(blockszs, eltypes)

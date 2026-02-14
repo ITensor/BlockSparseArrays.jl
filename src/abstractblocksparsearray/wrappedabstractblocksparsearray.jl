@@ -1,14 +1,7 @@
 using Adapt: Adapt, WrappedArray, adapt
 using ArrayLayouts: ArrayLayouts
-using BlockArrays:
-    BlockArrays,
-    AbstractBlockVector,
-    AbstractBlockedUnitRange,
-    BlockIndexRange,
-    BlockRange,
-    blockedrange,
-    mortar,
-    unblock
+using BlockArrays: BlockArrays, AbstractBlockVector, AbstractBlockedUnitRange,
+    BlockIndexRange, BlockRange, blockedrange, mortar, unblock
 using FunctionImplementations: FunctionImplementations, ImplementationStyle, style, zero!
 using GPUArraysCore: @allowscalar
 using SplitApplyCombine: groupcount
@@ -28,7 +21,9 @@ const AnyAbstractBlockSparseVecOrMat{T, N} = Union{
     AnyAbstractBlockSparseVector{T}, AnyAbstractBlockSparseMatrix{T},
 }
 
-function FunctionImplementations.ImplementationStyle(arrayt::Type{<:AnyAbstractBlockSparseArray})
+function FunctionImplementations.ImplementationStyle(
+        arrayt::Type{<:AnyAbstractBlockSparseArray}
+    )
     return BlockSparseArrayImplementationStyle()
 end
 
@@ -47,7 +42,8 @@ end
 # Fix ambiguity error with Base for logical indexing in Julia 1.10.
 # TODO: Delete this once we drop support for Julia 1.10.
 function Base.to_indices(
-        a::AnyAbstractBlockSparseArray, inds, I::Union{Tuple{BitArray{N}}, Tuple{Array{Bool, N}}}
+        a::AnyAbstractBlockSparseArray, inds,
+        I::Union{Tuple{BitArray{N}}, Tuple{Array{Bool, N}}}
     ) where {N}
     return style(a)(to_indices)(a, inds, I)
 end
@@ -64,7 +60,7 @@ end
 function Base.to_indices(
         a::AnyAbstractBlockSparseArray,
         inds,
-        I::Tuple{AbstractBlockVector{<:Block{1}}, Vararg{Any}},
+        I::Tuple{AbstractBlockVector{<:Block{1}}, Vararg{Any}}
     )
     return style(a)(to_indices)(a, inds, I)
 end
@@ -73,7 +69,7 @@ end
 function Base.to_indices(
         a::AnyAbstractBlockSparseArray,
         inds,
-        I::Tuple{BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexRange{1}}}, Vararg{Any}},
+        I::Tuple{BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexRange{1}}}, Vararg{Any}}
     )
     return style(a)(to_indices)(a, inds, I)
 end
@@ -82,28 +78,33 @@ end
 function Base.to_indices(
         a::AnyAbstractBlockSparseArray,
         inds,
-        I::Tuple{BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexVector{1}}}, Vararg{Any}},
+        I::Tuple{BlockVector{<:BlockIndex{1}, <:Vector{<:BlockIndexVector{1}}}, Vararg{Any}}
     )
     return style(a)(to_indices)(a, inds, I)
 end
 function Base.to_indices(
         a::AnyAbstractBlockSparseArray,
         inds,
-        I::Tuple{BlockVector{<:GenericBlockIndex{1}, <:Vector{<:BlockIndexVector{1}}}, Vararg{Any}},
+        I::Tuple{
+            BlockVector{<:GenericBlockIndex{1}, <:Vector{<:BlockIndexVector{1}}},
+            Vararg{Any},
+        }
     )
     return style(a)(to_indices)(a, inds, I)
 end
 
 # a[[Block(1)[1:2], Block(2)[1:2]], [Block(1)[1:2], Block(2)[1:2]]]
 function Base.to_indices(
-        a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:BlockIndexRange{1}}, Vararg{Any}}
+        a::AnyAbstractBlockSparseArray, inds,
+        I::Tuple{Vector{<:BlockIndexRange{1}}, Vararg{Any}}
     )
     return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
 end
 
 # a[[Block(1)[[1, 2]], Block(2)[[1, 2]]], [Block(1)[[1, 2]], Block(2)[[1, 2]]]]
 function Base.to_indices(
-        a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:BlockIndexVector{1}}, Vararg{Any}}
+        a::AnyAbstractBlockSparseArray, inds,
+        I::Tuple{Vector{<:BlockIndexVector{1}}, Vararg{Any}}
     )
     return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
 end
@@ -163,7 +164,10 @@ function Base.isassigned(a::AnyAbstractBlockSparseArray{<:Any, 0})
     return isassigned(blocks(a))
 end
 
-function Base.isassigned(a::AnyAbstractBlockSparseArray{<:Any, N}, index::Block{N}) where {N}
+function Base.isassigned(
+        a::AnyAbstractBlockSparseArray{<:Any, N},
+        index::Block{N}
+    ) where {N}
     return isassigned(a, Tuple(index)...)
 end
 
@@ -198,14 +202,15 @@ end
 # Needed by `BlockArrays` matrix multiplication interface
 function Base.similar(
         arraytype::Type{<:AnyAbstractBlockSparseArray},
-        axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
+        axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}}
     )
     return similar(arraytype, eltype(arraytype), axes)
 end
 
 # Fixes ambiguity error.
 function Base.similar(
-        arraytype::Type{<:AnyAbstractBlockSparseArray}, axes::Tuple{Base.OneTo, Vararg{Base.OneTo}}
+        arraytype::Type{<:AnyAbstractBlockSparseArray},
+        axes::Tuple{Base.OneTo, Vararg{Base.OneTo}}
     )
     return similar(arraytype, eltype(arraytype), axes)
 end
@@ -216,7 +221,7 @@ end
 # Delete once we drop support for older versions of Julia.
 function Base.similar(
         arraytype::Type{<:AnyAbstractBlockSparseArray},
-        axes::Tuple{AbstractUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}},
+        axes::Tuple{AbstractUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}}
     )
     return similar(arraytype, eltype(arraytype), axes)
 end
@@ -224,7 +229,7 @@ end
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
         arraytype::Type{<:AnyAbstractBlockSparseArray},
-        axes::Tuple{AbstractBlockedUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}},
+        axes::Tuple{AbstractBlockedUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}}
     )
     return similar(arraytype, eltype(arraytype), axes)
 end
@@ -236,7 +241,7 @@ function Base.similar(
             AbstractUnitRange{<:Integer},
             AbstractBlockedUnitRange{<:Integer},
             Vararg{AbstractUnitRange{<:Integer}},
-        },
+        }
     )
     return similar(arraytype, eltype(arraytype), axes)
 end
@@ -244,7 +249,7 @@ end
 # Needed for disambiguation
 function Base.similar(
         arraytype::Type{<:AnyAbstractBlockSparseArray},
-        axes::Tuple{Vararg{AbstractBlockedUnitRange{<:Integer}}},
+        axes::Tuple{Vararg{AbstractBlockedUnitRange{<:Integer}}}
     )
     return similar(arraytype, eltype(arraytype), axes)
 end
@@ -253,7 +258,8 @@ function blocksparse_similar(a, elt::Type, axes::Tuple)
     ndims = length(axes)
     # TODO: Define a version of `similartype` that catches the case
     # where the output isn't concrete and returns an `AbstractArray`.
-    blockt = Base.promote_op(similar, blocktype(a), Type{elt}, Tuple{blockaxistype.(axes)...})
+    blockt =
+        Base.promote_op(similar, blocktype(a), Type{elt}, Tuple{blockaxistype.(axes)...})
     blockt′ = !isconcretetype(blockt) ? AbstractArray{elt, ndims} : blockt
     return BlockSparseArray{elt, ndims, blockt′}(undef, axes)
 end
@@ -301,7 +307,7 @@ end
 function Base.similar(
         arraytype::Type{<:AnyAbstractBlockSparseArray},
         elt::Type,
-        axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
+        axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}}
     )
     return ImplementationStyle(arraytype)(similar)(arraytype, elt, axes)
 end
@@ -309,7 +315,7 @@ end
 function Base.similar(
         a::AnyAbstractBlockSparseArray,
         elt::Type,
-        axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
+        axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}}
     )
     return style(a)(similar)(a, elt, axes)
 end
@@ -325,7 +331,7 @@ function Base.similar(
         elt::Type,
         axes::Tuple{
             AbstractBlockedUnitRange{<:Integer}, Vararg{AbstractBlockedUnitRange{<:Integer}},
-        },
+        }
     )
     return style(a)(similar)(a, elt, axes)
 end
@@ -334,7 +340,7 @@ end
 function Base.similar(
         a::AnyAbstractBlockSparseArray,
         elt::Type,
-        axes::Tuple{AbstractUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}},
+        axes::Tuple{AbstractUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}}
     )
     return style(a)(similar)(a, elt, axes)
 end
@@ -343,7 +349,7 @@ end
 function Base.similar(
         a::AnyAbstractBlockSparseArray,
         elt::Type,
-        axes::Tuple{AbstractBlockedUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}},
+        axes::Tuple{AbstractBlockedUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}}
     )
     return style(a)(similar)(a, elt, axes)
 end
@@ -352,7 +358,7 @@ function Base.similar(a::AnyAbstractBlockSparseArray, elt::Type)
 end
 function Base.similar(
         a::AnyAbstractBlockSparseArray,
-        axes::Tuple{AbstractBlockedUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}},
+        axes::Tuple{AbstractBlockedUnitRange{<:Integer}, Vararg{AbstractUnitRange{<:Integer}}}
     )
     return style(a)(similar)(a, eltype(a), axes)
 end
@@ -365,7 +371,7 @@ function Base.similar(
             AbstractUnitRange{<:Integer},
             AbstractBlockedUnitRange{<:Integer},
             Vararg{AbstractUnitRange{<:Integer}},
-        },
+        }
     )
     return style(a)(similar)(a, elt, axes)
 end

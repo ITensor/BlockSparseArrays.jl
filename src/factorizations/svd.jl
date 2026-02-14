@@ -1,6 +1,6 @@
 using DiagonalArrays: diagonaltype
-using MatrixAlgebraKit: MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!,
-    svd_full!, svd_vals!
+using MatrixAlgebraKit:
+    MatrixAlgebraKit, check_input, default_svd_algorithm, svd_compact!, svd_full!, svd_vals!
 using TypeParameterAccessors: realtype
 
 function MatrixAlgebraKit.default_svd_algorithm(
@@ -87,12 +87,13 @@ function MatrixAlgebraKit.check_input(
         ::typeof(svd_compact!),
         A::AbstractBlockSparseMatrix,
         USVᴴ,
-        ::BlockPermutedDiagonalAlgorithm,
+        ::BlockPermutedDiagonalAlgorithm
     )
     return @assert isblockpermuteddiagonal(A)
 end
 function MatrixAlgebraKit.check_input(
-        ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ), ::BlockDiagonalAlgorithm
+        ::typeof(svd_compact!), A::AbstractBlockSparseMatrix, (U, S, Vᴴ),
+        ::BlockDiagonalAlgorithm
     )
     @assert isa(U, AbstractBlockSparseMatrix) &&
         isa(S, AbstractBlockSparseMatrix) &&
@@ -106,7 +107,8 @@ function MatrixAlgebraKit.check_input(
 end
 
 function MatrixAlgebraKit.check_input(
-        ::typeof(svd_full!), A::AbstractBlockSparseMatrix, USVᴴ, ::BlockPermutedDiagonalAlgorithm
+        ::typeof(svd_full!), A::AbstractBlockSparseMatrix, USVᴴ,
+        ::BlockPermutedDiagonalAlgorithm
     )
     @assert isblockpermuteddiagonal(A)
     return nothing

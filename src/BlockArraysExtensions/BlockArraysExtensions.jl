@@ -1,32 +1,11 @@
 using ArrayLayouts: ArrayLayouts, MemoryLayout, sub_materialize
-using BlockArrays:
-    BlockArrays,
-    AbstractBlockArray,
-    AbstractBlockVector,
-    Block,
-    BlockIndex,
-    BlockIndexRange,
-    BlockRange,
-    BlockSlice,
-    BlockVector,
-    BlockedOneTo,
-    BlockedUnitRange,
-    BlockedVector,
-    block,
-    blockaxes,
-    blockedrange,
-    blockindex,
-    blocks,
-    findblock,
+using BlockArrays: BlockArrays, AbstractBlockArray, AbstractBlockVector, Block, BlockIndex,
+    BlockIndexRange, BlockRange, BlockSlice, BlockVector, BlockedOneTo, BlockedUnitRange,
+    BlockedVector, block, blockaxes, blockedrange, blockindex, blocks, findblock,
     findblockindex
 using Dictionaries: Dictionary, Indices
-using SparseArraysBase:
-    SparseArraysBase,
-    eachstoredindex,
-    getunstoredindex,
-    isstored,
-    setunstoredindex!,
-    storedlength
+using SparseArraysBase: SparseArraysBase, eachstoredindex, getunstoredindex, isstored,
+    setunstoredindex!, storedlength
 
 function view!(a::AbstractArray{<:Any, N}, index::Block{N}) where {N}
     return view!(a, Tuple(index)...)
@@ -85,7 +64,9 @@ struct NonBlockedArray{T, N, Array <: AbstractArray{T, N}} <: AbstractArray{T, N
 end
 Base.parent(a::NonBlockedArray) = a.array
 Base.size(a::NonBlockedArray) = size(parent(a))
-Base.getindex(a::NonBlockedArray{<:Any, N}, I::Vararg{Integer, N}) where {N} = parent(a)[I...]
+function Base.getindex(a::NonBlockedArray{<:Any, N}, I::Vararg{Integer, N}) where {N}
+    return parent(a)[I...]
+end
 # Views of `NonBlockedArray`/`NonBlockedVector` are eager.
 # This fixes an issue in Julia 1.11 where reindexing defaults to using views.
 # TODO: Maybe reconsider this design, and allows views to work in slicing.
@@ -156,7 +137,9 @@ function Base.getindex(
     return NonBlockedVector(BlockIndices(S.blocks[Block(i)], S.indices[Block(i)]))
 end
 function Base.getindex(
-        S::BlockIndices{<:BlockedVector{<:Block{1}, <:BlockRange{1}}}, i::BlockSlice{<:Block{1}}
+        S::BlockIndices{<:BlockedVector{<:Block{1}, <:BlockRange{1}}}, i::BlockSlice{
+            <:Block{1},
+        }
     )
     return i
 end
@@ -190,7 +173,7 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
         map(1:length(i.block)) do I
             r = blocks(i.indices)[I]
             return S.indices[first(r)]:S.indices[last(r)]
-        end,
+        end
     )
     return BlockIndices(subblocks, subindices)
 end
@@ -201,12 +184,12 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockVector{<:BlockIndex
     subblocks = mortar(
         map(blocks(i.block)) do br
             return S.blocks[Int(Block(br))][only(br.indices)]
-        end,
+        end
     )
     subindices = mortar(
         map(blocks(i.block)) do br
-            S.indices[br]
-        end,
+            return S.indices[br]
+        end
     )
     return BlockIndices(subblocks, subindices)
 end
@@ -273,7 +256,7 @@ const SubBlockSliceCollection = Union{
 # ```
 function Base.getindex(
         a::BlockVector{<:BlockIndex{1}, <:AbstractVector{<:BlockIndexRange{1}}},
-        I::BlockSlice{<:Block{1}},
+        I::BlockSlice{<:Block{1}}
     )
     # Check that the block slice corresponds to the correct block.
     @assert I.indices == only(axes(a))[Block(I)]
@@ -439,7 +422,7 @@ end
 
 function blockrange(
         axis::AbstractUnitRange,
-        r::BlockVector{<:BlockIndex{1}, <:AbstractVector{<:BlockIndexRange{1}}},
+        r::BlockVector{<:BlockIndex{1}, <:AbstractVector{<:BlockIndexRange{1}}}
     )
     return map(Block, blocks(r))
 end
@@ -465,14 +448,14 @@ end
 
 function blockrange(
         axis::AbstractUnitRange,
-        r::BlockVector{<:BlockIndex{1}, <:AbstractVector{<:BlockIndexVector}},
+        r::BlockVector{<:BlockIndex{1}, <:AbstractVector{<:BlockIndexVector}}
     )
     return map(Block, blocks(r))
 end
 
 function blockrange(
         axis::AbstractUnitRange,
-        r::BlockVector{<:GenericBlockIndex{1}, <:AbstractVector{<:BlockIndexVector}},
+        r::BlockVector{<:GenericBlockIndex{1}, <:AbstractVector{<:BlockIndexVector}}
     )
     return map(Block, blocks(r))
 end
@@ -521,7 +504,7 @@ end
 function blockindices(
         a::AbstractUnitRange,
         b::Block,
-        r::BlockVector{<:BlockIndex{1}, <:AbstractVector{<:BlockIndexRange{1}}},
+        r::BlockVector{<:BlockIndex{1}, <:AbstractVector{<:BlockIndexRange{1}}}
     )
     # TODO: Change to iterate over `BlockRange(r)`
     # once https://github.com/JuliaArrays/BlockArrays.jl/issues/404
@@ -563,8 +546,8 @@ function subblocks(axes::Tuple, subaxes::Tuple, block::Block)
     @assert length(axes) == length(subaxes)
     return BlockRange(
         ntuple(length(axes)) do dim
-            findblocks(subaxes[dim], axes[dim][Tuple(block)[dim]])
-        end,
+            return findblocks(subaxes[dim], axes[dim][Tuple(block)[dim]])
+        end
     )
 end
 
@@ -663,8 +646,8 @@ end
 
 # SVD additions
 # -------------
-using LinearAlgebra: Algorithm
 using BlockArrays: BlockedMatrix
+using LinearAlgebra: Algorithm
 
 # svd first calls `eigencopy_oftype` to create something that can be in-place SVD'd
 # Here, we hijack this system to determine if there is any structure we can exploit

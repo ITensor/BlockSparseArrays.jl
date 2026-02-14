@@ -84,8 +84,8 @@ function Base.setindex!(
     if size(value) ≠ blocksize
         throw(
             DimensionMismatch(
-                "Trying to set block $(Block(Int.(I)...)), which has a size $blocksize, with data of size $(size(value)).",
-            ),
+                "Trying to set block $(Block(Int.(I)...)), which has a size $blocksize, with data of size $(size(value))."
+            )
         )
     end
     if isstored(a, I...)
@@ -115,7 +115,10 @@ end
 block_to_string(b, s) = string(join(map(string, b), '×'), "-blocked ", dims_to_string(s))
 
 using TypeParameterAccessors: type_parameters, unspecify_type_parameters
-function concretetype_to_string_truncated(type::Type; param_truncation_length = typemax(Int))
+function concretetype_to_string_truncated(
+        type::Type;
+        param_truncation_length = typemax(Int)
+    )
     isconcretetype(type) || throw(ArgumentError("Type must be concrete."))
     alias = Base.make_typealias(type)
     base_type, params = if isnothing(alias)

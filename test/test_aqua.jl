@@ -1,5 +1,5 @@
-using BlockSparseArrays: BlockSparseArrays
 using Aqua: Aqua
+using BlockSparseArrays: BlockSparseArrays
 using Test: @testset
 
 @testset "Code quality (Aqua.jl)" begin

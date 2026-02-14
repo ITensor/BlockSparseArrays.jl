@@ -17,7 +17,8 @@ function Base.keys(s::BlockSparseStorage)
         block_axes = axes(blocks(s.array)[I])
         blockindices = Block(Tuple(I))[block_axes...]
         return Iterators.map(
-            blockindex -> blockindex_to_cartesianindex(s.array, blockindex), blockindices
+            blockindex -> blockindex_to_cartesianindex(s.array, blockindex),
+            blockindices
         )
     end
     return Iterators.flatten(stored_blockindices)

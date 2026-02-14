@@ -1,32 +1,11 @@
 using ArrayLayouts: ArrayLayouts
-using BlockArrays:
-    BlockArrays,
-    AbstractBlockVector,
-    Block,
-    BlockIndex,
-    BlockRange,
-    BlockSlice,
-    BlockVector,
-    BlockedUnitRange,
-    BlockedVector,
-    block,
-    blockcheckbounds,
-    blockisequal,
-    blocklengths,
-    blocklength,
-    blocks,
-    findblockindex
+using BlockArrays: BlockArrays, AbstractBlockVector, Block, BlockIndex, BlockRange,
+    BlockSlice, BlockVector, BlockedUnitRange, BlockedVector, block, blockcheckbounds,
+    blockisequal, blocklength, blocklengths, blocks, findblockindex
 using FunctionImplementations: FunctionImplementations, permuteddims, zero!
 using LinearAlgebra: Adjoint, Transpose
-using SparseArraysBase:
-    AbstractSparseArrayImplementationStyle,
-    getstoredindex,
-    getunstoredindex,
-    eachstoredindex,
-    perm,
-    iperm,
-    storedlength,
-    storedvalues
+using SparseArraysBase: AbstractSparseArrayImplementationStyle, eachstoredindex,
+    getstoredindex, getunstoredindex, iperm, perm, storedlength, storedvalues
 
 # Like `SparseArraysBase.eachstoredindex` but
 # at the block level, i.e. iterates over the
@@ -109,14 +88,15 @@ blockstype(a::BlockArray) = blockstype(typeof(a))
 blocktype(arraytype::Type{<:BlockArray}) = eltype(blockstype(arraytype))
 blocktype(a::BlockArray) = eltype(blocks(a))
 
-abstract type AbstractBlockSparseArrayImplementationStyle <: AbstractSparseArrayImplementationStyle end
+abstract type AbstractBlockSparseArrayImplementationStyle <:
+AbstractSparseArrayImplementationStyle end
 
 struct BlockSparseArrayImplementationStyle <: AbstractBlockSparseArrayImplementationStyle end
 const blocksparse_style = BlockSparseArrayImplementationStyle()
 
 function FunctionImplementations.ImplementationStyle(
         style1::AbstractBlockSparseArrayImplementationStyle,
-        style2::AbstractBlockSparseArrayImplementationStyle,
+        style2::AbstractBlockSparseArrayImplementationStyle
     )
     return BlockSparseArrayImplementationStyle()
 end
@@ -178,7 +158,7 @@ end
 function to_indices_blocksparse(
         a,
         inds::Tuple{Base.OneTo{<:Integer}, Vararg{Any}},
-        I::Tuple{UnitRange{<:Integer}, Vararg{Any}},
+        I::Tuple{UnitRange{<:Integer}, Vararg{Any}}
     )
     return (inds[1][I[1]], to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
@@ -197,9 +177,12 @@ function to_indices_blocksparse(
         a,
         inds,
         I::Tuple{
-            BlockVector{<:BlockIndex{1}, <:Vector{<:Union{BlockIndexRange{1}, BlockIndexVector{1}}}},
+            BlockVector{
+                <:BlockIndex{1},
+                <:Vector{<:Union{BlockIndexRange{1}, BlockIndexVector{1}}},
+            },
             Vararg{Any},
-        },
+        }
     )
     # Index the `inds` by the `BlockIndexRange`/`BlockIndexVector`s on each block
     # in order to canonicalize the indices and preserve metadata,
@@ -209,7 +192,7 @@ function to_indices_blocksparse(
             b = Block(bi)
             binds = only(bi.indices)
             return BlockIndexVector(b, Base.axes1(inds[1][b])[binds])
-        end,
+        end
     )
     I1 = BlockIndices(bs, blockedunitrange_getindices(inds[1], I[1]))
     return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
@@ -217,7 +200,10 @@ end
 function to_indices_blocksparse(
         a,
         inds,
-        I::Tuple{BlockVector{<:GenericBlockIndex{1}, <:Vector{<:BlockIndexVector{1}}}, Vararg{Any}},
+        I::Tuple{
+            BlockVector{<:GenericBlockIndex{1}, <:Vector{<:BlockIndexVector{1}}},
+            Vararg{Any},
+        }
     )
     I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
     return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
@@ -364,7 +350,14 @@ struct SparsePermutedDimsArrayBlocks{
     array::Array
 end
 function blocks_blocksparse(a::PermutedDimsArray)
-    return SparsePermutedDimsArrayBlocks{eltype(a), ndims(a), blocktype(parent(a)), typeof(a)}(a)
+    return SparsePermutedDimsArrayBlocks{
+        eltype(a),
+        ndims(a),
+        blocktype(parent(a)),
+        typeof(a),
+    }(
+        a
+    )
 end
 function Base.size(a::SparsePermutedDimsArrayBlocks)
     return _getindices(size(blocks(parent(a.array))), _perm(a.array))
@@ -379,7 +372,7 @@ function SparseArraysBase.getstoredindex(
     ) where {N}
     return permuteddims(
         getstoredindex(blocks(parent(a.array)), _getindices(index, _invperm(a.array))...),
-        _perm(a.array),
+        _perm(a.array)
     )
 end
 function SparseArraysBase.getunstoredindex(
@@ -387,13 +380,16 @@ function SparseArraysBase.getunstoredindex(
     ) where {N}
     return permuteddims(
         getunstoredindex(blocks(parent(a.array)), _getindices(index, _invperm(a.array))...),
-        _perm(a.array),
+        _perm(a.array)
     )
 end
 function SparseArraysBase.eachstoredindex(
         ::IndexCartesian, a::SparsePermutedDimsArrayBlocks
     )
-    return map(I -> _getindices(I, _perm(a.array)), eachstoredindex(blocks(parent(a.array))))
+    return map(
+        I -> _getindices(I, _perm(a.array)),
+        eachstoredindex(blocks(parent(a.array)))
+    )
 end
 ## TODO: Define `storedvalues` instead.
 ## function SparseArraysBase.sparse_storage(a::SparsePermutedDimsArrayBlocks)
@@ -408,7 +404,12 @@ blocks_blocksparse(a::Adjoint) = adjoint(blocks(parent(a)))
 
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
-struct SparseSubArrayBlocks{T, N, BlockType <: AbstractArray{T, N}, Array <: SubArray{T, N}} <:
+struct SparseSubArrayBlocks{
+        T,
+        N,
+        BlockType <: AbstractArray{T, N},
+        Array <: SubArray{T, N},
+    } <:
     AbstractSparseArray{BlockType, N}
     array::Array
 end
@@ -456,7 +457,11 @@ function Base.getindex(a::SparseSubArrayBlocks{<:Any, N}, I::CartesianIndex{N}) 
     return a[Tuple(I)...]
 end
 # TODO: Define `setstoredindex!`, `setunstoredindex!` instead.
-function Base.setindex!(a::SparseSubArrayBlocks{<:Any, N}, value, I::Vararg{Int, N}) where {N}
+function Base.setindex!(
+        a::SparseSubArrayBlocks{<:Any, N},
+        value,
+        I::Vararg{Int, N}
+    ) where {N}
     parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
     # TODO: The following line is required to instantiate
     # uninstantiated blocks, maybe use `@view!` instead,
