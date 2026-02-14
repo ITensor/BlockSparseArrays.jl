@@ -51,7 +51,8 @@ function MatrixAlgebraKit.initialize_output(
 end
 
 function MatrixAlgebraKit.check_input(
-        ::typeof(lq_compact!), A::AbstractBlockSparseMatrix, LQ, ::BlockPermutedDiagonalAlgorithm
+        ::typeof(lq_compact!), A::AbstractBlockSparseMatrix, LQ,
+        ::BlockPermutedDiagonalAlgorithm
     )
     @assert isblockpermuteddiagonal(A)
     return nothing

@@ -1,8 +1,8 @@
 using BlockArrays
 using BlockSparseArrays
 using BlockSparseArrays: blocksparse
-using MatrixAlgebraKit
 using LinearAlgebra: LinearAlgebra
+using MatrixAlgebraKit
 using Test: @test, @testset
 
 @testset "Issue 162" begin

@@ -59,7 +59,7 @@ function TensorAlgebra.unmatricize(
         ::BlockReshapeFusion,
         m::AbstractBlockSparseMatrix,
         codomain_axes::Tuple{Vararg{AbstractUnitRange}},
-        domain_axes::Tuple{Vararg{AbstractUnitRange}},
+        domain_axes::Tuple{Vararg{AbstractUnitRange}}
     )
     ax = (codomain_axes..., domain_axes...)
     reshaped_blocks_m = reshape(blocks(m), blocklength.(ax))
@@ -69,7 +69,7 @@ function TensorAlgebra.unmatricize(
             map(ntuple(identity, length(ax))) do i
                 return Base.axes1(ax[i][Block(I[i])])
             end,
-            (length(codomain_axes), length(domain_axes)),
+            (length(codomain_axes), length(domain_axes))
         )
         return unmatricize(reshaped_blocks_m[I], block_axes_I)
     end

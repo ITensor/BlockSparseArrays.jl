@@ -1,46 +1,17 @@
 using Adapt: adapt
-using BlockArrays:
-    BlockArrays,
-    Block,
-    BlockArray,
-    BlockRange,
-    BlockVector,
-    BlockedOneTo,
-    BlockedArray,
-    BlockedVector,
-    blockedrange,
-    blocklength,
-    blocklengths,
-    blocksize,
-    blocksizes,
-    mortar,
-    undef_blocks
-using BlockSparseArrays:
-    @view!,
-    BlockSparseArray,
-    BlockSparseMatrix,
-    BlockSparseVector,
-    BlockType,
-    BlockView,
-    blockdiagindices,
-    blockreshape,
-    blocksparse,
-    blocksparsezeros,
-    blockstoredlength,
-    blockstype,
-    blocktype,
-    eachblockstoredindex,
-    eachstoredblock,
-    eachstoredblockdiagindex,
-    similartype_unchecked,
-    sparsemortar,
-    view!
+using BlockArrays: BlockArrays, Block, BlockArray, BlockRange, BlockVector, BlockedArray,
+    BlockedOneTo, BlockedVector, blockedrange, blocklength, blocklengths, blocksize,
+    blocksizes, mortar, undef_blocks
+using BlockSparseArrays: @view!, BlockSparseArray, BlockSparseMatrix, BlockSparseVector,
+    BlockType, BlockView, blockdiagindices, blockreshape, blocksparse, blocksparsezeros,
+    blockstoredlength, blockstype, blocktype, eachblockstoredindex, eachstoredblock,
+    eachstoredblockdiagindex, similartype_unchecked, sparsemortar, view!
 using GPUArraysCore: @allowscalar
 using JLArrays: JLArray, JLMatrix
 using LinearAlgebra: Adjoint, Transpose, dot, norm, tr
 using SparseArraysBase:
     SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, isstored, storedlength
-using Test: @test, @test_broken, @test_throws, @testset, @inferred
+using Test: @inferred, @test, @test_broken, @test_throws, @testset
 using TestExtras: @constinferred
 using TypeParameterAccessors: TypeParameterAccessors, Position
 include("TestBlockSparseArraysUtils.jl")

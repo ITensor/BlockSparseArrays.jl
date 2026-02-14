@@ -2,13 +2,18 @@ using BlockArrays: Block
 using FunctionImplementations: zero!
 
 struct ZeroBlocks{
-        N, A <: AbstractArray{<:Any, N}, ParentAxes <: Tuple{Vararg{AbstractUnitRange{<:Integer}, N}},
+        N, A <: AbstractArray{<:Any, N},
+        ParentAxes <: Tuple{Vararg{AbstractUnitRange{<:Integer}, N}},
     } <: AbstractArray{A, N}
     parentaxes::ParentAxes
 end
 function ZeroBlocks{N, A}(
         ax::Ax
-    ) where {N, A <: AbstractArray{<:Any, N}, Ax <: Tuple{Vararg{AbstractUnitRange{<:Integer}, N}}}
+    ) where {
+        N,
+        A <: AbstractArray{<:Any, N},
+        Ax <: Tuple{Vararg{AbstractUnitRange{<:Integer}, N}},
+    }
     return ZeroBlocks{N, A, Ax}(ax)
 end
 Base.size(a::ZeroBlocks) = map(blocklength, a.parentaxes)
@@ -33,7 +38,10 @@ end
 # TODO: this is a hack and is also type-unstable
 using LinearAlgebra: Diagonal
 using TypeParameterAccessors: similartype
-function Base.getindex(a::ZeroBlocks{2, A}, I::Vararg{Int, 2}) where {V, A <: Diagonal{<:Any, V}}
+function Base.getindex(
+        a::ZeroBlocks{2, A},
+        I::Vararg{Int, 2}
+    ) where {V, A <: Diagonal{<:Any, V}}
     ax = ntuple(2) do d
         return only(axes(a.parentaxes[d][Block(I[d])]))
     end
