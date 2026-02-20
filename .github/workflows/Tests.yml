@@ -40,3 +40,14 @@ jobs:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets:
       CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
+  tests-gate:
+    name: "Tests"
+    needs: "tests"
+    if: "${{ always() }}"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Fail if any matrix leg failed"
+        run: |
+          echo "tests.result = ${{ needs.tests.result }}"
+          test "${{ needs.tests.result }}" = "success"
+          
