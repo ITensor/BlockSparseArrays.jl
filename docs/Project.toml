@@ -1,14 +1,14 @@
 [deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
 BlockSparseArrays = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 
-[sources]
-BlockSparseArrays = {path = ".."}
-
 [compat]
+Documenter = "1"
 BlockArrays = "1"
 BlockSparseArrays = "0.10"
-Documenter = "1"
 Literate = "2"
+
+[sources.BlockSparseArrays]
+path = ".."
