@@ -1,3 +1,4 @@
+
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -20,8 +21,9 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 
-[sources]
-BlockSparseArrays = {path = ".."}
+
+[sources.BlockSparseArrays]
+path = ".."
 
 [compat]
 Adapt = "4"
