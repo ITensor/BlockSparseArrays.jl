@@ -1,5 +1,6 @@
 using BlockSparseArrays: BlockSparseArrays
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
+using ITensorFormatter: ITensorFormatter
 
 DocMeta.setdocmeta!(
     BlockSparseArrays, :DocTestSetup, quote
@@ -8,7 +9,7 @@ DocMeta.setdocmeta!(
     end; recursive = true
 )
 
-include("make_index.jl")
+ITensorFormatter.make_index!(pkgdir(BlockSparseArrays))
 
 makedocs(;
     modules = [BlockSparseArrays],
