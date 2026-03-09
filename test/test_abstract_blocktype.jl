@@ -56,36 +56,22 @@ arrayts = (Array, JLArray)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     for f in (eig_full, eig_trunc)
-        if arrayt === Array
-            d, v = f(a)
-            @test a * v ≈ v * d
-        else
-            @test_broken f(a)
-        end
+        res = f(a)
+        d, v = res[1:2]
+        @test a * v ≈ v * d
     end
-    if arrayt === Array
-        d = eig_vals(a)
-        @test sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
-    else
-        @test_broken eig_vals(a)
-    end
+    d = eig_vals(a)
+    @test sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(parent(hermitianpart(randn(elt, 2, 2))))
     for f in (eigh_full, eigh_trunc)
-        if arrayt === Array
-            d, v = f(a)
-            @test a * v ≈ v * d
-        else
-            @test_broken f(a)
-        end
+        res = f(a)
+        d, v = res[1:2]
+        @test a * v ≈ v * d
     end
-    if arrayt === Array
-        d = eigh_vals(a)
-        @test sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
-    else
-        @test_broken eigh_vals(a)
-    end
+    d = eigh_vals(a)
+    @test sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
@@ -96,7 +82,7 @@ arrayts = (Array, JLArray)
             @test isisometric(u; side = :left)
         else
             # TODO: Fix comparison with UniformScaling on GPU.
-            @test_broken isisometric(u; side = :left)
+            @test isisometric(u; side = :left)
         end
     end
     for f in (right_orth, right_polar, lq_compact, lq_full)
@@ -106,15 +92,11 @@ arrayts = (Array, JLArray)
             @test isisometric(u; side = :right)
         else
             # TODO: Fix comparison with UniformScaling on GPU.
-            @test_broken isisometric(u; side = :right)
+            @test isisometric(u; side = :right)
         end
     end
     for f in (svd_compact, svd_full, svd_trunc)
-        if arrayt ≢ Array && (f ≡ svd_full || f ≡ svd_trunc)
-            @test_broken f(a)
-        else
-            u, s, v = f(a)
-            @test u * s * v ≈ a
-        end
+        u, s, v = f(a)
+        @test u * s * v ≈ a
     end
 end

@@ -442,8 +442,7 @@ end
 
 # TODO: Define `getstoredindex`, `getunstoredindex` instead.
 function Base.getindex(a::SparseSubArrayBlocks{<:Any, N}, I::Vararg{Int, N}) where {N}
-    # TODO: Should this be defined as `@view a.array[Block(I)]` instead?
-    return @view a.array[Block(I)]
+    return BlockArrays.viewblock(a.array, Block(I))
 
     ## parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
     ## parent_block = parent_blocks[I...]
