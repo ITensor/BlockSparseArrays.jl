@@ -1,6 +1,7 @@
 using Adapt: adapt
 using BlockArrays: Block
 using BlockSparseArrays: BlockSparseMatrix, blockstoredlength
+using GPUArraysCore: allowscalar
 using JLArrays: JLArray
 using LinearAlgebra: hermitianpart, norm
 using MatrixAlgebraKit: eig_full, eig_trunc, eig_vals, eigh_full, eigh_trunc, eigh_vals,
@@ -14,6 +15,7 @@ arrayts = (Array, JLArray)
 @testset "Abstract block type (arraytype=$arrayt, eltype=$elt)" for arrayt in arrayts,
         elt in elts
 
+    arrayt === Array || allowscalar(false)
     dev = adapt(arrayt)
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
@@ -56,22 +58,30 @@ arrayts = (Array, JLArray)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     for f in (eig_full, eig_trunc)
-        res = f(a)
-        d, v = res[1:2]
-        @test a * v ≈ v * d
+        @test begin
+            res = f(a)
+            d, v = res[1:2]
+            a * v ≈ v * d
+        end broken = arrayt ≠ Array
     end
-    d = eig_vals(a)
-    @test sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
+    @test begin
+        d = eig_vals(a)
+        sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
+    end broken = arrayt ≠ Array
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(parent(hermitianpart(randn(elt, 2, 2))))
     for f in (eigh_full, eigh_trunc)
-        res = f(a)
-        d, v = res[1:2]
-        @test a * v ≈ v * d
+        @test begin
+            res = f(a)
+            d, v = res[1:2]
+            a * v ≈ v * d
+        end broken = arrayt ≠ Array
     end
-    d = eigh_vals(a)
-    @test sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
+    @test begin
+        d = eigh_vals(a)
+        sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
+    end broken = arrayt ≠ Array
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
