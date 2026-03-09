@@ -62,7 +62,10 @@ function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, ax
     # TODO: Use `similar`?
     blocktype_a = blocktype(parent(a))
     a_dest = BlockSparseArray{eltype(a), length(axes), blocktype_a}(undef, axes)
-    a_dest .= a
+    for I in SparseArraysBase.eachstoredindex(blocks(a))
+        b = Block(Tuple(I))
+        a_dest[b] = blocks(a)[Tuple(I)...]
+    end
     return a_dest
 end
 
