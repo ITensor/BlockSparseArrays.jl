@@ -67,16 +67,7 @@ function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, ax
 end
 
 function _similar(arraytype::Type{<:AbstractArray{T, N}}, size::Tuple) where {T, N}
-    if isconcretetype(arraytype)
-        try
-            return similar(arraytype, size)
-        catch err
-            if !(err isa MethodError)
-                rethrow()
-            end
-        end
-    end
-    return similar(Array{T, N}, size)
+    return isconcretetype(arraytype) ? similar(arraytype, size) : similar(Array{T, N}, size)
 end
 function _similar(
         ::Type{<:SubArray{<:Any, <:Any, <:ArrayType}}, size::Tuple
