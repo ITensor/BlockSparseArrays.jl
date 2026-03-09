@@ -98,16 +98,14 @@ arrayts = (Array, JLArray)
     @test iszero(storedlength(a))
     @test iszero(b)
     @test iszero(storedlength(b))
-    # TODO: Broken on GPU.
-    @test iszero(c) broken = arrayt ≠ Array
+    @test iszero(c)
     @test iszero(storedlength(c))
     @allowscalar a[5, 7] = 1
     @test !iszero(a)
     @test storedlength(a) == 3 * 4
     @test !iszero(b)
     @test storedlength(b) == 3 * 4
-    # TODO: Broken on GPU.
-    @test !iszero(c) broken = arrayt ≠ Array
+    @test !iszero(c)
     @test storedlength(c) == 3 * 4
     d = @view a[1:4, 1:6]
     @test iszero(d)
@@ -407,12 +405,7 @@ arrayts = (Array, JLArray)
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
     I = (:, [2, 4])
-    if arrayt === Array
-        @test Array(a[I...]) == Array(a)[I...]
-    else
-        # TODO: Broken on GPU, fix this.
-        @test_broken a[I...]
-    end
+    @test Array(a[I...]) == Array(a)[I...]
 
     a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
