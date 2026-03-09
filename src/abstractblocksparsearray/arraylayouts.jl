@@ -64,7 +64,7 @@ function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, ax
     a_dest = BlockSparseArray{eltype(a), length(axes), blocktype_a}(undef, axes)
     for I in SparseArraysBase.eachstoredindex(blocks(a))
         b = Block(Tuple(I))
-        a_dest[b] = blocks(a)[Tuple(I)...]
+        a_dest[b] = copy(blocks(a)[Tuple(I)...])
     end
     return a_dest
 end
