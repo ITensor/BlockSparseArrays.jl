@@ -62,20 +62,26 @@ function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, ax
     # TODO: Use `similar`?
     blocktype_a = blocktype(parent(a))
     a_dest = BlockSparseArray{eltype(a), length(axes), blocktype_a}(undef, axes)
-    for I in SparseArraysBase.eachstoredindex(blocks(a))
-        b = Block(Tuple(I))
-        a_dest[b] = copy(blocks(a)[Tuple(I)...])
-    end
+    a_dest .= a
     return a_dest
 end
 
-function _similar(arraytype::Type{<:AbstractArray}, size::Tuple)
-    return similar(arraytype, size)
+function _similar(arraytype::Type{<:AbstractArray{T, N}}, size::Tuple) where {T, N}
+    if isconcretetype(arraytype)
+        try
+            return similar(arraytype, size)
+        catch err
+            if !(err isa MethodError)
+                rethrow()
+            end
+        end
+    end
+    return similar(Array{T, N}, size)
 end
 function _similar(
         ::Type{<:SubArray{<:Any, <:Any, <:ArrayType}}, size::Tuple
     ) where {ArrayType}
-    return similar(ArrayType, size)
+    return _similar(ArrayType, size)
 end
 
 # Materialize a SubArray view.
@@ -83,6 +89,8 @@ function ArrayLayouts.sub_materialize(
         layout::BlockLayout{<:SparseLayout}, a, axes::Tuple{Vararg{Base.OneTo}}
     )
     a_dest = _similar(blocktype(a), length.(axes))
-    a_dest .= a
+    for I in CartesianIndices(a_dest)
+        @inbounds a_dest[I] = a[I]
+    end
     return a_dest
 end

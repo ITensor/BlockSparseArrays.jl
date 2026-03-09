@@ -41,17 +41,11 @@ function TensorAlgebra.matricize(
     key(I) = Block(Tuple(I))
     value(I) = matricize(reshaped_blocks_a[I], length_codomain)
     Is = eachstoredindex(reshaped_blocks_a)
-    bs = if isempty(Is)
-        # Catch empty case and make sure the type is constrained properly.
-        # This seems to only be necessary in Julia versions below v1.11,
-        # try removing it when we drop support for those versions.
-        keytype = Base.promote_op(key, eltype(Is))
-        valtype = Base.promote_op(value, eltype(Is))
-        valtype′ = !isconcretetype(valtype) ? AbstractMatrix{eltype(a)} : valtype
-        Dict{keytype, valtype′}()
-    else
-        Dict(key(I) => value(I) for I in Is)
-    end
+    # Constrain key/value types explicitly so empty cases are still typed.
+    keytype = Base.promote_op(key, eltype(Is))
+    valtype = Base.promote_op(value, eltype(Is))
+    valtype′ = !isconcretetype(valtype) ? AbstractMatrix{eltype(a)} : valtype
+    bs = Dict{keytype, valtype′}(key(I) => value(I) for I in Is)
     return blocksparse(bs, ax)
 end
 
@@ -73,7 +67,12 @@ function TensorAlgebra.unmatricize(
         )
         return unmatricize(reshaped_blocks_m[I], block_axes_I)
     end
-    bs = Dict(key(I) => value(I) for I in eachstoredindex(reshaped_blocks_m))
+    Is = eachstoredindex(reshaped_blocks_m)
+    # Constrain key/value types explicitly so empty cases are still typed.
+    keytype = Base.promote_op(key, eltype(Is))
+    valtype = Base.promote_op(value, eltype(Is))
+    valtype′ = !isconcretetype(valtype) ? AbstractArray{eltype(m), length(ax)} : valtype
+    bs = Dict{keytype, valtype′}(key(I) => value(I) for I in Is)
     return blocksparse(bs, ax)
 end
 
