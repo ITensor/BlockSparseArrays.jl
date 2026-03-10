@@ -1,6 +1,6 @@
 using ArrayLayouts: ArrayLayouts, DualLayout, MemoryLayout, MulAdd
 using BlockArrays: Block, BlockLayout, blocks
-using SparseArraysBase: SparseLayout, eachstoredindex
+using SparseArraysBase: SparseLayout
 using TypeParameterAccessors: parenttype, similartype
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:AnyAbstractBlockSparseArray})
@@ -62,12 +62,14 @@ function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, ax
     # TODO: Use `similar`?
     blocktype_a = blocktype(parent(a))
     a_dest = BlockSparseArray{eltype(a), length(axes), blocktype_a}(undef, axes)
-    for I in eachstoredindex(blocks(a))
+    for I in CartesianIndices(blocks(a_dest))
         b = Block(Tuple(I))
-        block_a = @view a[b]
-        block_dest = similar(a_dest[b])
-        copyto!(block_dest, block_a)
-        a_dest[b] = block_dest
+        if isstored(a, b)
+            block_a = @view a[b]
+            block_dest = similar(a_dest[b])
+            copyto!(block_dest, block_a)
+            a_dest[b] = block_dest
+        end
     end
     return a_dest
 end
