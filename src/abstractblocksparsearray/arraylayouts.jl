@@ -64,8 +64,8 @@ function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, ax
     a_dest = BlockSparseArray{eltype(a), length(axes), blocktype_a}(undef, axes)
     for I in CartesianIndices(blocks(a_dest))
         b = Block(Tuple(I))
-        block_a = @view a[b]
-        if !iszero(block_a)
+        if isstored(a, b)
+            block_a = @view a[b]
             block_dest = similar(a_dest[b])
             copyto!(block_dest, block_a)
             a_dest[b] = block_dest

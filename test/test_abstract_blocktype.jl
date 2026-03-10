@@ -88,22 +88,12 @@ arrayts = (Array, JLArray)
     for f in (left_orth, left_polar, qr_compact, qr_full)
         u, c = f(a)
         @test u * c ≈ a
-        if arrayt ≡ Array
-            @test isisometric(u; side = :left)
-        else
-            # TODO: Fix comparison with UniformScaling on GPU.
-            @test isisometric(u; side = :left)
-        end
+        @test isisometric(u; side = :left)
     end
     for f in (right_orth, right_polar, lq_compact, lq_full)
         c, u = f(a)
         @test c * u ≈ a
-        if arrayt ≡ Array
-            @test isisometric(u; side = :right)
-        else
-            # TODO: Fix comparison with UniformScaling on GPU.
-            @test isisometric(u; side = :right)
-        end
+        @test isisometric(u; side = :right)
     end
     for f in (svd_compact, svd_full, svd_trunc)
         u, s, v = f(a)
