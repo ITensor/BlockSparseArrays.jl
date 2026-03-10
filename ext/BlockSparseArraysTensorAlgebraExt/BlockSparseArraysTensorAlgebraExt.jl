@@ -80,7 +80,7 @@ function TensorAlgebra.unmatricize(
         valtype = Base.promote_op(value, eltype(Is))
         valtype′ =
             !isconcretetype(valtype) ? AbstractArray{eltype(m), length(ax)} : valtype
-        bs = Dict{keytype, valtype′}(key(I) => value(I) for I in Is)
+        bs = Dict{keytype, valtype′}()
     else
         Dict(key(I) => value(I) for I in eachstoredindex(reshaped_blocks_m))
     end
