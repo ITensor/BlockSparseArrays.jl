@@ -1,7 +1,7 @@
 using ArrayLayouts: ArrayLayouts
 using BlockArrays: BlockArrays, AbstractBlockVector, Block, BlockIndex, BlockRange,
-    BlockSlice, BlockVector, BlockedUnitRange, BlockedVector, block, blockcheckbounds,
-    blockisequal, blocklength, blocklengths, blocks, findblockindex
+    BlockSlice, BlockVector, BlockedUnitRange, BlockedVector, BlocksView, block,
+    blockcheckbounds, blockisequal, blocklength, blocklengths, blocks, findblockindex
 using FunctionImplementations: FunctionImplementations, permuteddims, zero!
 using LinearAlgebra: Adjoint, Transpose
 using SparseArraysBase: AbstractSparseArrayImplementationStyle, eachstoredindex,
@@ -75,12 +75,12 @@ julia> length(blocks(BlockedVector{Float64}(randn(0))))
 1
 ```
 =#
-function blocktype(a::AbstractArray)
-    if isempty(blocks(a))
-        error("`blocktype` can't be determined if `isempty(blocks(a))`.")
-    end
-    return mapreduce(typeof, promote_type, blocks(a))
+eltype_inferred(a::AbstractArray{T}) where {T} = T
+function eltype_inferred(a::BlocksView{<:Any, N}) where {N}
+    return Base.promote_op(getindex, typeof(a), ntuple(Returns(Int), Val(N))...)
 end
+
+blocktype(a::AbstractArray) = eltype_inferred(blocks(a))
 
 using BlockArrays: BlockArray
 blockstype(::Type{<:BlockArray{<:Any, <:Any, B}}) where {B} = B
@@ -526,5 +526,4 @@ function blocks_blocksparse(
     return @view blocks(parent(a))[map(to_blocks_indices, parentindices(a))...]
 end
 
-using BlockArrays: BlocksView
 SparseArraysBase.storedlength(a::BlocksView) = length(a)

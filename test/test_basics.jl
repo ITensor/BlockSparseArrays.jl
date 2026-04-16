@@ -174,9 +174,8 @@ arrayts = (Array, JLArray)
         @test (@constinferred blockstype(a)) <: BlockArrays.BlocksView{elt, 2}
         # TODO: This is difficult to determine just from type information.
         @test_broken blockstype(typeof(a)) <: BlockArrays.BlocksView{elt, 2}
-        @test (@constinferred blocktype(a)) <: SubArray{elt, 2, arrayt{elt, 2}}
-        # TODO: This is difficult to determine just from type information.
-        @test_broken blocktype(typeof(a)) <: SubArray{elt, 2, arrayt{elt, 2}}
+        @test blocktype(a) <: AbstractMatrix{elt}
+        @test_broken blocktype(typeof(a)) <: AbstractMatrix{elt}
 
         # sparsemortar
         for ax in (
