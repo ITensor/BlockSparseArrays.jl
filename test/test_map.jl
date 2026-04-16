@@ -15,7 +15,7 @@ arrayts = (Array, JLArray)
         elt in elts
 
     dev = adapt(arrayt)
-    gpu_broken = arrayt ≠ Array && VERSION < v"1.12.6"
+    gpu_broken = arrayt ≠ Array
 
     a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]

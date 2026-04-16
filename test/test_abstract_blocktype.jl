@@ -15,7 +15,7 @@ arrayts = (Array, JLArray)
         elt in elts
 
     dev = adapt(arrayt)
-    gpu_broken = arrayt ≠ Array && VERSION < v"1.12.6"
+    gpu_broken = arrayt ≠ Array
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     @test sprint(show, MIME"text/plain"(), a) isa String
