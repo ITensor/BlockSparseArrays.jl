@@ -7,7 +7,7 @@ using MatrixAlgebraKit: eig_full, eig_trunc, eig_vals, eigh_full, eigh_trunc, ei
     isisometric, left_orth, left_polar, lq_compact, lq_full, qr_compact, qr_full,
     right_orth, right_polar, svd_compact, svd_full, svd_trunc
 using SparseArraysBase: storedlength
-using Test: @test, @test_broken, @testset
+using Test: @test, @testset
 
 elts = (Float32, Float64, ComplexF32)
 arrayts = (Array, JLArray)
@@ -15,6 +15,7 @@ arrayts = (Array, JLArray)
         elt in elts
 
     dev = adapt(arrayt)
+    gpu_broken = arrayt ≠ Array && VERSION < v"1.12.6"
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     @test sprint(show, MIME"text/plain"(), a) isa String
@@ -56,65 +57,45 @@ arrayts = (Array, JLArray)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     for f in (eig_full, eig_trunc)
-        if arrayt === Array
+        @test begin
             d, v = f(a)
-            @test a * v ≈ v * d
-        else
-            @test_broken f(a)
-        end
+            a * v ≈ v * d
+        end broken = gpu_broken
     end
-    if arrayt === Array
+    @test begin
         d = eig_vals(a)
-        @test sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
-    else
-        @test_broken eig_vals(a)
-    end
+        sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
+    end broken = gpu_broken
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(parent(hermitianpart(randn(elt, 2, 2))))
     for f in (eigh_full, eigh_trunc)
-        if arrayt === Array
+        @test begin
             d, v = f(a)
-            @test a * v ≈ v * d
-        else
-            @test_broken f(a)
-        end
+            a * v ≈ v * d
+        end broken = gpu_broken
     end
-    if arrayt === Array
+    @test begin
         d = eigh_vals(a)
-        @test sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
-    else
-        @test_broken eigh_vals(a)
-    end
+        sort(Vector(d); by = abs) ≈ sort(eig_vals(Matrix(a)); by = abs)
+    end broken = gpu_broken
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     for f in (left_orth, left_polar, qr_compact, qr_full)
         u, c = f(a)
         @test u * c ≈ a
-        if arrayt ≡ Array
-            @test isisometric(u; side = :left)
-        else
-            # TODO: Fix comparison with UniformScaling on GPU.
-            @test_broken isisometric(u; side = :left)
-        end
+        @test isisometric(u; side = :left) broken = gpu_broken
     end
     for f in (right_orth, right_polar, lq_compact, lq_full)
         c, u = f(a)
         @test c * u ≈ a
-        if arrayt ≡ Array
-            @test isisometric(u; side = :right)
-        else
-            # TODO: Fix comparison with UniformScaling on GPU.
-            @test_broken isisometric(u; side = :right)
-        end
+        @test isisometric(u; side = :right) broken = gpu_broken
     end
     for f in (svd_compact, svd_full, svd_trunc)
-        if arrayt ≢ Array && (f ≡ svd_full || f ≡ svd_trunc)
-            @test_broken f(a)
-        else
+        @test begin
             u, s, v = f(a)
-            @test u * s * v ≈ a
-        end
+            u * s * v ≈ a
+        end broken = gpu_broken && (f ≡ svd_full || f ≡ svd_trunc)
     end
 end

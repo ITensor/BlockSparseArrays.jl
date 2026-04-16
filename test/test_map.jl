@@ -15,6 +15,7 @@ arrayts = (Array, JLArray)
         elt in elts
 
     dev = adapt(arrayt)
+    gpu_broken = arrayt ≠ Array && VERSION < v"1.12.6"
 
     a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]
@@ -98,16 +99,14 @@ arrayts = (Array, JLArray)
     @test iszero(storedlength(a))
     @test iszero(b)
     @test iszero(storedlength(b))
-    # TODO: Broken on GPU.
-    @test iszero(c) broken = arrayt ≠ Array
+    @test iszero(c) broken = gpu_broken
     @test iszero(storedlength(c))
     @allowscalar a[5, 7] = 1
     @test !iszero(a)
     @test storedlength(a) == 3 * 4
     @test !iszero(b)
     @test storedlength(b) == 3 * 4
-    # TODO: Broken on GPU.
-    @test !iszero(c) broken = arrayt ≠ Array
+    @test !iszero(c) broken = gpu_broken
     @test storedlength(c) == 3 * 4
     d = @view a[1:4, 1:6]
     @test iszero(d)
