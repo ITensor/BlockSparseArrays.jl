@@ -99,10 +99,10 @@ arrayts = (Array, JLArray)
         # `BlockSparseMatrix{T, AbstractMatrix{T}}` produce a `c * u` that does not
         # reproduce `a` (regression in MatrixAlgebraKit 0.6.6; fix tracked at
         # https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/pull/219).
-        @test c * u ≈ a broken = (
+        broken =
             arrayt ≢ Array && f ∈ (right_orth, lq_compact, lq_full) &&
-                pkgversion(MatrixAlgebraKit) < v"0.6.7"
-        )
+            pkgversion(MatrixAlgebraKit) < v"0.6.7"
+        @test c * u ≈ a broken = broken
         # TODO: Fix comparison with UniformScaling on GPU.
         @test isisometric(u; side = :right) broken = arrayt ≢ Array
     end
