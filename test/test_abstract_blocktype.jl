@@ -15,7 +15,6 @@ arrayts = (Array, JLArray)
 @testset "Abstract block type (arraytype=$arrayt, eltype=$elt)" for arrayt in arrayts,
         elt in elts
 
-    rng = StableRNG(1)
     dev = adapt(arrayt)
 
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
@@ -23,6 +22,7 @@ arrayts = (Array, JLArray)
     @test iszero(storedlength(a))
     @test iszero(blockstoredlength(a))
 
+    rng = StableRNG(1234)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(rng, elt, 2, 2))
     @test !iszero(a[Block(1, 1)])
@@ -34,6 +34,7 @@ arrayts = (Array, JLArray)
     @test iszero(a[Block(1, 2)])
     @test a[Block(1, 2)] isa Matrix{elt}
 
+    rng = StableRNG(1234)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(rng, elt, 2, 2))
     a′ = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
@@ -55,6 +56,7 @@ arrayts = (Array, JLArray)
     @test Array(b) ≈ Array(a) * Array(a′)
     @test norm(b) ≈ 0
 
+    rng = StableRNG(1234)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(rng, elt, 2, 2))
     for f in (eig_full, eig_trunc)
@@ -72,6 +74,7 @@ arrayts = (Array, JLArray)
         @test_broken eig_vals(a)
     end
 
+    rng = StableRNG(1234)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(parent(hermitianpart(randn(rng, elt, 2, 2))))
     for f in (eigh_full, eigh_trunc)
@@ -89,6 +92,7 @@ arrayts = (Array, JLArray)
         @test_broken eigh_vals(a)
     end
 
+    rng = StableRNG(1234)
     a = BlockSparseMatrix{elt, AbstractMatrix{elt}}(undef, [2, 3], [2, 3])
     a[Block(1, 1)] = dev(randn(rng, elt, 2, 2))
     for f in (left_orth, left_polar, qr_compact, qr_full)
