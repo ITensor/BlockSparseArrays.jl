@@ -7,7 +7,7 @@ using GPUArraysCore: @allowscalar
 using JLArrays: JLArray
 using SparseArraysBase: storedlength
 using StableRNGs: StableRNG
-using Test: @test, @test_broken, @test_throws, @testset
+using Test: @test, @test_throws, @testset
 
 elts = (Float32, Float64, ComplexF32)
 arrayts = (Array, JLArray)
@@ -407,12 +407,8 @@ arrayts = (Array, JLArray)
     a[Block(1, 1)] = dev(randn(elt, 2, 2))
     a[Block(2, 2)] = dev(randn(elt, 3, 3))
     I = (:, [2, 4])
-    if arrayt === Array
-        @test Array(a[I...]) == Array(a)[I...]
-    else
-        # TODO: Broken on GPU, fix this.
-        @test_broken a[I...]
-    end
+    # TODO: Broken on GPU, fix this.
+    @test Array(a[I...]) == Array(a)[I...] broken = arrayt ≢ Array
 
     a = BlockSparseArray{elt}(undef, [2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
@@ -718,5 +714,5 @@ arrayts = (Array, JLArray)
     a[Block(2, 2)] = randn(elt, 3, 3)
     @test a[2:4, 4] == Array(a)[2:4, 4]
     # TODO: Fix this.
-    @test_broken a[4, 2:4] == Array(a)[4, 2:4]
+    @test a[4, 2:4] == Array(a)[4, 2:4] broken = true
 end
