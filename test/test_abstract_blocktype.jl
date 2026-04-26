@@ -105,7 +105,8 @@ arrayts = (Array, JLArray)
         c, u = f(a)
         # `right_orth`, `lq_compact`, `lq_full` on JLArray-backed
         # `BlockSparseMatrix{T, AbstractMatrix{T}}` produce a `c * u` that does not
-        # reproduce `a` (regression in MatrixAlgebraKit 0.6.6).
+        # reproduce `a` (regression in MatrixAlgebraKit 0.6.6, tracked at
+        # https://github.com/QuantumKitHub/MatrixAlgebraKit.jl/issues/218).
         @test c * u ≈ a broken = (arrayt ≢ Array && f ∈ (right_orth, lq_compact, lq_full))
         if arrayt ≡ Array
             @test isisometric(u; side = :right)
