@@ -2,7 +2,7 @@ using BlockArrays: Block, BlockArray, blockedrange, blocksize
 using BlockSparseArrays: BlockSparseArray
 using Random: randn!
 using TensorAlgebra: contract
-using Test: @test, @test_broken, @testset
+using Test: @test, @testset
 
 function randn_blockdiagonal(elt::Type, axes::Tuple)
     a = BlockSparseArray{elt}(undef, axes)

@@ -11,7 +11,7 @@ using JLArrays: JLArray, JLMatrix
 using LinearAlgebra: Adjoint, Transpose, dot, norm, tr
 using SparseArraysBase:
     SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK, isstored, storedlength
-using Test: @inferred, @test, @test_broken, @test_throws, @testset
+using Test: @inferred, @test, @test_throws, @testset
 using TestExtras: @constinferred
 using TypeParameterAccessors: TypeParameterAccessors, Position
 include("TestBlockSparseArraysUtils.jl")
@@ -28,18 +28,18 @@ arrayts = (Array, JLArray)
         a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
         a[Block(1, 1)] = dev(randn(elt, 2, 2))
         a[Block(2, 2)] = dev(randn(elt, 3, 3))
-        @test_broken a[:, 4]
+        @test a[:, 4] broken = true
 
         # TODO: Fix this and turn it into a proper test.
         a = dev(BlockSparseArray{elt}(undef, [2, 3], [2, 3]))
         a[Block(1, 1)] = dev(randn(elt, 2, 2))
         a[Block(2, 2)] = dev(randn(elt, 3, 3))
         @allowscalar @test a[2:4, 4] == Array(a)[2:4, 4]
-        @test_broken a[4, 2:4]
+        @test a[4, 2:4] broken = true
 
         @test a[Block(1), :] isa BlockSparseArray{elt}
         @test adjoint(a) isa Adjoint{elt, <:BlockSparseArray}
-        @test_broken adjoint(a)[Block(1), :] isa Adjoint{elt, <:BlockSparseArray}
+        @test adjoint(a)[Block(1), :] isa Adjoint{elt, <:BlockSparseArray} broken = true
         # could also be directly a BlockSparseArray
     end
     @testset "Constructors" begin
@@ -153,10 +153,10 @@ arrayts = (Array, JLArray)
         a = arrayt(randn(elt, 2, 2))
         @test (@constinferred blockstype(a)) <: BlockArrays.BlockView{elt, 2}
         # TODO: This is difficult to determine just from type information.
-        @test_broken blockstype(typeof(a)) <: BlockArrays.BlockView{elt, 2}
+        @test blockstype(typeof(a)) <: BlockArrays.BlockView{elt, 2} broken = true
         @test (@constinferred blocktype(a)) <: arrayt{elt, 2}
         # TODO: This is difficult to determine just from type information.
-        @test_broken blocktype(typeof(a)) <: SubArray{elt, 2, arrayt{elt, 2}}
+        @test blocktype(typeof(a)) <: SubArray{elt, 2, arrayt{elt, 2}} broken = true
 
         a = BlockSparseMatrix{elt, arrayt{elt, 2}}(undef, [1, 1], [1, 1])
         @test (@constinferred blockstype(a)) <: SparseMatrixDOK{arrayt{elt, 2}}
@@ -173,9 +173,9 @@ arrayts = (Array, JLArray)
         a = BlockedArray(arrayt(randn(elt, 2, 2)), [1, 1], [1, 1])
         @test (@constinferred blockstype(a)) <: BlockArrays.BlocksView{elt, 2}
         # TODO: This is difficult to determine just from type information.
-        @test_broken blockstype(typeof(a)) <: BlockArrays.BlocksView{elt, 2}
+        @test blockstype(typeof(a)) <: BlockArrays.BlocksView{elt, 2} broken = true
         @test blocktype(a) <: AbstractMatrix{elt}
-        @test_broken blocktype(typeof(a)) <: AbstractMatrix{elt}
+        @test blocktype(typeof(a)) <: AbstractMatrix{elt} broken = true
 
         # sparsemortar
         for ax in (

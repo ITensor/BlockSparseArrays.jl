@@ -3,7 +3,7 @@ using BlockArrays: Block, BlockIndex, BlockSlice, BlockedArray, BlockedVector, b
 using BlockSparseArrays: BlockSparseArrays, BlockIndexVector, BlockIndices,
     GenericBlockIndex, blockedunitrange_getindices, blocksparsezeros, to_block,
     to_block_indices, to_blockindexrange
-using Test: @test, @test_broken, @testset
+using Test: @test, @testset
 
 # blockrange
 # checkindex
