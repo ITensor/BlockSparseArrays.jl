@@ -5,6 +5,7 @@ on:
       - 'master'
       - 'main'
       - 'release-'
+      - "release-*"
     tags: '*'
     paths-ignore:
       - 'docs/**'
